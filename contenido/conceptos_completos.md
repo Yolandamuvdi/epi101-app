@@ -1,7 +1,6 @@
-📁 contenido/
-├── conceptos_completos.md
-├── disenos_completos.md
-├── medidas_completas.md
-├── sesgos_completos.md
-├── glosario_completo.py
-└── ejercicios_completos.py
+contenido/conceptos_completos.md
+contenido/medidas_completas.md
+contenido/disenos_completos.md
+contenido/sesgos_completos.md
+contenido/glosario_completo.py
+contenido/ejercicios_completos.py
