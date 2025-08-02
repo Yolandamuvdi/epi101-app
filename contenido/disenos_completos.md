@@ -1,4 +1,4 @@
-🧪 DISEÑOS DE ESTUDIO EN EPIDEMIOLOGÍA
+
 Los diseños de estudio son estrategias para recolectar, analizar e interpretar datos en investigaciones epidemiológicas. Se dividen en dos grandes grupos:
 
 Observacionales 👉 El investigador observa sin intervenir.
