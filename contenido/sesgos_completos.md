@@ -51,4 +51,5 @@ El sesgo es un error sistemático que distorsiona la estimación de la asociaci�
 
 
 🎯 Mensaje clave
+
 ❗ Ningún estudio está completamente libre de sesgo, pero conocerlos y gestionarlos te hace una investigadora más crítica, poderosa y confiable. 💪📊
