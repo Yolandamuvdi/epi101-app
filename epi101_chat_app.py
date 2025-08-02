@@ -59,114 +59,32 @@ tabs = st.tabs([
     "Chat"
 ])
 
-# Contenidos directamente en el código
 with tabs[0]:
     st.header("📌 Conceptos Básicos de Epidemiología")
-    st.markdown("""
-    **Epidemiología:** Ciencia que estudia la distribución y determinantes de los eventos en salud en poblaciones.
-
-    **Incidencia:** Número de casos nuevos en una población durante un periodo.
-
-    **Prevalencia:** Proporción de personas que presentan una condición de salud en un momento o periodo específico.
-
-    **Tasa:** Expresión matemática que relaciona la frecuencia de un evento con el tiempo/personas en riesgo.
-
-    **Variables:** Características observables que pueden medirse (cualitativas o cuantitativas).
-
-    **Población en riesgo:** Conjunto de individuos susceptibles al evento.
-
-    **Cohorte:** Grupo seguido en el tiempo para observar aparición de eventos.
-
-    **Casos:** Individuos que presentan la enfermedad de interés.
-
-    **Controles:** Individuos sin la enfermedad de interés.
-
-    **Error aleatorio vs sesgo:** Variabilidad por azar vs. error sistemático.
-    """)
+    st.markdown(open("contenido/conceptos_completos.md").read())
 
 with tabs[1]:
     st.header("📈 Medidas de Asociación")
-    st.markdown("""
-    **Riesgo Relativo (RR):** Comparación del riesgo de desarrollar un evento entre dos grupos.
-
-    **Odds Ratio (OR):** Comparación de las probabilidades de exposición entre casos y controles.
-
-    **Riesgo Atribuible (RA):** Diferencia entre tasas de incidencia.
-
-    **Fracción Etiológica:** Proporción de riesgo atribuible a la exposición.
-
-    **Razón de Tasas:** Comparación entre tasas de incidencia por unidad de tiempo/persona.
-
-    **NNT (Número Necesario a Tratar):** Número de pacientes a tratar para evitar un caso.
-
-    **Hazard Ratio (HR):** Comparación de tasas instantáneas en estudios de supervivencia.
-    """)
+    st.markdown(open("contenido/medidas_completas.md").read())
 
 with tabs[2]:
     st.header("📊 Diseños de Estudio Epidemiológico")
-    st.markdown("""
-    **Estudios Observacionales:**
-    - Transversales: Miden prevalencia.
-    - Cohorte: Evalúan incidencia y riesgo.
-    - Casos y controles: Evalúan asociaciones retrospectivas.
-
-    **Estudios Experimentales:**
-    - Ensayos Clínicos Aleatorizados (RCT): Intervención asignada por el investigador.
-    - Cuasiexperimentales: No hay aleatorización.
-
-    **Estudios Ecológicos:** Unidades de análisis son grupos poblacionales.
-    """)
+    st.markdown(open("contenido/disenos_completos.md").read())
 
 with tabs[3]:
     st.header("⚠️ Sesgos y Errores")
-    st.markdown("""
-    **Sesgo de Selección:** Error por la forma de incluir sujetos en el estudio.
-
-    **Sesgo de Información:** Error en la medición de variables (ej. recuerdo, observación).
-
-    **Confusión:** Asociación espuria por efecto de una tercera variable.
-
-    **Error Aleatorio:** Variabilidad por azar, no atribuible a sesgo.
-
-    **Validez interna:** Precisión de los resultados dentro del estudio.
-
-    **Validez externa:** Generalización de los hallazgos.
-    """)
+    st.markdown(open("contenido/sesgos_completos.md").read())
 
 with tabs[4]:
     st.header("📚 Glosario Interactivo A–Z")
-    glosario = {
-        "Incidencia": "Número de casos nuevos en una población durante un periodo específico.",
-        "Prevalencia": "Proporción de personas con una condición en un momento dado.",
-        "Odds Ratio": "Medida de asociación que compara las probabilidades de exposición.",
-        "Riesgo Relativo": "Comparación de riesgo entre expuestos y no expuestos.",
-        "Cohorte": "Grupo seguido en el tiempo para observar aparición de eventos.",
-        "Ensayo Clínico Aleatorizado": "Estudio experimental con asignación aleatoria de tratamiento.",
-        "Tasa de Mortalidad": "Medida de frecuencia de muertes en una población."
-    }
+    glosario = eval(open("contenido/glosario_completo.py").read())
     for termino, definicion in glosario.items():
         with st.expander(termino):
             st.write(definicion)
 
 with tabs[5]:
     st.header("🧪 Ejercicios Prácticos")
-    preguntas = [
-        {
-            "pregunta": "¿Cuál es la diferencia entre incidencia y prevalencia?",
-            "opciones": [
-                "Incidencia mide casos existentes, prevalencia los nuevos.",
-                "Incidencia es una proporción, prevalencia una tasa.",
-                "Incidencia mide casos nuevos, prevalencia los existentes.",
-                "No hay diferencia."
-            ],
-            "respuesta_correcta": "Incidencia mide casos nuevos, prevalencia los existentes."
-        },
-        {
-            "pregunta": "¿Qué medida se usa comúnmente en estudios de casos y controles?",
-            "opciones": ["Riesgo Relativo", "Odds Ratio", "Hazard Ratio", "Riesgo Atribuible"],
-            "respuesta_correcta": "Odds Ratio"
-        }
-    ]
+    preguntas = eval(open("contenido/ejercicios_completos.py").read())
     for i, q in enumerate(preguntas):
         st.subheader(f"Pregunta {i+1}")
         respuesta = st.radio(q['pregunta'], q['opciones'], key=f"q{i}")
