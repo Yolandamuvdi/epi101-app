@@ -61,30 +61,30 @@ tabs = st.tabs([
 
 with tabs[0]:
     st.header("📌 Conceptos Básicos de Epidemiología")
-    st.markdown(open("contenido/conceptos_completos.md").read())
+    st.markdown(open("contenido/conceptos_completos.md", encoding="utf-8").read())
 
 with tabs[1]:
     st.header("📈 Medidas de Asociación")
-    st.markdown(open("contenido/medidas_completas.md").read())
+    st.markdown(open("contenido/medidas_completas.md", encoding="utf-8").read())
 
 with tabs[2]:
     st.header("📊 Diseños de Estudio Epidemiológico")
-    st.markdown(open("contenido/disenos_completos.md").read())
+    st.markdown(open("contenido/disenos_completos.md", encoding="utf-8").read())
 
 with tabs[3]:
     st.header("⚠️ Sesgos y Errores")
-    st.markdown(open("contenido/sesgos_completos.md").read())
+    st.markdown(open("contenido/sesgos_completos.md", encoding="utf-8").read())
 
 with tabs[4]:
     st.header("📚 Glosario Interactivo A–Z")
-    glosario = eval(open("contenido/glosario_completo.py").read())
+    glosario = eval(open("contenido/glosario_completo.py", encoding="utf-8").read())
     for termino, definicion in glosario.items():
         with st.expander(termino):
             st.write(definicion)
 
 with tabs[5]:
     st.header("🧪 Ejercicios Prácticos")
-    preguntas = eval(open("contenido/ejercicios_completos.py").read())
+    preguntas = eval(open("contenido/ejercicios_completos.py", encoding="utf-8").read())
     for i, q in enumerate(preguntas):
         st.subheader(f"Pregunta {i+1}")
         respuesta = st.radio(q['pregunta'], q['opciones'], key=f"q{i}")
