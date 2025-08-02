@@ -91,6 +91,7 @@ RP = Prevalencia en expuestos / Prevalencia en no expuestos
 | **RP (Razón de Prevalencias)** | No mide causalidad        | No permite establecer temporalidad ni causalidad. Solo indica **asociación** en un punto del tiempo. |
 
 🧾 7. Cómo reportar medidas en publicaciones científicas
+
 Siempre reporta las medidas de asociación acompañadas de su intervalo de confianza del 95% (IC95%) y su valor p para una interpretación precisa y estadísticamente válida.
 
 📌 Ejemplo de redacción:
