@@ -1,4 +1,4 @@
-# 🧠 CONCEPTOS BÁSICOS EN EPIDEMIOLOGÍA
+
 
 ## 1. Epidemiología
 Ciencia que estudia la frecuencia, distribución y determinantes de las enfermedades en poblaciones humanas, y aplica este conocimiento al control de problemas de salud.
