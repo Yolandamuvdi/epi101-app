@@ -1,8 +1,10 @@
 MEDIDAS DE ASOCIACIÓN EN EPIDEMIOLOGÍA
 1. ¿Qué son?
+2. 
 Las medidas de asociación permiten cuantificar la relación entre una exposición (como fumar) y un desenlace (como el cáncer de pulmón).
 
 Nos ayudan a responder: ¿la exposición está relacionada con el evento? ¿Cuánto más probable es?
+
 
 2. Tipos principales
 a. Riesgo Relativo (RR)
