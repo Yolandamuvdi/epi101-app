@@ -7,10 +7,13 @@ Nos ayudan a responder: ¿la exposición está relacionada con el evento? ¿Cuá
 
 
 2. Tipos principales
+   
 a. Riesgo Relativo (RR)
+
 ¿Qué tan probable es que los expuestos desarrollen el evento comparado con los no expuestos?
 
 Fórmula:
+
 RR = Incidencia en expuestos / Incidencia en no expuestos
 
 # Interpretación del Riesgo Relativo (RR)
@@ -23,9 +26,11 @@ RR = Incidencia en expuestos / Incidencia en no expuestos
 
 
 b. Odds Ratio (OR)
+
 Se usa especialmente en estudios de casos y controles.
 
 Fórmula:
+
 OR = (a/c) / (b/d) = (a×d)/(b×c)
 
 # Interpretación del Odds Ratio (OR)
@@ -38,9 +43,11 @@ OR = (a/c) / (b/d) = (a×d)/(b×c)
 
 
 c. Razón de Prevalencias (RP)
+
 Se utiliza en estudios transversales para comparar la prevalencia del desenlace entre expuestos y no expuestos.
 
 Fórmula:
+
 RP = Prevalencia en expuestos / Prevalencia en no expuestos
 
 # Interpretación de la Razón de Prevalencias (RP)
