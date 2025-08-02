@@ -1,38 +1,50 @@
+
 import streamlit as st
 import openai
 
-# Configuración de la página
-st.set_page_config(page_title="Epidemiología 101", page_icon="🧪")
-st.title("🧠 Epidemiología 101 - Asistente educativo")
-st.markdown("🤓 Creado por Yolanda Muvdi. Aprende conceptos clave de epidemiología de forma clara y práctica.")
+st.set_page_config(page_title="Epidemiología 101", page_icon="🧪", layout="wide")
 
-# Verificación segura de la clave API
+# Estilo personalizado
+st.markdown("""
+    <style>
+    body {
+        background-color: #f4f6f9;
+    }
+    .block-container {
+        padding-top: 2rem;
+    }
+    .title {
+        font-size: 2.8em;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    .subtitle {
+        font-size: 1.2em;
+        color: #34495e;
+        margin-bottom: 2rem;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+st.markdown('<div class="title">🧠 Epidemiología 101 - Asistente educativo</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">🤓 Creado por Yolanda Muvdi. Aprende conceptos clave de epidemiología de forma clara, pro y con flow académico internacional.</div>', unsafe_allow_html=True)
+
+# Verifica que la clave esté presente
 if "OPENAI_API_KEY" in st.secrets:
     openai.api_key = st.secrets["OPENAI_API_KEY"]
     st.success("✅ Clave API detectada correctamente.")
 else:
     st.error("❌ No se encontró OPENAI_API_KEY. Ve al panel de Secrets en Streamlit Cloud y agrégala.")
-    st.stop()  # Detiene la app para evitar error
+    st.stop()
 
-# Inicializa el historial si no existe
+# Inicializa el historial
 if "messages" not in st.session_state:
     st.session_state["messages"] = [{
         "role": "system",
-        "content": """
-Eres un profesor universitario experto en epidemiología con vocación pedagógica.
-Tu tarea es explicar conceptos clave de epidemiología (tasas, medidas de asociación, diseños de estudio, sesgos, interpretación de resultados), resolver ejercicios y generar recursos educativos adaptados al nivel del usuario.
-Este GPT se llama 'Epidemiología 101' y fue creado por Yolanda Muvdi.
-Sigue estos pasos:
-1. Pregunta o identifica el nivel de conocimiento del usuario (básico, intermedio o avanzado).
-2. Explica el concepto solicitado con claridad y precisión.
-3. Incluye un ejemplo práctico.
-4. Propón una pregunta o ejercicio relacionado.
-5. Incluye glosario si se usan términos técnicos.
-6. Cita fuentes si se usan datos concretos.
-"""
+        "content": "Eres un profesor universitario experto en epidemiología con vocación pedagógica. Tu tarea es explicar conceptos clave de epidemiología (tasas, medidas de asociación, diseños de estudio, sesgos, interpretación de resultados), resolver ejercicios y generar recursos educativos adaptados al nivel del usuario. Este GPT se llama 'Epidemiología 101' y fue creado por Yolanda Muvdi."
     }]
 
-# Mostrar historial de conversación
+# Mostrar historial
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
@@ -43,7 +55,6 @@ if prompt := st.chat_input("Haz tu pregunta de epidemiología..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Generar respuesta
     with st.chat_message("assistant"):
         try:
             response = openai.ChatCompletion.create(
