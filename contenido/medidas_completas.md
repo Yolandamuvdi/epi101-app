@@ -74,15 +74,18 @@ RP = Prevalencia en expuestos / Prevalencia en no expuestos
 | Interpretación fácil | Sí                      | Menos intuitiva si OR > 2 o < 0.5 | Similar al RR              |
 | ¿Estima causalidad?  | Con diseño adecuado, sí | No directamente                   | No directamente            |
 
-6. Limitaciones de las medidas
-RR: Solo se puede calcular si se conoce el tiempo de seguimiento y el total en riesgo.
+🚫 6. Limitaciones de las medidas de asociación
+| Medida                         | Limitación principal      | Detalle                                                                                              |
+| ------------------------------ | ------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **RR (Riesgo Relativo)**       | Requiere seguimiento      | Solo se puede calcular si se conoce el **tiempo de seguimiento** y la **población en riesgo**.       |
+| **OR (Odds Ratio)**            | Sobreestima la asociación | Puede **sobreestimar** la fuerza de asociación cuando el evento es **frecuente** (>10%).             |
+| **RP (Razón de Prevalencias)** | No mide causalidad        | No permite establecer temporalidad ni causalidad. Solo indica **asociación** en un punto del tiempo. |
 
-OR: Puede sobreestimar la fuerza de asociación si el evento es muy frecuente.
+🧾 7. Cómo reportar medidas en publicaciones científicas
+Siempre reporta las medidas de asociación acompañadas de su intervalo de confianza del 95% (IC95%) y su valor p para una interpretación precisa y estadísticamente válida.
 
-RP: No indica causalidad ni permite inferencias temporales.
+📌 Ejemplo de redacción:
 
-🎯 7. Cómo reportarlas (en publicaciones científicas)
-"Se encontró que el riesgo de enfermedad fue 2 veces mayor en los expuestos comparado con los no expuestos (RR=2.0, IC95%: 1.2–3.3, p<0.01)."
+"Se encontró que el riesgo de enfermedad fue 2 veces mayor en los expuestos comparado con los no expuestos (RR = 2.0; IC95%: 1.2–3.3; p < 0.01)."
 
-TIP: Siempre reporta con IC95% y valor p para interpretación precisa.
-
+✅ Usa un lenguaje claro, cuantifica el efecto y especifica la precisión del estimador.
