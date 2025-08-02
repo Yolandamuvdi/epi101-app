@@ -48,9 +48,11 @@ Total	a + c	b + d	N
 RR = (a / (a + b)) / (c / (c + d))
 OR = (a × d) / (b × c)
 
-4. ¿Cómo elegir la medida adecuada?
-Diseño del estudio	Medida recomendada
-Cohorte	Riesgo Relativo (RR)
-Casos y controles	Odds Ratio (OR)
-Transversal	Razón de Prevalencias (RP)
+# ¿Cómo elegir la medida adecuada?
+
+| Diseño del estudio | Medida recomendada         |
+|--------------------|----------------------------|
+| Cohorte            | Riesgo Relativo (RR)       |
+| Casos y controles  | Odds Ratio (OR)            |
+| Transversal        | Razón de Prevalencias (RP) |
 
