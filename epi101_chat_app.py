@@ -245,4 +245,3 @@ with tabs[8]:
                 st.session_state.messages.append({"role": "assistant", "content": reply})
             except Exception as e:
                 st.error(f"Error al comunicarse con OpenAI: {e}")
-
