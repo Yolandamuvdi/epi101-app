@@ -1,4 +1,4 @@
-⚠️ SESGOS Y ERRORES EN EPIDEMIOLOGÍA
+
 
 El sesgo es un error sistemático que distorsiona la estimación de la asociación entre exposición y desenlace. Afecta la validez interna del estudio y puede llevar a conclusiones incorrectas.
 
