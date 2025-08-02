@@ -1,4 +1,4 @@
-contenido/conceptos_completos.md
+contenido/conceptosbasicos.md
 contenido/medidas_completas.md
 contenido/disenos_completos.md
 contenido/sesgos_completos.md
