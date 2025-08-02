@@ -104,72 +104,62 @@ Proceso evolutivo de una enfermedad sin intervención:
 - **Secundaria:** Detectar precozmente (tamizaje).
 - **Terciaria:** Limitar daño y rehabilitar.
 
-21. Cadena epidemiológica
+## 21. Cadena epidemiológica
 Modelo que describe el proceso de transmisión de una enfermedad infecciosa. Incluye:
-
-Agente
-
-Reservorio
-
-Puerta de salida
-
-Modo de transmisión
-
-Puerta de entrada
-
-Huésped susceptible
+- Agente
+- Reservorio
+- Puerta de salida
+- Modo de transmisión
+- Puerta de entrada
+- Huésped susceptible
 
 🔗 Interrumpir cualquier eslabón ayuda a controlar la propagación.
 
-22. Niveles de prevención
-Complementa el concepto de prevención:
+## 22. Agente
+Factor (biológico, químico o físico) cuya presencia o ausencia puede causar una enfermedad.
 
-Cuaternaria: Evitar intervenciones médicas innecesarias o dañinas.
+📌 Ejemplo: virus, bacterias, toxinas, calor extremo.
 
-🩺 Ejemplo: Evitar sobrediagnósticos o tratamientos innecesarios en cribados masivos.
+## 23. Huésped
+Organismo (persona o animal) que puede desarrollar una enfermedad tras la exposición a un agente.
 
-23. Carga de enfermedad
-Mide el impacto de enfermedades y muertes en una población.
+🧬 Sus características individuales influyen en la susceptibilidad (edad, genética, inmunidad, estado nutricional, etc.).
 
-🧮 Se expresa en AVISA (Años de Vida Saludable Perdidos) o DALYs (Disability-Adjusted Life Years), combinando mortalidad y morbilidad.
+## 24. Medio ambiente
+Conjunto de condiciones externas que influyen en la transmisión de enfermedades.
 
-24. Tasa ajustada
-Tasa que ha sido modificada para eliminar el efecto de una variable de confusión (como la edad).
+🌍 Incluye factores físicos, biológicos, sociales y culturales.
 
-📊 Muy útil para comparar tasas entre poblaciones con estructuras distintas.
+## 25. Vigilancia activa y pasiva
+- **Activa**: las autoridades buscan activamente casos (ej. visitas domiciliarias, llamadas).
+- **Pasiva**: se espera que los casos sean notificados por los servicios de salud.
 
-25. Validez y confiabilidad
-Validez: Qué tan bien una medida evalúa lo que pretende medir.
+📌 La vigilancia activa es más costosa, pero más sensible.
 
-Confiabilidad: Consistencia de una medida cuando se repite.
+## 26. Periodo de incubación
+Tiempo entre la exposición al agente y la aparición de los primeros síntomas.
 
-📌 Ejemplo: Un test de VIH debe ser válido (detecta VIH) y confiable (consistente en repeticiones).
+🕒 Es clave para establecer ventanas de exposición y controlar brotes.
 
-26. Sensibilidad y especificidad
-Características de una prueba diagnóstica:
+## 27. Periodo de transmisibilidad
+Tiempo durante el cual un individuo infectado puede transmitir la enfermedad a otros.
 
-Sensibilidad: Capacidad para detectar verdaderos positivos.
+🚨 No siempre coincide con la fase sintomática.
 
-Especificidad: Capacidad para identificar verdaderos negativos.
+## 28. Endemia
+Presencia constante de una enfermedad en una región o población determinada.
 
-✅ Se relacionan con la precisión del tamizaje o diagnóstico.
+📍 Ejemplo: malaria en ciertas zonas tropicales.
 
-27. Tasa de ataque
-Proporción de personas expuestas que enferman en un periodo corto, muy usada en brotes.
+## 29. Caso índice
+Primer caso identificado de una enfermedad en una población o brote.
 
-📍 Ejemplo: En una intoxicación alimentaria, mide cuántos enferman tras consumir el alimento.
+🧩 Es útil para rastrear el origen y entender la propagación.
 
-28. R0 (número reproductivo básico)
-Número promedio de casos secundarios generados por un caso primario en una población susceptible.
+## 30. Tasa de ataque
+Medida de incidencia usada comúnmente en brotes.
 
-📈 Si R0 > 1 → la enfermedad puede propagarse.
+**Fórmula:**
+Tasa de ataque = (número de casos nuevos / población expuesta) × 100
 
-29. Equidad en salud
-Principio que reconoce que todos deben tener la misma oportunidad de alcanzar su máximo potencial de salud.
-
-⚖️ Implica eliminar desigualdades injustas y evitables.
-
-30. One Health
-Enfoque que reconoce la conexión entre la salud humana, animal y ambiental.
-
-🌍 Fundamental para prevenir zoonosis (como COVID-19), resistencia antimicrobiana, etc.
+📌 Suele expresarse como porcentaje.
