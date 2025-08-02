@@ -2,6 +2,9 @@ import streamlit as st
 import openai
 import matplotlib.pyplot as plt
 import pandas as pd
+import importlib.util
+import sys
+import os
 
 st.set_page_config(page_title="Epidemiología 101", page_icon="🧪", layout="wide")
 
@@ -46,6 +49,23 @@ else:
     st.error("❌ No se encontró OPENAI_API_KEY. Ve al panel de Secrets en Streamlit Cloud y agrégala.")
     st.stop()
 
+def cargar_md(ruta):
+    try:
+        with open(ruta, encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        return f"Error cargando archivo: {e}"
+
+def cargar_py_variable(path_py, var_name):
+    """
+    Carga una variable de un archivo .py sin eval, usando exec en un dict seguro.
+    """
+    namespace = {}
+    with open(path_py, "r", encoding="utf-8") as f:
+        code = f.read()
+    exec(code, namespace)
+    return namespace.get(var_name, None)
+
 # Pestañas de navegación
 tabs = st.tabs([
     "Conceptos Básicos",
@@ -61,38 +81,44 @@ tabs = st.tabs([
 
 with tabs[0]:
     st.header("📌 Conceptos Básicos de Epidemiología")
-    st.markdown(open("contenido/conceptos_completos.md", encoding="utf-8").read())
+    st.markdown(cargar_md("contenido/conceptosbasicos.md"))
 
 with tabs[1]:
     st.header("📈 Medidas de Asociación")
-    st.markdown(open("contenido/medidas_completas.md", encoding="utf-8").read())
+    st.markdown(cargar_md("contenido/medidas_completas.md"))
 
 with tabs[2]:
     st.header("📊 Diseños de Estudio Epidemiológico")
-    st.markdown(open("contenido/disenos_completos.md", encoding="utf-8").read())
+    st.markdown(cargar_md("contenido/disenos_completos.md"))
 
 with tabs[3]:
     st.header("⚠️ Sesgos y Errores")
-    st.markdown(open("contenido/sesgos_completos.md", encoding="utf-8").read())
+    st.markdown(cargar_md("contenido/sesgos_completos.md"))
 
 with tabs[4]:
     st.header("📚 Glosario Interactivo A–Z")
-    glosario = eval(open("contenido/glosario_completo.py", encoding="utf-8").read())
-    for termino, definicion in glosario.items():
-        with st.expander(termino):
-            st.write(definicion)
+    glosario = cargar_py_variable("contenido/glosario_completo.py", "glosario")
+    if glosario is None:
+        st.error("No se pudo cargar el glosario.")
+    else:
+        for termino, definicion in glosario.items():
+            with st.expander(termino):
+                st.write(definicion)
 
 with tabs[5]:
     st.header("🧪 Ejercicios Prácticos")
-    preguntas = eval(open("contenido/ejercicios_completos.py", encoding="utf-8").read())
-    for i, q in enumerate(preguntas):
-        st.subheader(f"Pregunta {i+1}")
-        respuesta = st.radio(q['pregunta'], q['opciones'], key=f"q{i}")
-        if st.button(f"Verificar {i+1}"):
-            if respuesta == q['respuesta_correcta']:
-                st.success("✅ Correcto")
-            else:
-                st.error(f"❌ Incorrecto. Respuesta correcta: {q['respuesta_correcta']}")
+    preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
+    if preguntas is None:
+        st.error("No se pudieron cargar los ejercicios.")
+    else:
+        for i, q in enumerate(preguntas):
+            st.subheader(f"Pregunta {i+1}")
+            respuesta = st.radio(q['pregunta'], q['opciones'], key=f"q{i}")
+            if st.button(f"Verificar {i+1}", key=f"btn_{i}"):
+                if respuesta == q['respuesta_correcta']:
+                    st.success("✅ Correcto")
+                else:
+                    st.error(f"❌ Incorrecto. Respuesta correcta: {q['respuesta_correcta']}")
 
 with tabs[6]:
     st.header("📊 Tablas 2x2 y Cálculos Epidemiológicos")
@@ -109,10 +135,14 @@ with tabs[6]:
             orr = (a * d) / (b * c) if b > 0 and c > 0 else None
             if rr:
                 st.success(f"RR: {rr:.2f}")
+            else:
+                st.warning("No se puede calcular RR con los datos proporcionados.")
             if orr:
                 st.success(f"OR: {orr:.2f}")
-        except:
-            st.error("Error en los cálculos")
+            else:
+                st.warning("No se puede calcular OR con los datos proporcionados.")
+        except Exception as e:
+            st.error(f"Error en los cálculos: {e}")
 
 with tabs[7]:
     st.header("📈 Visualización de Datos")
