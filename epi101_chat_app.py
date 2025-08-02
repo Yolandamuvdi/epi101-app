@@ -1,5 +1,7 @@
 import streamlit as st
 import openai
+import matplotlib.pyplot as plt
+import pandas as pd
 
 st.set_page_config(page_title="Epidemiología 101", page_icon="🧪", layout="wide")
 
@@ -11,7 +13,6 @@ st.markdown("""
         color: #1b2838;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-
     .block-container {
         padding: 2rem 4rem 3rem 4rem;
         max-width: 1100px;
@@ -20,14 +21,12 @@ st.markdown("""
         border-radius: 12px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
-
     .title {
         font-size: 3rem;
         font-weight: 900;
         color: #0d3b66;
         margin-bottom: 0.2rem;
     }
-
     .subtitle {
         font-size: 1.3rem;
         color: #3e5c76;
@@ -37,16 +36,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Cabecera
-descripcion = (
-    "Desarrollado por Yolanda Muvdi, Enfermera Epidemióloga. Plataforma de formación en conceptos clave de epidemiología y salud pública, "
-    "con enfoque pedagógico y base científica sólida."
-)
-
 st.markdown('<div class="title">🧠 Epidemiología 101 - Asistente educativo</div>', unsafe_allow_html=True)
-st.markdown(f'<div class="subtitle">{descripcion}</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Plataforma integral para el aprendizaje de conceptos clave de epidemiología, salud pública y análisis de datos, creada por Yolanda Muvdi.</div>', unsafe_allow_html=True)
 
-# Verificación de API
 if "OPENAI_API_KEY" in st.secrets:
     openai.api_key = st.secrets["OPENAI_API_KEY"]
     st.success("✅ Clave API detectada correctamente.")
@@ -54,7 +46,7 @@ else:
     st.error("❌ No se encontró OPENAI_API_KEY. Ve al panel de Secrets en Streamlit Cloud y agrégala.")
     st.stop()
 
-# Pestañas
+# Pestañas de navegación
 tabs = st.tabs([
     "Conceptos Básicos",
     "Medidas de Asociación",
@@ -63,75 +55,129 @@ tabs = st.tabs([
     "Glosario Interactivo",
     "Ejercicios Prácticos",
     "Tablas 2x2 y Cálculos",
+    "Visualización de Datos",
     "Chat"
 ])
 
+# Contenidos directamente en el código
 with tabs[0]:
     st.header("📌 Conceptos Básicos de Epidemiología")
     st.markdown("""
-    - **Epidemiología:** Ciencia que estudia la distribución y los determinantes de los eventos de salud en poblaciones.
-    - **Población:** Conjunto de individuos que comparten una característica en común.
-    - **Evento de interés:** Enfermedad, condición o suceso relacionado con la salud.
-    - **Frecuencia:** Cuántas veces ocurre un evento en un grupo.
-    - **Prevalencia:** Proporción de personas que tienen una enfermedad en un momento dado.
-    - **Incidencia:** Número de casos nuevos de una enfermedad en un periodo específico.
+    **Epidemiología:** Ciencia que estudia la distribución y determinantes de los eventos en salud en poblaciones.
+
+    **Incidencia:** Número de casos nuevos en una población durante un periodo.
+
+    **Prevalencia:** Proporción de personas que presentan una condición de salud en un momento o periodo específico.
+
+    **Tasa:** Expresión matemática que relaciona la frecuencia de un evento con el tiempo/personas en riesgo.
+
+    **Variables:** Características observables que pueden medirse (cualitativas o cuantitativas).
+
+    **Población en riesgo:** Conjunto de individuos susceptibles al evento.
+
+    **Cohorte:** Grupo seguido en el tiempo para observar aparición de eventos.
+
+    **Casos:** Individuos que presentan la enfermedad de interés.
+
+    **Controles:** Individuos sin la enfermedad de interés.
+
+    **Error aleatorio vs sesgo:** Variabilidad por azar vs. error sistemático.
     """)
 
 with tabs[1]:
     st.header("📈 Medidas de Asociación")
     st.markdown("""
-    - **Riesgo Relativo (RR):** Compara el riesgo de enfermar entre dos grupos.
-    - **Razón de Momios (OR):** Se usa en estudios de casos y controles.
-    - **Reducción del Riesgo Absoluto (RRA):** Diferencia entre dos tasas de incidencia.
-    - **Número Necesario a Tratar (NNT):** Cuántas personas necesitas tratar para prevenir un caso.
+    **Riesgo Relativo (RR):** Comparación del riesgo de desarrollar un evento entre dos grupos.
+
+    **Odds Ratio (OR):** Comparación de las probabilidades de exposición entre casos y controles.
+
+    **Riesgo Atribuible (RA):** Diferencia entre tasas de incidencia.
+
+    **Fracción Etiológica:** Proporción de riesgo atribuible a la exposición.
+
+    **Razón de Tasas:** Comparación entre tasas de incidencia por unidad de tiempo/persona.
+
+    **NNT (Número Necesario a Tratar):** Número de pacientes a tratar para evitar un caso.
+
+    **Hazard Ratio (HR):** Comparación de tasas instantáneas en estudios de supervivencia.
     """)
 
 with tabs[2]:
     st.header("📊 Diseños de Estudio Epidemiológico")
     st.markdown("""
-    - **Estudio Transversal:** Mide exposición y enfermedad al mismo tiempo.
-    - **Casos y Controles:** Compara un grupo con la enfermedad vs. uno sin ella. Calcula OR.
-    - **Cohorte:** Sigue a personas expuestas y no expuestas. Calcula RR.
-    - **Ensayo Clínico:** Intervención para probar tratamientos. Alta validez interna.
+    **Estudios Observacionales:**
+    - Transversales: Miden prevalencia.
+    - Cohorte: Evalúan incidencia y riesgo.
+    - Casos y controles: Evalúan asociaciones retrospectivas.
+
+    **Estudios Experimentales:**
+    - Ensayos Clínicos Aleatorizados (RCT): Intervención asignada por el investigador.
+    - Cuasiexperimentales: No hay aleatorización.
+
+    **Estudios Ecológicos:** Unidades de análisis son grupos poblacionales.
     """)
 
 with tabs[3]:
     st.header("⚠️ Sesgos y Errores")
     st.markdown("""
-    - **Sesgo:** Error sistemático que afecta la validez de los resultados.
-    - **Sesgo de selección:** Diferencias entre quienes entran o no al estudio.
-    - **Sesgo de información:** Errores en la medición.
-    - **Confusión:** Otro factor afecta la asociación.
-    - **Errores aleatorios:** Se minimizan aumentando el tamaño de muestra.
+    **Sesgo de Selección:** Error por la forma de incluir sujetos en el estudio.
+
+    **Sesgo de Información:** Error en la medición de variables (ej. recuerdo, observación).
+
+    **Confusión:** Asociación espuria por efecto de una tercera variable.
+
+    **Error Aleatorio:** Variabilidad por azar, no atribuible a sesgo.
+
+    **Validez interna:** Precisión de los resultados dentro del estudio.
+
+    **Validez externa:** Generalización de los hallazgos.
     """)
 
 with tabs[4]:
-    st.header("📚 Glosario Interactivo")
-    for termino, definicion in {
-        "Incidencia": "Número de casos nuevos en una población en riesgo durante un periodo de tiempo.",
-        "Prevalencia": "Proporción de individuos con la enfermedad en un momento o periodo determinado.",
-        "Riesgo relativo": "Comparación del riesgo entre dos grupos.",
-        "Odds ratio": "Medida de asociación utilizada en estudios de casos y controles.",
-        "Tasa de mortalidad": "Número de muertes por cada unidad de población en un tiempo determinado."
-    }.items():
+    st.header("📚 Glosario Interactivo A–Z")
+    glosario = {
+        "Incidencia": "Número de casos nuevos en una población durante un periodo específico.",
+        "Prevalencia": "Proporción de personas con una condición en un momento dado.",
+        "Odds Ratio": "Medida de asociación que compara las probabilidades de exposición.",
+        "Riesgo Relativo": "Comparación de riesgo entre expuestos y no expuestos.",
+        "Cohorte": "Grupo seguido en el tiempo para observar aparición de eventos.",
+        "Ensayo Clínico Aleatorizado": "Estudio experimental con asignación aleatoria de tratamiento.",
+        "Tasa de Mortalidad": "Medida de frecuencia de muertes en una población."
+    }
+    for termino, definicion in glosario.items():
         with st.expander(termino):
             st.write(definicion)
 
 with tabs[5]:
     st.header("🧪 Ejercicios Prácticos")
-    st.subheader("Pregunta 1")
-    pregunta = st.radio("¿Cuál de las siguientes es una medida de frecuencia?", 
-                        ["Odds ratio", "Riesgo relativo", "Prevalencia", "Sensibilidad"])
-    if st.button("Verificar respuesta"):
-        if pregunta == "Prevalencia":
-            st.success("✅ ¡Correcto! La prevalencia es una medida de frecuencia.")
-        else:
-            st.error("❌ Incorrecto. La respuesta correcta es 'Prevalencia'.")
+    preguntas = [
+        {
+            "pregunta": "¿Cuál es la diferencia entre incidencia y prevalencia?",
+            "opciones": [
+                "Incidencia mide casos existentes, prevalencia los nuevos.",
+                "Incidencia es una proporción, prevalencia una tasa.",
+                "Incidencia mide casos nuevos, prevalencia los existentes.",
+                "No hay diferencia."
+            ],
+            "respuesta_correcta": "Incidencia mide casos nuevos, prevalencia los existentes."
+        },
+        {
+            "pregunta": "¿Qué medida se usa comúnmente en estudios de casos y controles?",
+            "opciones": ["Riesgo Relativo", "Odds Ratio", "Hazard Ratio", "Riesgo Atribuible"],
+            "respuesta_correcta": "Odds Ratio"
+        }
+    ]
+    for i, q in enumerate(preguntas):
+        st.subheader(f"Pregunta {i+1}")
+        respuesta = st.radio(q['pregunta'], q['opciones'], key=f"q{i}")
+        if st.button(f"Verificar {i+1}"):
+            if respuesta == q['respuesta_correcta']:
+                st.success("✅ Correcto")
+            else:
+                st.error(f"❌ Incorrecto. Respuesta correcta: {q['respuesta_correcta']}")
 
 with tabs[6]:
     st.header("📊 Tablas 2x2 y Cálculos Epidemiológicos")
-    st.markdown("Completa los datos de la tabla 2x2:")
-
     col1, col2 = st.columns(2)
     with col1:
         a = st.number_input("Casos con exposición (a)", min_value=0, step=1)
@@ -139,45 +185,55 @@ with tabs[6]:
     with col2:
         c = st.number_input("Controles con exposición (c)", min_value=0, step=1)
         d = st.number_input("Controles sin exposición (d)", min_value=0, step=1)
-
     if st.button("Calcular RR y OR"):
         try:
             rr = (a / (a + b)) / (c / (c + d)) if (a + b) > 0 and (c + d) > 0 else None
             orr = (a * d) / (b * c) if b > 0 and c > 0 else None
             if rr:
-                st.success(f"✅ Riesgo Relativo (RR): {rr:.2f}")
-            else:
-                st.warning("⚠️ No se pudo calcular el RR (división por cero)")
-
+                st.success(f"RR: {rr:.2f}")
             if orr:
-                st.success(f"✅ Odds Ratio (OR): {orr:.2f}")
-            else:
-                st.warning("⚠️ No se pudo calcular el OR (división por cero)")
+                st.success(f"OR: {orr:.2f}")
         except:
-            st.error("❌ Ocurrió un error en los cálculos")
+            st.error("Error en los cálculos")
 
 with tabs[7]:
-    st.header("💬 Chat con Epidemiología 101")
+    st.header("📈 Visualización de Datos")
+    st.markdown("Carga tus datos en formato CSV para graficar.")
+    uploaded_file = st.file_uploader("Sube un archivo CSV", type=["csv"])
+    if uploaded_file is not None:
+        df = pd.read_csv(uploaded_file)
+        st.dataframe(df)
+        col_x = st.selectbox("Selecciona variable para eje X", df.columns)
+        col_y = st.selectbox("Selecciona variable para eje Y", df.columns)
+        tipo = st.selectbox("Tipo de gráfico", ["Barras", "Líneas", "Dispersión"])
 
+        fig, ax = plt.subplots()
+        if tipo == "Barras":
+            ax.bar(df[col_x], df[col_y])
+        elif tipo == "Líneas":
+            ax.plot(df[col_x], df[col_y])
+        elif tipo == "Dispersión":
+            ax.scatter(df[col_x], df[col_y])
+
+        ax.set_xlabel(col_x)
+        ax.set_ylabel(col_y)
+        ax.set_title(f"{tipo} entre {col_x} y {col_y}")
+        st.pyplot(fig)
+
+with tabs[8]:
+    st.header("💬 Chat con Epidemiología 101")
     if "messages" not in st.session_state:
         st.session_state["messages"] = [{
             "role": "system",
-            "content": (
-                "Eres un profesor universitario experto en epidemiología con vocación pedagógica. "
-                "Tu tarea es explicar conceptos clave de epidemiología (tasas, medidas de asociación, "
-                "diseños de estudio, sesgos, interpretación de resultados), resolver ejercicios y generar recursos educativos."
-            )
+            "content": "Eres un docente experto en epidemiología. Explica conceptos y resuelve preguntas con claridad y evidencia."
         }]
-
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
-
     if prompt := st.chat_input("Haz tu pregunta de epidemiología..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
-
         with st.chat_message("assistant"):
             try:
                 response = openai.chat.completions.create(
