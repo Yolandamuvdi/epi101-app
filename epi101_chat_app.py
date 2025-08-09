@@ -12,28 +12,43 @@ import google.generativeai as genai
 # =========================================
 # CONFIGURACIÓN DE GEMINI
 # =========================================
-api_key = st.secrets.get("GEMINI_API_KEY", None)
+api_key = st.secrets.get("GEMINI_API_KEY")
 if not api_key:
-    st.error("❌ No se encontró la clave GEMINI_API_KEY en secrets.toml")
+    st.error("❌ No se encontró la clave GEMINI_API_KEY en secrets.toml. El chat no funcionará.")
 else:
     genai.configure(api_key=api_key)
 
-def chat_with_gemini(prompt):
-    """Función para enviar prompts a Gemini y recibir respuesta."""
+def chat_with_gemini(prompt: str) -> str:
+    """
+    Envía un prompt a Gemini y devuelve la respuesta en texto plano.
+    Si ocurre un error, lo devuelve como mensaje.
+    """
+    if not api_key:
+        return "⚠ No se encontró la clave de API de Gemini."
     try:
         model = genai.GenerativeModel("gemini-pro")
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
         return f"⚠ Error en la conexión con Gemini: {e}"
-# Intentar importar SciPy para pruebas estadísticas
+
+# =========================================
+# IMPORTAR LIBRERÍAS PARA PRUEBAS ESTADÍSTICAS
+# =========================================
 try:
     from scipy.stats import chi2_contingency, fisher_exact
     SCIPY_AVAILABLE = True
-except Exception:
+except ImportError:
     SCIPY_AVAILABLE = False
 
-st.set_page_config(page_title="Epidemiología 101", page_icon="🧪", layout="wide")
+# =========================================
+# CONFIGURACIÓN DE LA PÁGINA STREAMLIT
+# =========================================
+st.set_page_config(
+    page_title="Epidemiología 101",
+    page_icon="🧪",
+    layout="wide"
+)
 
 # Estilo visual personalizado
 st.markdown("""
