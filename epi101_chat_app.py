@@ -382,7 +382,13 @@ def main():
                 st.session_state.nivel_gamificacion = nivel
                 preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
                 if preguntas:
-                    st.session_state.preguntas_gamificacion = filtrar_preguntas_por_nivel(preguntas, nivel)
+                    # Mezclar opciones para cada pregunta y guardar
+                    preguntas_filtradas = filtrar_preguntas_por_nivel(preguntas, nivel)
+                    for p in preguntas_filtradas:
+                        opciones = p["opciones"].copy()
+                        random.shuffle(opciones)
+                        p["opciones_shuffled"] = opciones
+                    st.session_state.preguntas_gamificacion = preguntas_filtradas
                 else:
                     st.error("No hay preguntas disponibles.")
                 st.session_state.index_pregunta = 0
@@ -395,13 +401,15 @@ def main():
             if idx < len(preguntas):
                 p = preguntas[idx]
                 st.subheader(f"Pregunta {idx+1} de {len(preguntas)} (Nivel {st.session_state.nivel_gamificacion})")
-                respuesta = st.radio(p["pregunta"], p["opciones"], key=f"gam_preg_{idx}")
+                respuesta = st.radio(p["pregunta"], p["opciones_shuffled"], key=f"gam_preg_{idx}")
                 if st.button("Responder", key=f"gam_btn_{idx}"):
-                    if respuesta == p["respuesta_correcta"]:
+                    correcta = p["respuesta_correcta"]
+                    # Comparar respuesta con correcta teniendo en cuenta opciones barajadas
+                    if respuesta == correcta:
                         st.success("✅ Correcto!")
                         st.session_state.respuestas_correctas += 1
                     else:
-                        st.error(f"❌ Incorrecto. Respuesta correcta: {p['respuesta_correcta']}")
+                        st.error(f"❌ Incorrecto. Respuesta correcta: {correcta}")
                     st.session_state.index_pregunta += 1
 
             else:
