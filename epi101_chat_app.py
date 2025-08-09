@@ -1,6 +1,5 @@
 # epi101_chat_app.py
 import streamlit as st
-import openai
 import matplotlib.pyplot as plt
 import pandas as pd
 import importlib.util
@@ -9,15 +8,24 @@ import os
 import numpy as np
 import math
 import google.generativeai as genai
+
 # =========================================
 # CONFIGURACIÓN DE GEMINI
 # =========================================
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+api_key = st.secrets.get("GEMINI_API_KEY", None)
+if not api_key:
+    st.error("❌ No se encontró la clave GEMINI_API_KEY en secrets.toml")
+else:
+    genai.configure(api_key=api_key)
 
 def chat_with_gemini(prompt):
-    model = genai.GenerativeModel("gemini-pro")
-    response = model.generate_content(prompt)
-    return response.text
+    """Función para enviar prompts a Gemini y recibir respuesta."""
+    try:
+        model = genai.GenerativeModel("gemini-pro")
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"⚠ Error en la conexión con Gemini: {e}"
 # Intentar importar SciPy para pruebas estadísticas
 try:
     from scipy.stats import chi2_contingency, fisher_exact
