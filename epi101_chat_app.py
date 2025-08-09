@@ -351,97 +351,105 @@ def calcular_medidas(a, b, c, d):
     se_rd = math.sqrt((inc_exp*(1-inc_exp)/(a_adj+b_adj)) + (inc_noexp*(1-inc_noexp)/(c_adj+d_adj)))
     ci95_rd = (rd - 1.96*se_rd, rd + 1.96*se_rd)
     rae = rd
-    fae = (rae/inc_exp) if inc_exp != 0 else None
-    pexp = (a + b) / (a + b + c + d)
-    rap = pexp * rd
-    ipop = (a + c) / (a + b + c + d) if (a + b + c + d) > 0 else None
-    fap = (rap / ipop) if (ipop is not None and ipop != 0) else None
-    nnt = None if rd == 0 else 1 / abs(rd)
+    fae = (rae/inc_exp) if inc_exp > 0 else np.nan
+    fap = (rae / inc_noexp) if inc_noexp > 0 else np.nan
 
-    # Pruebas estadísticas si scipy disponible
-    chi2, p_chi2, p_fisher = None, None, None
+    # Cálculo p-valor de asociación (Chi2 o Fisher)
     if SCIPY_AVAILABLE:
-        tabla_chi = np.array([[a, b], [c, d]])
+        tabla = np.array([[a, b], [c, d]])
         try:
-            chi2, p_chi2, _, ex = chi2_contingency(tabla_chi)
-            if (ex < 5).any():
-                _, p_fisher = fisher_exact(tabla_chi)
+            chi2, p_val, _, _ = chi2_contingency(tabla)
         except Exception:
-            pass
+            p_val = np.nan
+        # Fisher exact solo si tabla pequeña o Chi2 inválido
+        if p_val > 0.05 and np.min(tabla) < 5:
+            try:
+                _, p_val_fisher = fisher_exact(tabla)
+                p_val = p_val_fisher
+            except Exception:
+                pass
+    else:
+        p_val = np.nan
 
     # Alertas y recomendaciones
-    total = a+b+c+d
     alertas = []
-    if total < 30:
-        alertas.append("⚠️ Tamaño muestral total pequeño (<30). Resultados con poca potencia estadística.")
     if corr:
-        alertas.append("⚠️ Se aplicó corrección Haldane-Anscombe por ceros en la tabla.")
-    if p_chi2 is not None and p_chi2 < 0.05:
-        alertas.append(f"✅ Asociación estadísticamente significativa (Chi2 p={p_chi2:.3f}).")
-    if p_fisher is not None and p_fisher < 0.05:
-        alertas.append(f"✅ Asociación significativa (Test exacto de Fisher p={p_fisher:.3f}).")
+        alertas.append("Se aplicó corrección de Haldane-Anscombe por valores cero en tabla.")
+    if np.isnan(rr) or np.isnan(orr):
+        alertas.append("Algunas medidas no pudieron calcularse correctamente por división por cero o datos insuficientes.")
+    if p_val < 0.05:
+        alertas.append("La asociación es estadísticamente significativa (p < 0.05).")
+    else:
+        alertas.append("La asociación no es estadísticamente significativa (p >= 0.05).")
 
-    return {
-        "rr": rr, "ci95_rr": ci95_rr,
-        "or": orr, "ci95_or": ci95_or,
-        "rd": rd, "ci95_rd": ci95_rd,
-        "rae": rae, "fae": fae,
-        "rap": rap, "fap": fap,
-        "nnt": nnt,
-        "chi2": chi2, "p_chi2": p_chi2,
-        "p_fisher": p_fisher,
-        "alertas": alertas
+    # Análisis de sensibilidad (opcional)
+    analisis_sensibilidad = {}
+    if not corr:
+        analisis_sensibilidad["sin_correccion"] = True
+    else:
+        analisis_sensibilidad["sin_correccion"] = False
+
+    # Empaquetar resultados
+    resultados = {
+        "RR": rr,
+        "IC95_RR": ci95_rr,
+        "OR": orr,
+        "IC95_OR": ci95_or,
+        "RD": rd,
+        "IC95_RD": ci95_rd,
+        "RAE": rae,
+        "FAE": fae,
+        "FAP": fap,
+        "p_val": p_val,
+        "alertas": alertas,
+        "analisis_sensibilidad": analisis_sensibilidad
     }
+    return resultados
 
 
-def interpretar_medidas(medidas):
-    """Texto explicativo para interpretación básica de medidas epidemiológicas."""
-    textos = []
-    rr = medidas["rr"]
-    orr = medidas["or"]
-    rd = medidas["rd"]
+def mostrar_resultados_tabla(resultados):
+    """Muestra tabla resumen y alertas."""
+    if resultados is None:
+        st.warning("No hay resultados para mostrar.")
+        return
 
-    if rr > 1:
-        textos.append(f"El Riesgo Relativo (RR) > 1 indica mayor riesgo en expuestos (RR={rr:.2f}).")
-    elif rr < 1:
-        textos.append(f"El RR < 1 sugiere un efecto protector (RR={rr:.2f}).")
-    else:
-        textos.append("RR = 1 no indica asociación.")
+    st.subheader("Resultados principales")
+    data = {
+        "Medida": ["Riesgo Relativo (RR)", "Odds Ratio (OR)", "Diferencia de Riesgos (RD)", "Riesgo atribuible en expuesto (RAE)",
+                   "Fracción atribuible en expuesto (FAE)", "Fracción atribuible en población (FAP)", "Valor p (Asociación)"],
+        "Valor": [resultados["RR"], resultados["OR"], resultados["RD"], resultados["RAE"], resultados["FAE"], resultados["FAP"], resultados["p_val"]],
+        "IC 95%": [f"{resultados['IC95_RR'][0]:.3f} - {resultados['IC95_RR'][1]:.3f}" if all(np.isfinite(resultados['IC95_RR'])) else "N/A",
+                   f"{resultados['IC95_OR'][0]:.3f} - {resultados['IC95_OR'][1]:.3f}" if all(np.isfinite(resultados['IC95_OR'])) else "N/A",
+                   f"{resultados['IC95_RD'][0]:.3f} - {resultados['IC95_RD'][1]:.3f}" if all(np.isfinite(resultados['IC95_RD'])) else "N/A",
+                   "-", "-", "-", "-"]
+    }
+    df = pd.DataFrame(data)
+    st.table(df)
 
-    if orr > 1:
-        textos.append(f"La Odds Ratio (OR) > 1 indica asociación positiva (OR={orr:.2f}).")
-    elif orr < 1:
-        textos.append(f"La OR < 1 indica posible efecto protector (OR={orr:.2f}).")
-    else:
-        textos.append("OR = 1 no indica asociación.")
+    st.subheader("Alertas y recomendaciones")
+    for alerta in resultados.get("alertas", []):
+        st.info(alerta)
 
-    textos.append(f"La Diferencia de Riesgos (RD) es {rd:.3f}, que representa la diferencia absoluta en riesgo entre grupos.")
-    return "\n".join(textos)
-
-
-# --------------------------
-# Función para plot forest plot RR y OR con IC95%
-# --------------------------
 
 def plot_forest_rr_or(rr, ci_rr, orr, ci_or):
-    """Grafica forest plot simple para RR y OR con IC95% y colores semánticos."""
-
+    """Gráfico forest plot para RR y OR con sus IC 95%."""
     fig, ax = plt.subplots(figsize=(6, 3))
-
     medidas = ["Riesgo Relativo (RR)", "Odds Ratio (OR)"]
     valores = [rr, orr]
     ci_inf = [ci_rr[0], ci_or[0]]
     ci_sup = [ci_rr[1], ci_or[1]]
-
     y_pos = np.arange(len(medidas))
 
     for i, (val, inf, sup) in enumerate(zip(valores, ci_inf, ci_sup)):
+        # Validar valores finitos para evitar error matplotlib
+        if not (np.isfinite(val) and np.isfinite(inf) and np.isfinite(sup)):
+            continue  # Ignorar si algún valor no es válido
+
         color = 'green' if val < 1 else 'red'
         ax.errorbar(val, y_pos[i], xerr=[[val - inf], [sup - val]],
                     fmt='o', color='black', ecolor=color, elinewidth=3, capsize=5)
 
     ax.axvline(x=1, color='grey', linestyle='--')
-
     ax.set_yticks(y_pos)
     ax.set_yticklabels(medidas)
     ax.set_xlabel("Medida (con IC 95%)")
@@ -452,198 +460,90 @@ def plot_forest_rr_or(rr, ci_rr, orr, ci_or):
 
 
 # --------------------------
-# Guardar y cargar estado para tabla 2x2 y resultados
+# Pestañas en Streamlit
 # --------------------------
 
-if "tabla_2x2" not in st.session_state:
-    st.session_state["tabla_2x2"] = {"a": 15, "b": 25, "c": 5, "d": 30}  # valores ejemplo
-if "resultados" not in st.session_state:
-    st.session_state["resultados"] = None
+tab1, tab2, tab3 = st.tabs(["Conceptos básicos", "Tablas 2x2 y Cálculos", "Gráficos y visualización"])
 
+with tab1:
+    md_intro = cargar_md("assets/conceptos_basicos.md")
+    st.markdown(md_intro)
 
-# --------------------------
-# Layout principal con pestañas
-# --------------------------
-
-tabs = st.tabs([
-    "Conceptos Básicos",
-    "Medidas de Asociación",
-    "Diseños de Estudio",
-    "Sesgos y Errores",
-    "Glosario Interactivo",
-    "Ejercicios Prácticos",
-    "Tablas 2x2 y Cálculos",
-    "Visualización de Datos",
-    "Chat"
-])
-
-# ---- TAB 0: Conceptos Básicos ----
-with tabs[0]:
-    st.header("📌 Conceptos Básicos")
-    contenido = safe_execute(cargar_md, "contenido/conceptosbasicos.md")
-    if contenido is None or contenido.startswith("Error cargando"):
-        st.write("Aquí iría el contenido de 'Conceptos Básicos'. Coloca el archivo 'contenido/conceptosbasicos.md'.")
-    else:
-        st.markdown(contenido)
-
-# ---- TAB 1: Medidas de Asociación ----
-with tabs[1]:
-    st.header("📈 Medidas de Asociación")
-    contenido = safe_execute(cargar_md, "contenido/medidas_completas.md")
-    if contenido is None or contenido.startswith("Error cargando"):
-        st.write("Aquí iría el contenido de 'Medidas de Asociación'. Coloca el archivo 'contenido/medidas_completas.md'.")
-    else:
-        st.markdown(contenido)
-
-# ---- TAB 2: Diseños de Estudio ----
-with tabs[2]:
-    st.header("📊 Diseños de Estudio")
-    contenido = safe_execute(cargar_md, "contenido/disenos_completos.md")
-    if contenido is None or contenido.startswith("Error cargando"):
-        st.write("Aquí iría el contenido de 'Diseños de Estudio'. Coloca el archivo 'contenido/disenos_completos.md'.")
-    else:
-        st.markdown(contenido)
-
-# ---- TAB 3: Sesgos y Errores ----
-with tabs[3]:
-    st.header("⚠️ Sesgos y Errores")
-    contenido = safe_execute(cargar_md, "contenido/sesgos_completos.md")
-    if contenido is None or contenido.startswith("Error cargando"):
-        st.write("Aquí iría el contenido de 'Sesgos y Errores'. Coloca el archivo 'contenido/sesgos_completos.md'.")
-    else:
-        st.markdown(contenido)
-
-    st.markdown("### 💡 Tips sobre sesgos en medidas epidemiológicas")
-    st.markdown(
-        """
-        - El Riesgo Relativo (RR) puede estar afectado por sesgos de selección si los grupos no son comparables.
-        - La Odds Ratio (OR) tiende a sobreestimar el riesgo relativo en enfermedades comunes.
-        - Siempre validar diseño de estudio y controles para minimizar sesgos.
-        """
-    )
-
-# ---- TAB 4: Glosario Interactivo ----
-with tabs[4]:
-    st.header("📚 Glosario Interactivo")
-    contenido = safe_execute(cargar_md, "contenido/glosario.md")
-    if contenido is None or contenido.startswith("Error cargando"):
-        st.write("Aquí iría el contenido del Glosario. Coloca el archivo 'contenido/glosario.md'.")
-    else:
-        st.markdown(contenido)
-
-# ---- TAB 5: Ejercicios Prácticos ----
-with tabs[5]:
-    st.header("📝 Ejercicios Prácticos")
-    contenido = safe_execute(cargar_md, "contenido/ejercicios.md")
-    if contenido is None or contenido.startswith("Error cargando"):
-        st.write("Aquí irían ejercicios prácticos. Coloca el archivo 'contenido/ejercicios.md'.")
-    else:
-        st.markdown(contenido)
-
-# ---- TAB 6: Tablas 2x2 y cálculos ----
-with tabs[6]:
-    st.header("🔢 Tablas 2x2 y Cálculos Epidemiológicos")
-
+with tab2:
+    st.header("Ingreso de datos para tabla 2x2")
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("Introduce los datos de la tabla 2x2")
-        a = st.number_input("Casos con exposición (a)", min_value=0, value=st.session_state["tabla_2x2"]["a"], step=1)
-        b = st.number_input("Casos sin exposición (b)", min_value=0, value=st.session_state["tabla_2x2"]["b"], step=1)
-        c = st.number_input("Controles con exposición (c)", min_value=0, value=st.session_state["tabla_2x2"]["c"], step=1)
-        d = st.number_input("Controles sin exposición (d)", min_value=0, value=st.session_state["tabla_2x2"]["d"], step=1)
-
-        # Validar inputs
-        valid, mensajes = validar_inputs(a, b, c, d)
-
-        if mensajes:
-            for msg in mensajes:
-                st.warning(msg)
-
-        # Guardar tabla actualizada
-        st.session_state["tabla_2x2"] = {"a": a, "b": b, "c": c, "d": d}
+        a = st.number_input("a: Casos expuestos", min_value=0, value=10, step=1)
+        b = st.number_input("b: No casos expuestos", min_value=0, value=20, step=1)
 
     with col2:
-        if valid:
-            if st.button("Calcular medidas"):
-                st.session_state["resultados"] = calcular_medidas(a, b, c, d)
-        else:
-            st.button("Calcular medidas", disabled=True)
+        c = st.number_input("c: Casos no expuestos", min_value=0, value=5, step=1)
+        d = st.number_input("d: No casos no expuestos", min_value=0, value=40, step=1)
 
-        if st.session_state["resultados"]:
-            res = st.session_state["resultados"]
-            st.markdown("### Resultados:")
+    valido, mensajes = validar_inputs(a, b, c, d)
+    if not valido:
+        for m in mensajes:
+            st.warning(m)
 
-            st.write(f"• Riesgo Relativo (RR): {res['rr']:.3f} (IC95%: {res['ci95_rr'][0]:.3f} - {res['ci95_rr'][1]:.3f})")
-            st.write(f"• Odds Ratio (OR): {res['or']:.3f} (IC95%: {res['ci95_or'][0]:.3f} - {res['ci95_or'][1]:.3f})")
-            st.write(f"• Diferencia de Riesgos (RD): {res['rd']:.3f} (IC95%: {res['ci95_rd'][0]:.3f} - {res['ci95_rd'][1]:.3f})")
+    if valido:
+        if st.button("Calcular medidas"):
+            resultados = safe_execute(calcular_medidas, a, b, c, d)
+            mostrar_resultados_tabla(resultados)
+    else:
+        st.info("Por favor ingresa valores válidos para calcular.")
 
-            if res["fae"] is not None:
-                st.write(f"• Fracción atribuible en expuestos (FAE): {res['fae']:.3f}")
-            if res["fap"] is not None:
-                st.write(f"• Fracción atribuible en población (FAP): {res['fap']:.3f}")
-            if res["nnt"] is not None:
-                st.write(f"• Número necesario a tratar (NNT): {abs(res['nnt']):.1f}")
+with tab3:
+    st.header("Visualización gráfica de RR y OR")
+    # Necesitamos valores para graficar (pueden venir del tab2 o inputs manuales)
+    rr_input = st.number_input("RR (Riesgo Relativo)", min_value=0.0, value=1.5, step=0.01, format="%.3f")
+    rr_inf_input = st.number_input("Límite inferior IC RR", min_value=0.0, value=1.1, step=0.01, format="%.3f")
+    rr_sup_input = st.number_input("Límite superior IC RR", min_value=0.0, value=2.0, step=0.01, format="%.3f")
 
-            # Alertas
-            for alert in res["alertas"]:
-                st.info(alert)
+    or_input = st.number_input("OR (Odds Ratio)", min_value=0.0, value=2.0, step=0.01, format="%.3f")
+    or_inf_input = st.number_input("Límite inferior IC OR", min_value=0.0, value=1.2, step=0.01, format="%.3f")
+    or_sup_input = st.number_input("Límite superior IC OR", min_value=0.0, value=3.3, step=0.01, format="%.3f")
 
-            # Interpretación breve
-            st.markdown("#### Interpretación básica")
-            st.write(interpretar_medidas(res))
-
-            # Mostrar gráfico forest plot
-            fig = plot_forest_rr_or(res["rr"], res["ci95_rr"], res["or"], res["ci95_or"])
+    if st.button("Mostrar gráfico"):
+        fig = safe_execute(plot_forest_rr_or,
+                           rr_input, (rr_inf_input, rr_sup_input),
+                           or_input, (or_inf_input, or_sup_input))
+        if fig:
             st.pyplot(fig)
 
-# ---- TAB 7: Visualización de Datos ----
-with tabs[7]:
-    st.header("📊 Visualización de Datos")
-    contenido = safe_execute(cargar_md, "contenido/visualizacion.md")
-    if contenido is None or contenido.startswith("Error cargando"):
-        st.write("Aquí iría el contenido para Visualización de Datos. Coloca el archivo 'contenido/visualizacion.md'.")
-    else:
-        st.markdown(contenido)
 
-# ---- TAB 8: Chat IA ----
-with tabs[8]:
-    st.header("💬 Chat de Epidemiología 101")
+# --------------------------
+# Chat Gemini - conversación (simple)
+# --------------------------
 
-    if "chat_history" not in st.session_state:
-        st.session_state["chat_history"] = [
-            {"role": "assistant", "content": "¡Hola! Soy tu asistente de Epidemiología 101. ¿En qué te puedo ayudar hoy?"}
-        ]
+if "chat_messages" not in st.session_state:
+    st.session_state.chat_messages = []
 
+st.header("💬 Chat con Epidemiólogo Virtual")
+
+input_text = st.text_area("Escribe tu pregunta o duda:", height=100)
+
+if st.button("Enviar"):
+    if input_text.strip() != "":
+        st.session_state.chat_messages.append({"role": "user", "content": input_text.strip()})
+        respuesta = chat_with_gemini_messages(st.session_state.chat_messages)
+        st.session_state.chat_messages.append({"role": "assistant", "content": respuesta})
+
+if st.session_state.chat_messages:
     chat_container = st.container()
-
     with chat_container:
-        for chat_msg in st.session_state["chat_history"]:
-            role = chat_msg["role"]
-            content = chat_msg["content"]
-            if role == "user":
-                st.markdown(f"<p style='color:#0d3b66;font-weight:bold;'>Tú:</p><p>{content}</p>", unsafe_allow_html=True)
+        for msg in st.session_state.chat_messages:
+            if msg["role"] == "user":
+                st.markdown(f"**Tú:** {msg['content']}")
             else:
-                st.markdown(f"<p style='color:#3a66ff;font-weight:bold;'>Asistente:</p><p>{content}</p>", unsafe_allow_html=True)
+                st.markdown(f"**Epidemiólogo:** {msg['content']}")
 
-    user_input = st.text_area("Escribe tu pregunta aquí...", key="chat_input")
-
-    if st.button("Enviar", disabled=(not user_input.strip())):
-        st.session_state["chat_history"].append({"role": "user", "content": user_input})
-        with st.spinner("Consultando al asistente..."):
-            respuesta = chat_with_gemini_messages(st.session_state["chat_history"])
-        st.session_state["chat_history"].append({"role": "assistant", "content": respuesta})
-        st.experimental_rerun()  # Para actualizar chat instantáneamente
 
 # --------------------------
-# Referencias fijas (pueden ir en sidebar o footer)
+# Footer
 # --------------------------
-st.sidebar.markdown("## 📚 Referencias y bibliografía")
-st.sidebar.markdown(
-    """
-    - Rothman KJ, Greenland S, Lash TL. Modern Epidemiology, 3rd Ed.
-    - Kleinbaum DG et al. Epidemiologic Research: Principles and Quantitative Methods.
-    - Altman DG et al. Statistics with Confidence.
-    """
-)
+st.markdown("---")
+st.markdown("© 2025 Yolanda Muvdi - Todos los derechos reservados.")
+
+
 
