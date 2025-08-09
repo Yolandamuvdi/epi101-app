@@ -99,47 +99,85 @@ def mostrar_splash():
     .blue-box {
         background-color: #0d3b66;
         color: white;
-        padding: 2rem 3rem;
-        border-radius: 12px;
-        max-width: 400px;
-        height: 250px; /* altura fija para centrar verticalmente */
-        margin: 6rem auto 3rem auto;
+        padding: 3rem 2rem 2rem 2rem;
+        border-radius: 16px;
+        max-width: 450px;
+        height: 300px;
+        margin: 6rem auto 2rem auto;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
 
         display: flex;
         flex-direction: column;
-        justify-content: center; /* centra vertical */
-        align-items: center;     /* centra horizontal */
-        box-shadow: 0 4px 10px rgba(13, 59, 102, 0.4);
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 6px 15px rgba(13, 59, 102, 0.6);
+        position: relative;
     }
-    select {
-        margin-top: 1.5rem;
+    .blue-box h1 {
+        font-size: 2.8rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 0.2rem;
+        justify-content: center;
+    }
+    .blue-box h1 .icon {
+        font-size: 3.2rem;
+    }
+    .blue-box p {
+        font-size: 1.3rem;
+        font-weight: 500;
+        margin-bottom: 2rem;
+    }
+    .blue-box select {
         width: 100%;
         padding: 0.5rem 1rem;
-        border-radius: 8px;
+        border-radius: 10px;
         border: none;
         font-size: 1.1rem;
         cursor: pointer;
         outline: none;
     }
-    select:focus {
+    .blue-box select:focus {
         outline: 2px solid #f4d35e;
+    }
+    .footer-info {
+        position: absolute;
+        bottom: 12px;
+        right: 15px;
+        font-size: 0.9rem;
+        font-weight: 400;
+        color: #a6c8ff;
+        user-select: none;
+        font-style: italic;
+    }
+    .footer-info a {
+        color: #f4d35e;
+        text-decoration: none;
+        margin-left: 0.3rem;
+    }
+    .footer-info a:hover {
+        text-decoration: underline;
     }
     </style>
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="blue-box">', unsafe_allow_html=True)
-    st.markdown("<h1>Epidemiología 101</h1>", unsafe_allow_html=True)
-    st.markdown("<p>¿Qué quieres aprender hoy?</p>", unsafe_allow_html=True)
+    st.markdown('<h1><span class="icon">🧪</span> Epidemiología 101</h1>', unsafe_allow_html=True)
+    st.markdown('<p>¿Qué quieres aprender hoy?</p>', unsafe_allow_html=True)
 
     opcion = st.selectbox("", [""] + SECCIONES, key="splash_select")
+
+    st.markdown('<div class="footer-info">Creado por <b>Yolanda Muvdi</b> | ymuvdi&#64;gmail.com</div>', unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
     if opcion and opcion != "":
         st.session_state.seccion = opcion
         st.experimental_rerun()
+
 
 # Menú lateral fijo
 def mostrar_sidebar():
