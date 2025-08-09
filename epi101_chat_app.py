@@ -500,8 +500,6 @@ def main():
         elif st.session_state.seccion == "Chat Epidemiológico":
     mostrar_chat_epidemiologico()
         mostrar_footer()
-
-
 if __name__ == "__main__":
     main()
 
