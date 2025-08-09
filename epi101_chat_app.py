@@ -8,7 +8,7 @@ import sys
 import os
 import numpy as np
 import math
-
+import google.generativeai as genai
 # =========================================
 # CONFIGURACIÓN DE GEMINI
 # =========================================
