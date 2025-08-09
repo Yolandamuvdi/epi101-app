@@ -96,47 +96,42 @@ def mostrar_footer():
 def mostrar_splash():
     st.markdown("""
     <style>
-    /* Fondo general blanco o muy claro */
-    .splash-container {
+    .blue-box {
+        background-color: #0d3b66;
+        color: white;
+        padding: 2rem 3rem;
+        border-radius: 12px;
+        max-width: 400px;
+        height: 250px; /* altura fija para centrar verticalmente */
+        margin: 6rem auto 3rem auto;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        text-align: center;
+
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        height: 70vh;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        color: #0d3b66;
-        background: #f9f9f9;
-        margin: 0 auto;
-    }
-    .splash-container h1 {
-        font-size: 3.5rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
-    .splash-container p {
-        font-size: 1.3rem;
-        margin-bottom: 1.8rem;
-        color: #34495e;
+        justify-content: center; /* centra vertical */
+        align-items: center;     /* centra horizontal */
+        box-shadow: 0 4px 10px rgba(13, 59, 102, 0.4);
     }
     select {
-        font-size: 1.15rem;
-        padding: 0.6rem 1rem;
+        margin-top: 1.5rem;
+        width: 100%;
+        padding: 0.5rem 1rem;
         border-radius: 8px;
-        border: 2px solid #0d3b66;
-        max-width: 320px;
+        border: none;
+        font-size: 1.1rem;
         cursor: pointer;
-        transition: border-color 0.3s ease;
-    }
-    select:hover, select:focus {
-        border-color: #f4d35e;
         outline: none;
+    }
+    select:focus {
+        outline: 2px solid #f4d35e;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="splash-container">', unsafe_allow_html=True)
-    st.markdown("🧪 <h1>Epidemiología 101</h1>", unsafe_allow_html=True)
-    st.markdown("<p>¿Qué tema quieres aprender hoy?</p>", unsafe_allow_html=True)
+    st.markdown('<div class="blue-box">', unsafe_allow_html=True)
+    st.markdown("<h1>Epidemiología 101</h1>", unsafe_allow_html=True)
+    st.markdown("<p>¿Qué quieres aprender hoy?</p>", unsafe_allow_html=True)
 
     opcion = st.selectbox("", [""] + SECCIONES, key="splash_select")
 
