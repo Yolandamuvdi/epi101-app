@@ -168,19 +168,6 @@ def plot_barras_expuestos(a,b,c,d):
 def mostrar_confeti():
     rain(emoji="🎉", font_size=54, falling_speed=5, animation_length=3)
 
-def mostrar_mensaje_nivel(nivel, puntaje, total):
-    mensajes = {
-        "Básico": f"Nivel Básico completado. Puntaje: {puntaje}/{total}. ¡Buen comienzo! Sigue estudiando 📚.",
-        "Intermedio": f"Nivel Intermedio completado. Puntaje: {puntaje}/{total}. ¡Vas muy bien! ¡Aumenta el nivel! 🚀",
-        "Avanzado": f"Nivel Avanzado completado. Puntaje: {puntaje}/{total}. ¡Impresionante! Estás dominando la epidemiología 💪",
-        "Experto/Messi": f"Nivel Experto/Messi completado. Puntaje: {puntaje}/{total}. ¡Eres un crack en epidemiología! 🎖️🔥"
-    }
-    st.balloons()
-    st.success(mensajes.get(nivel, "¡Felicidades!"))
-
-def filtrar_preguntas_por_nivel(preguntas, nivel):
-    return [p for p in preguntas if p.get("nivel") == nivel]
-
 # --- Navegación ---
 def pagina_inicio():
     st.title("🧠 Epidemiología 101")
@@ -232,7 +219,6 @@ def main():
     if "seccion" not in st.session_state:
         st.session_state.seccion = None
         st.session_state.nivel_gamificacion = None
-        st.session_state.preguntas_gamificacion = []
         st.session_state.index_pregunta = 0
         st.session_state.respuestas_correctas = 0
 
@@ -292,8 +278,8 @@ def main():
 
         if preguntas:
             for i, p in enumerate(preguntas):
-                nivel = p.get("nivel", "No definido")
-                st.subheader(f"Pregunta {i+1} (Nivel {nivel})")
+                # Sin mostrar nivel ni nada extra
+                st.subheader(f"Pregunta {i+1}")
                 respuesta = st.radio(p["pregunta"], p["opciones"], key=f"ej_{i}")
                 if st.button(f"Verificar respuesta {i+1}", key=f"btn_{i}"):
                     if respuesta == p["respuesta_correcta"]:
@@ -383,32 +369,44 @@ def main():
                 st.session_state.respuestas_correctas = 0
                 st.session_state.nivel_gamificacion = "Básico"
 
-            pregunta_actual = preguntas[st.session_state.index_pregunta]
-            nivel = pregunta_actual.get("nivel", "Básico")
+            # Pregunta inicial para elegir nivel (solo una vez)
+            if "nivel_confirmado" not in st.session_state:
+                st.markdown("### 🎉 ¿En qué nivel te consideras actualmente?")
+                opciones_niveles = ["Básico", "Intermedio", "Avanzado", "Experto/Messi"]
+                nivel_usuario = st.selectbox("Selecciona tu nivel", opciones_niveles)
+                if st.button("Confirmar nivel"):
+                    st.session_state.nivel_gamificacion = nivel_usuario
+                    st.session_state.nivel_confirmado = True
+                    st.balloons()
+                    st.success(f"¡Genial! Empezaremos desde el nivel {nivel_usuario}. ¡A romperla! 🚀")
 
-            st.subheader(f"Pregunta {st.session_state.index_pregunta + 1} (Nivel {nivel})")
-            respuesta_usuario = st.radio(pregunta_actual["pregunta"], pregunta_actual["opciones"], key="gam_pregunta")
+            else:
+                pregunta_actual = preguntas[st.session_state.index_pregunta]
+                st.subheader(f"Pregunta {st.session_state.index_pregunta + 1}")
+                respuesta_usuario = st.radio(pregunta_actual["pregunta"], pregunta_actual["opciones"], key="gam_pregunta")
 
-            if st.button("Verificar respuesta y siguiente"):
-                correcta = pregunta_actual["respuesta_correcta"]
-                if respuesta_usuario == correcta:
-                    st.success("✅ Correcto")
-                    st.session_state.respuestas_correctas += 1
-                else:
-                    st.error(f"❌ Incorrecto. Respuesta correcta: {correcta}")
+                if st.button("Verificar respuesta y siguiente"):
+                    correcta = pregunta_actual["respuesta_correcta"]
+                    if respuesta_usuario == correcta:
+                        st.success("✅ Correcto")
+                        st.session_state.respuestas_correctas += 1
+                    else:
+                        st.error(f"❌ Incorrecto. Respuesta correcta: {correcta}")
 
-                if st.session_state.index_pregunta + 1 < len(preguntas):
-                    st.session_state.index_pregunta += 1
-                else:
-                    mostrar_confeti()
-                    st.success(f"🎉 Terminaste todas las preguntas con {st.session_state.respuestas_correctas} aciertos de {len(preguntas)}")
-                    st.session_state.index_pregunta = 0
-                    st.session_state.respuestas_correctas = 0
+                    if st.session_state.index_pregunta + 1 < len(preguntas):
+                        st.session_state.index_pregunta += 1
+                    else:
+                        mostrar_confeti()
+                        st.success(f"🎉 Terminaste todas las preguntas con {st.session_state.respuestas_correctas} aciertos de {len(preguntas)}. ¡Sigue así! 💪")
+                        st.session_state.index_pregunta = 0
+                        st.session_state.respuestas_correctas = 0
+                        del st.session_state["nivel_confirmado"]  # Reiniciar nivel para jugar otra vez
 
         else:
             st.info("Archivo 'contenido/ejercicios_completos.py' no encontrado o variable 'preguntas' no definida.")
 
+    else:
+        st.warning("Sección no implementada.")
+
 if __name__ == "__main__":
     main()
-
-
