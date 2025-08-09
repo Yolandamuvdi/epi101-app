@@ -1,4 +1,3 @@
-# epi101_chat_app.py
 import streamlit as st
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -48,6 +47,13 @@ st.markdown("""
         border-radius: 5px;
         padding: 8px 15px;
         font-weight: 600;
+    }
+    a {
+        color: #0d3b66;
+        text-decoration: none;
+    }
+    a:hover {
+        text-decoration: underline;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -111,8 +117,6 @@ def corregir_ceros(a,b,c,d):
     return a,b,c,d, False
 
 def ic_riesgo_relativo(a,b,c,d, alpha=0.05):
-    # RR = (a/(a+b)) / (c/(c+d))
-    # IC usando log(RR)
     risk1 = a / (a + b)
     risk2 = c / (c + d)
     rr = risk1 / risk2
@@ -123,7 +127,6 @@ def ic_riesgo_relativo(a,b,c,d, alpha=0.05):
     return rr, lower, upper
 
 def ic_odds_ratio(a,b,c,d, alpha=0.05):
-    # OR = (a*d)/(b*c)
     or_ = (a*d)/(b*c)
     se_log_or = math.sqrt(1/a + 1/b + 1/c + 1/d)
     z = norm.ppf(1 - alpha/2)
@@ -132,7 +135,6 @@ def ic_odds_ratio(a,b,c,d, alpha=0.05):
     return or_, lower, upper
 
 def diferencia_riesgos(a,b,c,d, alpha=0.05):
-    # RD = risk1 - risk2
     risk1 = a / (a + b)
     risk2 = c / (c + d)
     rd = risk1 - risk2
@@ -146,7 +148,6 @@ def calcular_p_valor(a,b,c,d):
     if not SCIPY_AVAILABLE:
         return None, "scipy no disponible"
     table = np.array([[a,b],[c,d]])
-    # Si algún valor esperado es menor a 5, usar fisher
     chi2, p, dof, expected = chi2_contingency(table, correction=False)
     if (expected < 5).any():
         _, p = fisher_exact(table)
@@ -155,25 +156,25 @@ def calcular_p_valor(a,b,c,d):
         test_used = "Chi-cuadrado sin corrección"
     return p, test_used
 
-# 5. Interpretación sencilla automática
+# 5. Interpretación automática
 
 def interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_val, test_name):
     texto = f"""
-    **Resultados:**
+**Resultados:**
 
-    - Riesgo Relativo (RR): {rr:.3f} (IC95% {rr_l:.3f} - {rr_u:.3f})
-    - Odds Ratio (OR): {or_:.3f} (IC95% {or_l:.3f} - {or_u:.3f})
-    - Diferencia de Riesgos (RD): {rd:.3f} (IC95% {rd_l:.3f} - {rd_u:.3f})
-    - Valor p ({test_name}): {p_val:.4f}
+- Riesgo Relativo (RR): {rr:.3f} (IC95% {rr_l:.3f} - {rr_u:.3f})  
+- Odds Ratio (OR): {or_:.3f} (IC95% {or_l:.3f} - {or_u:.3f})  
+- Diferencia de Riesgos (RD): {rd:.3f} (IC95% {rd_l:.3f} - {rd_u:.3f})  
+- Valor p ({test_name}): {p_val:.4f}  
 
-    """
+"""
     if p_val < 0.05:
         texto += "La asociación es estadísticamente significativa (p < 0.05)."
     else:
         texto += "No se encontró asociación estadísticamente significativa (p ≥ 0.05)."
     return texto
 
-# 6. Gráficos para medidas y tablas 2x2
+# 6. Gráficos
 
 def plot_forest(rr, rr_l, rr_u, or_, or_l, or_u):
     fig, ax = plt.subplots(figsize=(6,3))
@@ -186,7 +187,7 @@ def plot_forest(rr, rr_l, rr_u, or_, or_l, or_u):
     st.pyplot(fig)
 
 def plot_barras_expuestos(a,b,c,d):
-    labels = ["Casos expuestos", "Casos no expuestos", "No casos expuestos", "No casos no expuestos"]
+    labels = ["Casos expuestos", "No casos expuestos", "Casos no expuestos", "No casos no expuestos"]
     valores = [a,b,c,d]
     colores = ['#0d3b66', '#3e5c76', '#82a0bc', '#b0c4de']
     fig, ax = plt.subplots()
@@ -327,7 +328,6 @@ with tabs[7]:
             st.write("Vista previa de los datos cargados:")
             st.dataframe(df.head())
 
-            # Selección de columna para gráfico
             columnas = df.columns.tolist()
             columna = st.selectbox("Selecciona columna para gráfico boxplot o histograma", columnas)
 
@@ -369,4 +369,16 @@ with tabs[8]:
         else:
             st.markdown(f"**Gemini:** {msg['content']}")
 
+# --- Footer con datos de contacto ---
+st.markdown("---")
+st.markdown(
+    """
+    <div style="font-size:0.85rem; color: #555; text-align: center; margin-top: 2rem;">
+        Creado por <strong>Yolanda Muvdi</strong>, Enfermera Epidemióloga.<br>
+        Contacto: <a href="mailto:ymuvdi@gmail.com">ymuvdi@gmail.com</a> | 
+        <a href="https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/" target="_blank">LinkedIn</a>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
