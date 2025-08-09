@@ -73,26 +73,24 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# -------------------- SIDEBAR CON NAVEGACIÓN --------------------
-st.sidebar.title("🧪 Epidemiología 101")
-st.sidebar.markdown("""
-👩‍⚕️ Creado por Yolanda Muvdi, Enfermera Epidemióloga  
-📧 [ymuvdi@gmail.com](mailto:ymuvdi@gmail.com)  
-🔗 [LinkedIn](https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/)
-""")
+# --- Variables y configuraciones ---
+SECCIONES = {
+    "🏠 Inicio": "inicio",
+    "📌 Conceptos Básicos": "conceptos",
+    "📈 Medidas de Asociación": "medidas",
+    "📊 Diseños de Estudio": "disenos",
+    "⚠️ Sesgos y Errores": "sesgos",
+    "📚 Glosario Interactivo": "glosario",
+    "🧪 Ejercicios Prácticos": "ejercicios",
+    "📊 Tablas 2x2 y Cálculos": "tablas",
+    "🎥 Videos Educativos": "videos",
+    "🎮 Gamificación": "gamificacion",
+    "🤖 Chat IA Epidemiológica": "chat",
+}
 
-menu = st.sidebar.radio("Ir a sección:", [
-    "Conceptos Básicos",
-    "Medidas de Asociación",
-    "Diseños de Estudio",
-    "Sesgos y Errores",
-    "Glosario Interactivo",
-    "Ejercicios Prácticos",
-    "Tablas 2x2 y Cálculos",
-    "Visualización de Datos",
-    "Multimedia YouTube",
-    "Chat Epidemiológico"
-])
+# --- Inicializar sesión ---
+if "seccion_actual" not in st.session_state:
+    st.session_state.seccion_actual = None
 
 # -------------------- FUNCIONES DE CARGA --------------------
 @st.cache_data(show_spinner=False)
@@ -192,7 +190,7 @@ def plot_forest(rr, rr_l, rr_u, or_, or_l, or_u):
     st.pyplot(fig, use_container_width=True)
 
 def plot_barras_expuestos(a,b,c,d):
-    labels = ["Casos expuestos", "No casos expuestos", "Casos no expuestos", "No casos no expuestos"]
+    labels = ["Casos expuestos (a)", "No casos expuestos (b)", "Casos no expuestos (c)", "No casos no expuestos (d)"]
     valores = [a,b,c,d]
     colores = ['#0d3b66', '#3e5c76', '#82a0bc', '#b0c4de']
     fig, ax = plt.subplots()
@@ -243,188 +241,185 @@ def chat_with_gemini(messages):
 
 # -------------------- CONTENIDO PRINCIPAL --------------------
 
-if menu == "Conceptos Básicos":
-    st.header("📌 Conceptos Básicos")
-    contenido = cargar_md("contenido/conceptosbasicos.md")
-    if contenido:
-        st.markdown(contenido)
-    else:
-        st.info("Agrega el archivo 'contenido/conceptosbasicos.md' para mostrar el contenido.")
+if st.session_state.seccion_actual is None:
+    # Landing
+    st.markdown(
+        """
+        <h1 style="text-align:center; font-size:4rem; color:#0d3b66; font-weight:900; user-select:none;">
+        Bienvenido/a a <br> Epidemiología 101
+        </h1>
+        <h3 style="text-align:center; margin-top:-10px; font-weight:600; color:#144a91; user-select:none;">
+        Hecho por Yolanda Muvdi
+        </h3>
+        <p style="text-align:center; font-size:1.5rem; color:#0d3b66; margin-top:40px; user-select:none;">
+        ¿Qué quieres aprender hoy?
+        </p>
+        """, unsafe_allow_html=True
+    )
+    opcion = st.selectbox(
+        "Selecciona la sección:",
+        options=list(SECCIONES.keys()),
+        index=0,
+        label_visibility="collapsed",
+        help="Elige una sección para comenzar",
+    )
+    if st.button("Ir a la sección"):
+        st.session_state.seccion_actual = SECCIONES[opcion]
+        st.experimental_rerun()
 
-elif menu == "Medidas de Asociación":
-    st.header("📈 Medidas de Asociación")
-    contenido = cargar_md("contenido/medidas_completas.md")
-    if contenido:
-        st.markdown(contenido)
-    else:
-        st.info("Agrega el archivo 'contenido/medidas_completas.md' para mostrar el contenido.")
+else:
+    # Sidebar y contenido
+    with st.sidebar:
+        st.markdown("<h2 style='color:#0d3b66; font-weight:900;'>🧪 Epidemiología 101</h2>", unsafe_allow_html=True)
+        if st.button("🏠 Volver al inicio"):
+            st.session_state.seccion_actual = None
+            st.experimental_rerun()
+        st.markdown("---")
+        for nombre, key in SECCIONES.items():
+            if key == "inicio":
+                continue
+            style = "font-weight:bold; color:#0d3b66;" if st.session_state.seccion_actual == key else "color:#0d3b66;"
+            if st.button(f"{nombre}", key=key):
+                st.session_state.seccion_actual = key
+                st.experimental_rerun()
 
-elif menu == "Diseños de Estudio":
-    st.header("📊 Diseños de Estudio")
-    contenido = cargar_md("contenido/disenos_completos.md")
-    if contenido:
-        st.markdown(contenido)
-    else:
-        st.info("Agrega el archivo 'contenido/disenos_completos.md' para mostrar el contenido.")
-
-elif menu == "Sesgos y Errores":
-    st.header("⚠️ Sesgos y Errores")
-    contenido = cargar_md("contenido/sesgos_completos.md")
-    if contenido:
-        st.markdown(contenido)
-    else:
-        st.info("Agrega el archivo 'contenido/sesgos_completos.md' para mostrar el contenido.")
-
-elif menu == "Glosario Interactivo":
-    st.header("📚 Glosario Interactivo")
-    glosario = cargar_py_variable("contenido/glosario_completo.py", "glosario")
-    if glosario:
-        for termino, definicion in glosario.items():
-            with st.expander(termino):
-                st.write(definicion)
-    else:
-        st.info("Agrega 'contenido/glosario_completo.py' con variable `glosario`.")
-
-elif menu == "Ejercicios Prácticos":
-    st.header("🧪 Ejercicios Prácticos")
-    preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
-    if preguntas:
-        respuestas_correctas = 0
-        for i, q in enumerate(preguntas):
-            st.subheader(f"Pregunta {i+1}")
-            respuesta = st.radio(q['pregunta'], q['opciones'], key=f"q{i}")
-            if st.button(f"Verificar respuesta {i+1}", key=f"btn_{i}"):
-                if respuesta == q['respuesta_correcta']:
-                    st.success("✅ Correcto")
-                    respuestas_correctas += 1
-                    mostrar_insignia("ejercicio_correcto")
-                else:
-                    st.error(f"❌ Incorrecto. La respuesta correcta es: {q['respuesta_correcta']}")
-        if respuestas_correctas == len(preguntas) and len(preguntas) > 0:
-            mostrar_insignia("completo")
-    else:
-        st.info("Agrega 'contenido/ejercicios_completos.py' con variable `preguntas`.")
-
-elif menu == "Tablas 2x2 y Cálculos":
-    st.header("📊 Tablas 2x2 y Cálculos Epidemiológicos")
-
-    if "a" not in st.session_state:
-        st.session_state.a = 10
-    if "b" not in st.session_state:
-        st.session_state.b = 20
-    if "c" not in st.session_state:
-        st.session_state.c = 5
-    if "d" not in st.session_state:
-        st.session_state.d = 40
-
-    col1, col2 = st.columns(2)
-    with col1:
-        st.session_state.a = st.number_input("Casos expuestos (a)", min_value=0, value=st.session_state.a, step=1, key="input_a")
-        st.session_state.b = st.number_input("No casos expuestos (b)", min_value=0, value=st.session_state.b, step=1, key="input_b")
-    with col2:
-        st.session_state.c = st.number_input("Casos no expuestos (c)", min_value=0, value=st.session_state.c, step=1, key="input_c")
-        st.session_state.d = st.number_input("No casos no expuestos (d)", min_value=0, value=st.session_state.d, step=1, key="input_d")
-
-    if st.button("Calcular medidas y mostrar gráficos"):
-        a, b, c, d = st.session_state.a, st.session_state.b, st.session_state.c, st.session_state.d
-        total = a+b+c+d
-        if total == 0:
-            st.error("Por favor ingresa valores mayores que cero.")
+    # Mostrar contenido por sección
+    if st.session_state.seccion_actual == "conceptos":
+        st.header("📌 Conceptos Básicos")
+        contenido = cargar_md("contenido/conceptosbasicos.md")
+        if contenido:
+            st.markdown(contenido)
         else:
-            a_, b_, c_, d_, corregido = corregir_ceros(a,b,c,d)
-            rr, rr_l, rr_u = ic_riesgo_relativo(a_,b_,c_,d_)
-            or_, or_l, or_u = ic_odds_ratio(a_,b_,c_,d_)
-            rd, rd_l, rd_u = diferencia_riesgos(a_,b_,c_,d_)
-            p_val, test_name = calcular_p_valor(int(a_), int(b_), int(c_), int(d_))
+            st.info("Agrega el archivo 'contenido/conceptosbasicos.md' para mostrar el contenido.")
 
-            st.markdown(interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_val, test_name))
+    elif st.session_state.seccion_actual == "medidas":
+        st.header("📈 Medidas de Asociación")
+        contenido = cargar_md("contenido/medidas_completas.md")
+        if contenido:
+            st.markdown(contenido)
+        else:
+            st.info("Agrega el archivo 'contenido/medidas_completas.md' para mostrar el contenido.")
 
-            if corregido:
-                st.warning("Se aplicó corrección de 0.5 en celdas con valor 0 para cálculos.")
+    elif st.session_state.seccion_actual == "disenos":
+        st.header("📊 Diseños de Estudio")
+        contenido = cargar_md("contenido/disenos_completos.md")
+        if contenido:
+            st.markdown(contenido)
+        else:
+            st.info("Agrega el archivo 'contenido/disenos_completos.md' para mostrar el contenido.")
 
-            plot_forest(rr, rr_l, rr_u, or_, or_l, or_u)
-            plot_barras_expuestos(a,b,c,d)
+    elif st.session_state.seccion_actual == "sesgos":
+        st.header("⚠️ Sesgos y Errores")
+        contenido = cargar_md("contenido/sesgos_completos.md")
+        if contenido:
+            st.markdown(contenido)
+        else:
+            st.info("Agrega el archivo 'contenido/sesgos_completos.md' para mostrar el contenido.")
 
-elif menu == "Visualización de Datos":
-    st.header("📊 Visualización de Datos")
+    elif st.session_state.seccion_actual == "glosario":
+        st.header("📚 Glosario Interactivo")
+        glosario = cargar_py_variable("contenido/glosario_completo.py", "glosario")
+        if glosario:
+            for termino, definicion in glosario.items():
+                with st.expander(termino):
+                    st.write(definicion)
+        else:
+            st.info("Agrega 'contenido/glosario_completo.py' con variable `glosario`.")
 
-    uploaded_file = st.file_uploader("Carga un archivo CSV para gráficos exploratorios", type=["csv"])
+    elif st.session_state.seccion_actual == "ejercicios":
+        st.header("🧪 Ejercicios Prácticos")
+        preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
+        if preguntas:
+            respuestas_correctas = 0
+            for i, q in enumerate(preguntas):
+                st.subheader(f"Pregunta {i+1}")
+                respuesta = st.radio(q['pregunta'], q['opciones'], key=f"q{i}")
+                if st.button(f"Verificar respuesta {i+1}", key=f"btn_{i}"):
+                    if respuesta == q['respuesta_correcta']:
+                        st.success("✅ Correcto")
+                        respuestas_correctas += 1
+                        mostrar_insignia("ejercicio_correcto")
+                    else:
+                        st.error(f"❌ Incorrecto. La respuesta correcta es: {q['respuesta_correcta']}")
+            if respuestas_correctas == len(preguntas) and len(preguntas) > 0:
+                mostrar_insignia("completo")
+        else:
+            st.info("Agrega 'contenido/ejercicios_completos.py' con variable `preguntas`.")
 
-    if uploaded_file:
-        try:
-            df = pd.read_csv(uploaded_file)
-            st.write("Vista previa de los datos cargados:")
-            st.dataframe(df.head())
+    elif st.session_state.seccion_actual == "tablas":
+        st.header("📊 Tablas 2x2 y Cálculos Epidemiológicos")
 
-            columnas = df.columns.tolist()
-            columna = st.selectbox("Selecciona columna para gráfico", columnas)
+        if "a" not in st.session_state:
+            st.session_state.a = 10
+        if "b" not in st.session_state:
+            st.session_state.b = 20
+        if "c" not in st.session_state:
+            st.session_state.c = 5
+        if "d" not in st.session_state:
+            st.session_state.d = 40
 
-            tipo_grafico = st.radio("Tipo de gráfico", ("Boxplot", "Histograma"))
+        col1, col2 = st.columns(2)
+        with col1:
+            st.session_state.a = st.number_input("Casos expuestos (a)", min_value=0, value=st.session_state.a, step=1, key="input_a")
+            st.session_state.b = st.number_input("No casos expuestos (b)", min_value=0, value=st.session_state.b, step=1, key="input_b")
+        with col2:
+            st.session_state.c = st.number_input("Casos no expuestos (c)", min_value=0, value=st.session_state.c, step=1, key="input_c")
+            st.session_state.d = st.number_input("No casos no expuestos (d)", min_value=0, value=st.session_state.d, step=1, key="input_d")
 
-            if tipo_grafico == "Boxplot":
-                fig, ax = plt.subplots()
-                ax.boxplot(df[columna].dropna())
-                ax.set_title(f"Boxplot de {columna}")
-                st.pyplot(fig)
+        if st.button("Calcular medidas y mostrar gráficos"):
+            a, b, c, d = st.session_state.a, st.session_state.b, st.session_state.c, st.session_state.d
+            total = a+b+c+d
+            if total == 0:
+                st.error("Por favor ingresa valores mayores que cero.")
             else:
-                fig, ax = plt.subplots()
-                ax.hist(df[columna].dropna(), bins=20, color='#0d3b66', alpha=0.7)
-                ax.set_title(f"Histograma de {columna}")
-                st.pyplot(fig)
+                a_, b_, c_, d_, corregido = corregir_ceros(a,b,c,d)
+                rr, rr_l, rr_u = ic_riesgo_relativo(a_,b_,c_,d_)
+                or_, or_l, or_u = ic_odds_ratio(a_,b_,c_,d_)
+                rd, rd_l, rd_u = diferencia_riesgos(a_,b_,c_,d_)
+                p_val, test_name = calcular_p_valor(int(a_), int(b_), int(c_), int(d_))
 
-        except Exception as e:
-            st.error(f"Error al procesar archivo: {e}")
+                st.markdown(interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_val, test_name))
+
+                plot_forest(rr, rr_l, rr_u, or_, or_l, or_u)
+                plot_barras_expuestos(a, b, c, d)
+
+                if corregido:
+                    st.warning("Se aplicó corrección de 0.5 para evitar ceros en la tabla.")
+
+    elif st.session_state.seccion_actual == "videos":
+        st.header("🎥 Videos Educativos")
+        st.info("Próximamente: Videos explicativos para reforzar conceptos epidemiológicos.")
+
+    elif st.session_state.seccion_actual == "gamificacion":
+        st.header("🎮 Gamificación")
+        st.info("Aquí podrías agregar juegos, quizzes interactivos y retos para aprender más divertido.")
+
+    elif st.session_state.seccion_actual == "chat":
+        st.header("🤖 Chat IA Epidemiológica")
+        st.write("Haz preguntas sobre epidemiología, cálculos, análisis y más.")
+
+        if "chat_messages" not in st.session_state:
+            st.session_state.chat_messages = [{"role":"system","content":"Eres un experto epidemiólogo amable y claro."}]
+
+        with st.form("chat_form", clear_on_submit=True):
+            user_msg = st.text_area("Escribe tu pregunta o consulta epidemiológica aquí:", max_chars=512)
+            submitted = st.form_submit_button("Enviar")
+
+        if submitted and user_msg.strip():
+            st.session_state.chat_messages.append({"role":"user","content":user_msg.strip()})
+            respuesta = chat_with_gemini(st.session_state.chat_messages)
+            st.session_state.chat_messages.append({"role":"assistant","content":respuesta})
+
+        for msg in st.session_state.chat_messages[1:]:
+            if msg["role"] == "user":
+                st.markdown(f"**Tú:** {msg['content']}")
+            else:
+                st.markdown(f"**IA Epidemiológica:** {msg['content']}")
+
     else:
-        st.info("Carga un archivo CSV para empezar.")
+        st.info("Sección no encontrada. Por favor vuelve al inicio.")
 
-elif menu == "Multimedia YouTube":
-    st.header("🎥 Videos Educativos de Epidemiología")
-    st.info("Aquí puedes encontrar recursos audiovisuales para complementar tu aprendizaje.")
 
-    videos = {
-        "Introducción a la Epidemiología": "https://www.youtube.com/embed/5uj0pPU-68E",
-        "Medidas de Asociación": "https://www.youtube.com/embed/0nZPxtYQDrQ",
-        "Diseños de Estudios Epidemiológicos": "https://www.youtube.com/embed/NMRJ9iJZynA",
-        "Sesgos en Epidemiología": "https://www.youtube.com/embed/o7hvLv_lcVk"
-    }
-
-    for title, url in videos.items():
-        st.subheader(title)
-        st.video(url)
-
-elif menu == "Chat Epidemiológico":
-    st.header("🤖 Chat Epidemiológico con Gemini AI")
-    st.info("Pregunta cualquier duda epidemiológica. Gemini responde clara, precisa y con humor inteligente.")
-
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
-
-    pregunta = st.text_input("Escribe tu pregunta aquí:", key="chat_input")
-
-    if st.button("Enviar"):
-        if pregunta.strip():
-            st.session_state.chat_history.append({"role":"user", "content": pregunta})
-            with st.spinner("Gemini está respondiendo..."):
-                respuesta = chat_with_gemini(st.session_state.chat_history)
-            st.session_state.chat_history.append({"role":"assistant", "content": respuesta})
-
-    for msg in st.session_state.chat_history:
-        if msg["role"] == "user":
-            st.markdown(f"**Tú:** {msg['content']}")
-        else:
-            st.markdown(f"**Gemini:** {msg['content']}")
-
-# -------------------- FOOTER --------------------
-st.markdown("---")
-st.markdown(
-    """
-    <div style="font-size:0.85rem; color: #555; text-align: center; margin-top: 2rem;">
-        Creado por <strong>Yolanda Muvdi</strong>, Enfermera Epidemióloga.<br>
-        Contacto: <a href="mailto:ymuvdi@gmail.com">ymuvdi@gmail.com</a> | 
-        <a href="https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-    </div>
-    """,
-    unsafe_allow_html=True,
 )
 
 
