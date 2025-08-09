@@ -96,43 +96,47 @@ def mostrar_footer():
 def mostrar_splash():
     st.markdown("""
     <style>
-    .splash {
-        background-color: #0d3b66;
-        height: 80vh;
+    /* Fondo general blanco o muy claro */
+    .splash-container {
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        color: white;
+        height: 70vh;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #0d3b66;
+        background: #f9f9f9;
+        margin: 0 auto;
     }
-    .splash h1 {
-        font-size: 4rem;
-        margin-bottom: 1rem;
+    .splash-container h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
     }
-    .splash p {
-        font-size: 1.5rem;
-        margin-bottom: 2rem;
+    .splash-container p {
+        font-size: 1.3rem;
+        margin-bottom: 1.8rem;
+        color: #34495e;
     }
     select {
-        font-size: 1.2rem;
-        padding: 0.6rem 0.8rem;
-        border-radius: 6px;
-        border: none;
-        width: 320px;
-        max-width: 90vw;
+        font-size: 1.15rem;
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        border: 2px solid #0d3b66;
+        max-width: 320px;
         cursor: pointer;
+        transition: border-color 0.3s ease;
     }
-    select:focus {
+    select:hover, select:focus {
+        border-color: #f4d35e;
         outline: none;
-        border: 2px solid #f4d35e;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="splash">', unsafe_allow_html=True)
-    st.markdown("🧪 <h1>Bienvenido/a a Epidemiología 101</h1>", unsafe_allow_html=True)
-    st.markdown("<p>¿Qué quieres aprender hoy?</p>", unsafe_allow_html=True)
+    st.markdown('<div class="splash-container">', unsafe_allow_html=True)
+    st.markdown("🧪 <h1>Epidemiología 101</h1>", unsafe_allow_html=True)
+    st.markdown("<p>¿Qué tema quieres aprender hoy?</p>", unsafe_allow_html=True)
 
     opcion = st.selectbox("", [""] + SECCIONES, key="splash_select")
 
