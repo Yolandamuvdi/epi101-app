@@ -365,13 +365,13 @@ def main():
         for titulo, url in videos.items():
             st.markdown(f"**{titulo}**")
             st.video(url)
+            
+             elif seleccion == "🤖 Chat Epidemiológico":
+        st.header(seleccion)
+        pregunta = st.text_input("Escribe tu pregunta epidemiológica:")
+        if st.button("Enviar"):
+            st.success(f"Respuesta simulada para: {pregunta}")
 
-   elif seleccion == "🤖 Chat Epidemiológico":
-    st.header(seleccion)
-    pregunta = st.text_input("Escribe tu pregunta epidemiológica:")
-    if st.button("Enviar"):
-        # Aquí puedes integrar tu modelo Gemini AI o similar
-        st.success(f"Respuesta simulada para: {pregunta}")
 
     elif seleccion == "🎯 Gamificación":
     st.header(seleccion)
