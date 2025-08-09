@@ -179,7 +179,7 @@ def mostrar_mensaje_nivel(nivel, puntaje, total):
     st.success(mensajes.get(nivel, "¡Felicidades!"))
 
 def filtrar_preguntas_por_nivel(preguntas, nivel):
-    return [p for p in preguntas if p["nivel"] == nivel]
+    return [p for p in preguntas if p.get("nivel") == nivel]
 
 # --- Navegación ---
 def pagina_inicio():
@@ -286,28 +286,23 @@ def main():
         else:
             st.info("Archivo 'contenido/glosario_completo.py' no encontrado o variable 'glosario' no definida.")
 
-   elif seleccion == "🧪 Ejercicios Prácticos":
-    st.header(seleccion)
-    preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
+    elif seleccion == "🧪 Ejercicios Prácticos":
+        st.header(seleccion)
+        preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
 
-    # Depuración rápida para revisar las preguntas cargadas y sus claves
-    st.write("Cantidad de preguntas cargadas:", len(preguntas) if preguntas else 0)
-    for i, p in enumerate(preguntas or []):
-        st.write(f"Pregunta {i+1} keys:", list(p.keys()))
+        if preguntas:
+            for i, p in enumerate(preguntas):
+                nivel = p.get("nivel", "No definido")
+                st.subheader(f"Pregunta {i+1} (Nivel {nivel})")
+                respuesta = st.radio(p["pregunta"], p["opciones"], key=f"ej_{i}")
+                if st.button(f"Verificar respuesta {i+1}", key=f"btn_{i}"):
+                    if respuesta == p["respuesta_correcta"]:
+                        st.success("✅ Correcto")
+                    else:
+                        st.error(f"❌ Incorrecto. Respuesta correcta: {p['respuesta_correcta']}")
+        else:
+            st.info("Archivo 'contenido/ejercicios_completos.py' no encontrado o variable 'preguntas' no definida.")
 
-    if preguntas:
-        for i, p in enumerate(preguntas):
-            nivel = p.get("nivel", "No definido")  # Evita error si no hay 'nivel'
-            st.subheader(f"Pregunta {i+1} (Nivel {nivel})")
-            respuesta = st.radio(p["pregunta"], p["opciones"], key=f"ej_{i}")
-            if st.button(f"Verificar respuesta {i+1}", key=f"btn_{i}"):
-                if respuesta == p["respuesta_correcta"]:
-                    st.success("✅ Correcto")
-                else:
-                    st.error(f"❌ Incorrecto. Respuesta correcta: {p['respuesta_correcta']}")
-    else:
-        st.info("Archivo 'contenido/ejercicios_completos.py' no encontrado o variable 'preguntas' no definida.")
-        
     elif seleccion == "📊 Tablas 2x2 y Cálculos":
         st.header(seleccion)
         if "a" not in st.session_state: st.session_state.a = 10
@@ -373,73 +368,12 @@ def main():
 
     elif seleccion == "🤖 Chat Epidemiológico":
         st.header(seleccion)
-        st.info("Función integrada para consultas epidemiológicas.")
-        pregunta = st.text_input("Escribe tu pregunta epidemiológica:")
-        if st.button("Enviar"):
-            # Aquí puedes integrar tu modelo Gemini AI o similar
-            st.success(f"Respuesta simulada para: {pregunta}")
+        st.info("Función integrada próximamente...")
 
     elif seleccion == "🎯 Gamificación":
         st.header(seleccion)
-        niveles = ["Básico", "Intermedio", "Avanzado", "Experto/Messi"]
-
-        if st.session_state.nivel_gamificacion is None:
-            nivel = st.selectbox("¿En qué nivel consideras que estás?", niveles)
-            if st.button("Comenzar quiz"):
-                st.session_state.nivel_gamificacion = nivel
-                preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
-                if preguntas:
-                    # Mezclar opciones para cada pregunta y guardar
-                    preguntas_filtradas = filtrar_preguntas_por_nivel(preguntas, nivel)
-                    for p in preguntas_filtradas:
-                        opciones = p["opciones"].copy()
-                        random.shuffle(opciones)
-                        p["opciones_shuffled"] = opciones
-                    st.session_state.preguntas_gamificacion = preguntas_filtradas
-                else:
-                    st.error("No hay preguntas disponibles.")
-                st.session_state.index_pregunta = 0
-                st.session_state.respuestas_correctas = 0
-
-        else:
-            preguntas = st.session_state.preguntas_gamificacion
-            idx = st.session_state.index_pregunta
-
-            if idx < len(preguntas):
-                p = preguntas[idx]
-                st.subheader(f"Pregunta {idx+1} de {len(preguntas)} (Nivel {st.session_state.nivel_gamificacion})")
-                respuesta = st.radio(p["pregunta"], p["opciones_shuffled"], key=f"gam_preg_{idx}")
-                if st.button("Responder", key=f"gam_btn_{idx}"):
-                    correcta = p["respuesta_correcta"]
-                    # Comparar respuesta con correcta teniendo en cuenta opciones barajadas
-                    if respuesta == correcta:
-                        st.success("✅ Correcto!")
-                        st.session_state.respuestas_correctas += 1
-                    else:
-                        st.error(f"❌ Incorrecto. Respuesta correcta: {correcta}")
-                    st.session_state.index_pregunta += 1
-
-            else:
-                mostrar_confeti()
-                mostrar_mensaje_nivel(st.session_state.nivel_gamificacion,
-                                      st.session_state.respuestas_correctas,
-                                      len(preguntas))
-                if st.button("Reiniciar gamificación"):
-                    st.session_state.nivel_gamificacion = None
-                    st.session_state.index_pregunta = 0
-                    st.session_state.respuestas_correctas = 0
-
-    # Footer con tus datos
-    st.markdown("---")
-    st.markdown("""
-    <footer style="text-align:center; font-size:0.9rem; color:#555;">
-    Creado por Yolanda Muvdi - Enfermera Epidemióloga |  
-    📧 <a href="mailto:ymuvdi@gmail.com">ymuvdi@gmail.com</a> |  
-    🔗 <a href="https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/" target="_blank">LinkedIn</a>
-    </footer>
-    """, unsafe_allow_html=True)
+        st.info("Próximamente módulo de gamificación.")
 
 if __name__ == "__main__":
     main()
-
 
