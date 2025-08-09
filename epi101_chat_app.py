@@ -6,14 +6,14 @@ import numpy as np
 import math
 import os
 
-# Gemini client
+# Gemini client (google generative ai)
 try:
     import google.generativeai as genai
     GENAI_AVAILABLE = True
 except Exception:
     GENAI_AVAILABLE = False
 
-# SciPy (opcional)
+# SciPy (opcional) para Chi2 / Fisher
 try:
     from scipy.stats import chi2_contingency, fisher_exact
     SCIPY_AVAILABLE = True
@@ -25,7 +25,7 @@ except Exception:
 # -------------------------
 st.set_page_config(page_title="Epidemiología 101", page_icon="🧪", layout="wide")
 
-# Estilo
+# Estilo visual
 st.markdown("""
     <style>
     body, .block-container {
@@ -53,6 +53,7 @@ st.markdown('<div class="subtitle">Plataforma para aprender epidemiología, crea
 # Configuración Gemini (segura)
 # -------------------------
 GEMINI_KEY = st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
+
 if not GENAI_AVAILABLE:
     st.warning("La librería `google-generativeai` no está instalada. El chat no estará disponible.")
 elif not GEMINI_KEY:
@@ -65,14 +66,14 @@ else:
 
 def chat_with_gemini_messages(messages):
     """
-    messages: lista de dicts {'role':'system'|'user'|'assistant','content': str}
-    Devolvemos texto plano.
+    Envía historial (lista de dicts role/content) a Gemini y devuelve texto.
+    Protegido frente a errores de librería/clave.
     """
     if not GENAI_AVAILABLE:
         return "⚠ La librería google-generativeai no está disponible en este entorno."
     if not GEMINI_KEY:
         return "⚠ No hay GEMINI_API_KEY configurada."
-    # Convertir historial a un prompt concatenado simple (mantener roles)
+    # Convertir historial a prompt simple
     convo = []
     for m in messages:
         role = m.get("role", "user")
@@ -82,10 +83,9 @@ def chat_with_gemini_messages(messages):
     try:
         model = genai.GenerativeModel("gemini-pro")
         response = model.generate_content(prompt)
-        # response may have `.text` or `.candidates` depending on lib version
+        # Diferentes versiones de la lib pueden devolver text o candidates
         text = getattr(response, "text", None)
         if not text:
-            # try parse candidates
             if hasattr(response, "candidates") and len(response.candidates) > 0:
                 text = response.candidates[0].content
             else:
@@ -395,12 +395,10 @@ with tabs[8]:
 
     # Show history
     for msg in st.session_state["messages"]:
-        # Use st.chat_message when available
         try:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
         except Exception:
-            # fallback
             st.write(f"**{msg['role']}**: {msg['content']}")
 
     # Input
