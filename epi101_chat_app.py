@@ -1,36 +1,40 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import math
-import os
+import matplotlib.pyplot as plt
 from scipy.stats import chi2_contingency, fisher_exact, norm
+import os
 
-# ----------- CONFIGURACIÓN GENERAL --------------
-st.set_page_config(page_title="🧠 Epidemiología 101 - Masterclass", page_icon="🧪", layout="wide", initial_sidebar_state="expanded")
+# ------------- CONFIG -------------
+st.set_page_config(
+    page_title="🧠 Epidemiología 101 - Masterclass",
+    page_icon="🧪",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
-# ----------- ESTILOS CSS --------------
+# ----------- ESTILOS -----------
 st.markdown("""
 <style>
-    body, .block-container {
-        background: #fefefe;
+    .stApp {
+        background-color: #fefefe;
         color: #0d3b66;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        line-height: 1.5;
     }
-    .block-container {
-        max-width: 1100px;
-        margin: 2rem auto 4rem auto;
-        padding: 2rem 3rem;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 12px 30px rgba(13,59,102,0.1);
-    }
-    h1, h2, h3, h4 {
+    h1, h2, h3 {
         color: #0d3b66;
         font-weight: 700;
     }
-    .stButton>button {
+    .block-container {
+        max-width: 900px;
+        padding: 2rem 3rem;
+        margin: 2rem auto 4rem auto;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 8px 20px rgba(13,59,102,0.1);
+    }
+    .stButton > button {
         background-color: #0d3b66;
         color: white;
         border-radius: 7px;
@@ -39,102 +43,23 @@ st.markdown("""
         font-size: 1.1rem;
         transition: background-color 0.3s ease;
     }
-    .stButton>button:hover {
+    .stButton > button:hover {
         background-color: #09466b;
         cursor: pointer;
-    }
-    a {
-        color: #0d3b66;
-        text-decoration: none;
-    }
-    a:hover {
-        text-decoration: underline;
-    }
-    /* Botones grandes para móvil */
-    @media (max-width: 768px) {
-        .stButton>button {
-            width: 100% !important;
-            font-size: 1.2rem !important;
-        }
-    }
-    /* Inicio centrado */
-    .centered {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 80vh;
-        color: #0d3b66;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .titulo {
-        font-size: 3rem;
-        font-weight: 800;
-        margin-bottom: 1rem;
-    }
-    .subtitulo {
-        font-size: 1.5rem;
-        margin-bottom: 2rem;
-        font-weight: 600;
-    }
-    .stSelectbox > div > div > select {
-        font-size: 1.25rem;
-        padding: 10px;
-        border-radius: 10px;
-        border: 2px solid #0d3b66;
-        width: 320px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# ----------- MENU CON ICONOS --------------
-menu_items = {
-    "📌 Conceptos Básicos": "conceptos_basicos",
-    "📈 Medidas de Asociación": "medidas_asociacion",
-    "📊 Diseños de Estudio": "disenos_estudio",
-    "⚠️ Sesgos y Errores": "sesgos_errores",
-    "📚 Glosario Interactivo": "glosario_interactivo",
-    "🧪 Ejercicios Prácticos": "ejercicios_practicos",
-    "📊 Tablas 2x2 y Cálculos": "tablas_2x2",
-    "📉 Visualización de Datos": "visualizacion_datos",
-    "🎥 Multimedia YouTube": "multimedia_youtube",
-    "🤖 Chat Epidemiológico": "chat_gemini",
-    "🏆 Gamificación": "gamificacion"
-}
-
-# ----------- ESTADO INICIAL ---------
-if "seccion_actual" not in st.session_state:
-    st.session_state.seccion_actual = "Inicio"
-
-# ----------- FUNCIONES DE CARGA MD/VARIABLES --------------
-@st.cache_data(show_spinner=False)
-def cargar_md(ruta):
-    try:
-        with open(ruta, encoding="utf-8") as f:
-            return f.read()
-    except Exception:
-        return None
-
-@st.cache_data(show_spinner=False)
-def cargar_py_variable(ruta_py, var_name):
-    ns = {}
-    try:
-        with open(ruta_py, encoding="utf-8") as f:
-            exec(f.read(), ns)
-        return ns.get(var_name)
-    except Exception:
-        return None
-
-# ----------- FUNCIONES TABLAS 2x2, CÁLCULOS, INTERPRETACIONES --------------
+# -------- FUNCIONES DE CÁLCULO EPIDEMIOLÓGICO -----------
 def corregir_ceros(a,b,c,d):
     if 0 in [a,b,c,d]:
         return a+0.5, b+0.5, c+0.5, d+0.5, True
     return a,b,c,d, False
 
 def ic_riesgo_relativo(a,b,c,d, alpha=0.05):
-    risk1 = a / (a + b)
-    risk2 = c / (c + d)
-    rr = risk1 / risk2
+    risk1 = a/(a+b)
+    risk2 = c/(c+d)
+    rr = risk1/risk2
     se_log_rr = math.sqrt(1/a - 1/(a+b) + 1/c - 1/(c+d))
     z = norm.ppf(1 - alpha/2)
     lower = math.exp(math.log(rr) - z * se_log_rr)
@@ -145,13 +70,13 @@ def ic_odds_ratio(a,b,c,d, alpha=0.05):
     or_ = (a*d)/(b*c)
     se_log_or = math.sqrt(1/a + 1/b + 1/c + 1/d)
     z = norm.ppf(1 - alpha/2)
-    lower = math.exp(math.log(or_) - z * se_log_or)
-    upper = math.exp(math.log(or_) + z * se_log_or)
+    lower = math.exp(math.log(or_) - z*se_log_or)
+    upper = math.exp(math.log(or_) + z*se_log_or)
     return or_, lower, upper
 
 def diferencia_riesgos(a,b,c,d, alpha=0.05):
-    risk1 = a / (a + b)
-    risk2 = c / (c + d)
+    risk1 = a/(a+b)
+    risk2 = c/(c+d)
     rd = risk1 - risk2
     se_rd = math.sqrt((risk1*(1-risk1))/(a+b) + (risk2*(1-risk2))/(c+d))
     z = norm.ppf(1 - alpha/2)
@@ -160,40 +85,20 @@ def diferencia_riesgos(a,b,c,d, alpha=0.05):
     return rd, lower, upper
 
 def calcular_p_valor(a,b,c,d):
-    try:
-        table = np.array([[a,b],[c,d]])
-        chi2, p, dof, expected = chi2_contingency(table, correction=False)
-        if (expected < 5).any():
-            _, p = fisher_exact(table)
-            test_used = "Fisher exact test"
-        else:
-            test_used = "Chi-cuadrado sin corrección"
-        return p, test_used
-    except Exception:
-        return None, "Error en cálculo p-valor"
-
-def interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_val, test_name):
-    texto = f"""
-*Resultados Epidemiológicos:*
-
-•⁠  ⁠Riesgo Relativo (RR): {rr:.3f} (IC95% {rr_l:.3f} - {rr_u:.3f})  
-•⁠  ⁠Odds Ratio (OR): {or_:.3f} (IC95% {or_l:.3f} - {or_u:.3f})  
-•⁠  ⁠Diferencia de Riesgos (RD): {rd:.3f} (IC95% {rd_l:.3f} - {rd_u:.3f})  
-•⁠  ⁠Valor p ({test_name}): {p_val if p_val is not None else 'N/A'}  
-
-"""
-    if p_val is not None and p_val < 0.05:
-        texto += "🎯 La asociación es estadísticamente significativa (p < 0.05)."
-    elif p_val is not None:
-        texto += "⚠️ No se encontró asociación estadísticamente significativa (p ≥ 0.05)."
+    table = np.array([[a,b],[c,d]])
+    chi2, p, dof, expected = chi2_contingency(table, correction=False)
+    if (expected < 5).any():
+        _, p = fisher_exact(table)
+        test_used = "Fisher exact test"
     else:
-        texto += "⚠️ No se pudo calcular valor p."
-    return texto
+        test_used = "Chi-cuadrado sin corrección"
+    return p, test_used
 
+# --------- FUNCIONES DE PLOTEO ----------
 def plot_forest(rr, rr_l, rr_u, or_, or_l, or_u):
     fig, ax = plt.subplots(figsize=(6,3))
     ax.errorbar(x=[rr, or_], y=[2,1], 
-                xerr=[ [rr-rr_l, or_-or_l], [rr_u-rr, or_u-or_] ], 
+                xerr=[[rr - rr_l, or_ - or_l], [rr_u - rr, or_u - or_]],
                 fmt='o', color='#0d3b66', capsize=5, markersize=10)
     ax.set_yticks([1,2])
     ax.set_yticklabels(["Odds Ratio (OR)", "Riesgo Relativo (RR)"])
@@ -213,100 +118,101 @@ def plot_barras_expuestos(a,b,c,d):
     plt.xticks(rotation=15)
     st.pyplot(fig, use_container_width=True)
 
-# ----------- GAMIFICACIÓN --------------
-def mostrar_insignia(tipo):
-    insignias = {
-        "inicio": "🎓 Bienvenida a Epidemiología 101. ¡Empecemos la aventura científica! 🧬",
-        "ejercicio_correcto": "🏅 ¡Genial! Has desbloqueado una insignia por responder correctamente. Sigue así 🔥",
-        "completo": "🌟 ¡Felicidades! Has completado todos los ejercicios y desbloqueado el certificado digital. 📜"
-    }
-    msg = insignias.get(tipo, "🎉 ¡Bien hecho!")
-    st.toast(msg, icon="🎉")
-
-# Gamificación avanzada con niveles
+# ------------- GAMIFICACIÓN --------------
 def gamificacion():
-    st.subheader("Selecciona tu nivel actual en Epidemiología")
-    niveles = ["Básico", "Intermedio", "Avanzado", "Experto/Messi"]
-    nivel = st.selectbox("Nivel de epidemiología", niveles, key="nivel_gamificacion")
-    
-    preguntas_nivel = {
+    st.header("🎮 Gamificación: ¿Qué nivel crees tener en Epidemiología?")
+
+    niveles = {
         "Básico": [
-            {
-                "pregunta": "¿Qué es la epidemiología?",
-                "opciones": ["Estudio de animales", "Estudio de enfermedades en poblaciones", "Estudio de plantas"],
-                "respuesta_correcta": "Estudio de enfermedades en poblaciones"
-            },
-            {
-                "pregunta": "¿Qué mide la incidencia?",
-                "opciones": ["Nuevos casos", "Casos totales", "Casos recuperados"],
-                "respuesta_correcta": "Nuevos casos"
-            }
+            {"pregunta": "¿Qué es la epidemiología?", 
+             "opciones": ["Estudio de bacterias", "Estudio de enfermedades en poblaciones", "Estudio de genética", "Estudio del clima"],
+             "respuesta_correcta": "Estudio de enfermedades en poblaciones"},
+            {"pregunta": "¿Qué mide la incidencia?", 
+             "opciones": ["Nuevos casos en un tiempo", "Total de casos acumulados", "Número de muertes", "Población total"],
+             "respuesta_correcta": "Nuevos casos en un tiempo"}
         ],
         "Intermedio": [
-            {
-                "pregunta": "¿Qué es un Odds Ratio?",
-                "opciones": ["Medida de asociación", "Tasa de mortalidad", "Variable de confusión"],
-                "respuesta_correcta": "Medida de asociación"
-            },
-            {
-                "pregunta": "¿Qué es un sesgo de selección?",
-                "opciones": ["Error de medición", "Error en selección de participantes", "Error aleatorio"],
-                "respuesta_correcta": "Error en selección de participantes"
-            }
+            {"pregunta": "¿Qué es un diseño de cohorte?", 
+             "opciones": ["Estudio transversal", "Estudio prospectivo de seguimiento", "Ensayo clínico", "Revisión sistemática"],
+             "respuesta_correcta": "Estudio prospectivo de seguimiento"},
+            {"pregunta": "¿Qué es un Odds Ratio?", 
+             "opciones": ["Medida de asociación en casos y controles", "Medida de incidencia", "Medida de prevalencia", "Medida de mortalidad"],
+             "respuesta_correcta": "Medida de asociación en casos y controles"}
         ],
         "Avanzado": [
-            {
-                "pregunta": "¿Qué método se usa para ajustar confusores?",
-                "opciones": ["Regresión logística", "T-test", "ANOVA"],
-                "respuesta_correcta": "Regresión logística"
-            },
-            {
-                "pregunta": "¿Qué es un diseño transversal?",
-                "opciones": ["Estudio en un momento", "Estudio longitudinal", "Estudio experimental"],
-                "respuesta_correcta": "Estudio en un momento"
-            }
+            {"pregunta": "¿Qué test estadístico se usa si las frecuencias esperadas son bajas?", 
+             "opciones": ["Chi-cuadrado", "Fisher exacto", "t-test", "ANOVA"],
+             "respuesta_correcta": "Fisher exacto"},
+            {"pregunta": "¿Qué es un sesgo de selección?", 
+             "opciones": ["Error aleatorio", "Error sistemático en selección de participantes", "Confusión", "Error de medición"],
+             "respuesta_correcta": "Error sistemático en selección de participantes"}
         ],
-        "Experto/Messi": [
-            {
-                "pregunta": "¿Qué significa p<0.05 en análisis estadístico?",
-                "opciones": ["No hay asociación", "Asociación significativa", "Error tipo II"],
-                "respuesta_correcta": "Asociación significativa"
-            },
-            {
-                "pregunta": "¿Qué es un efecto modificador?",
-                "opciones": ["Variable que modifica asociación", "Variable dependiente", "Variable confusora"],
-                "respuesta_correcta": "Variable que modifica asociación"
-            }
+        "Experto / Messi": [
+            {"pregunta": "¿Cuál es el propósito principal del análisis multivariado?", 
+             "opciones": ["Describir datos", "Controlar confusión y evaluar asociaciones ajustadas", "Calcular prevalencia", "Realizar muestreos"],
+             "respuesta_correcta": "Controlar confusión y evaluar asociaciones ajustadas"},
+            {"pregunta": "¿Qué es el error tipo I?", 
+             "opciones": ["No rechazar H0 cuando es falsa", "Rechazar H0 cuando es verdadera", "Error en muestreo", "Error en medición"],
+             "respuesta_correcta": "Rechazar H0 cuando es verdadera"}
         ]
     }
-    
-    preguntas = preguntas_nivel.get(nivel, [])
-    correctas = 0
-    for i, q in enumerate(preguntas):
-        st.markdown(f"**Pregunta {i+1}:** {q['pregunta']}")
-        resp = st.radio("", q['opciones'], key=f"gam_{nivel}_{i}")
-        if st.button(f"Verificar Pregunta {i+1}", key=f"btn_gam_{nivel}_{i}"):
-            if resp == q['respuesta_correcta']:
-                st.success("✅ Correcto")
-                correctas += 1
+
+    # Estado para gamificación
+    if "nivel" not in st.session_state:
+        st.session_state.nivel = None
+    if "indice_pregunta" not in st.session_state:
+        st.session_state.indice_pregunta = 0
+    if "puntaje" not in st.session_state:
+        st.session_state.puntaje = 0
+    if "mostrar_resultado" not in st.session_state:
+        st.session_state.mostrar_resultado = False
+
+    if st.session_state.nivel is None:
+        nivel_elegido = st.selectbox("Selecciona tu nivel:", list(niveles.keys()))
+        if st.button("Iniciar Quiz"):
+            st.session_state.nivel = nivel_elegido
+            st.session_state.indice_pregunta = 0
+            st.session_state.puntaje = 0
+            st.session_state.mostrar_resultado = False
+    else:
+        preguntas = niveles[st.session_state.nivel]
+        if st.session_state.indice_pregunta < len(preguntas):
+            pregunta_actual = preguntas[st.session_state.indice_pregunta]
+            st.subheader(f"Pregunta {st.session_state.indice_pregunta+1} de {len(preguntas)}")
+            respuesta = st.radio(pregunta_actual["pregunta"], pregunta_actual["opciones"], key="resp_gam")
+
+            if st.button("Responder", key="boton_responder"):
+                if respuesta == pregunta_actual["respuesta_correcta"]:
+                    st.success("✅ Correcto!")
+                    st.session_state.puntaje += 1
+                else:
+                    st.error(f"❌ Incorrecto. La respuesta correcta es: {pregunta_actual['respuesta_correcta']}")
+                st.session_state.indice_pregunta += 1
+        else:
+            st.write(f"Tu puntaje final es: {st.session_state.puntaje} de {len(preguntas)}")
+            if st.session_state.puntaje == len(preguntas):
+                st.balloons()
+                st.success("🎉 ¡Eres un experto en Epidemiología! ¡Felicitaciones!")
+            elif st.session_state.puntaje >= len(preguntas)*0.7:
+                st.success("👍 Muy bien, casi experto. Sigue practicando.")
             else:
-                st.error(f"❌ Incorrecto. La respuesta correcta es: {q['respuesta_correcta']}")
+                st.info("📚 Sigue estudiando, ¡vas por buen camino!")
 
-    if correctas == len(preguntas) and len(preguntas) > 0:
-        st.balloons()
-        st.success(f"¡Excelente, {nivel}! Eres un pro en Epidemiología 🎉")
-    elif len(preguntas) > 0:
-        st.info("Sigue estudiando para subir de nivel 🚀")
+            if st.button("Volver a elegir nivel"):
+                st.session_state.nivel = None
+                st.session_state.indice_pregunta = 0
+                st.session_state.puntaje = 0
+                st.session_state.mostrar_resultado = False
 
-# ----------- CHAT GEMINI --------------
-GENAI_AVAILABLE = False
+# --------- CHAT GEMINI ------------
 try:
     import google.generativeai as genai
     GENAI_AVAILABLE = True
-except Exception:
-    pass
+except ImportError:
+    GENAI_AVAILABLE = False
 
 GEMINI_KEY = st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
+
 if GENAI_AVAILABLE and GEMINI_KEY:
     try:
         genai.configure(api_key=GEMINI_KEY)
@@ -316,159 +222,270 @@ else:
     if not GENAI_AVAILABLE:
         st.info("⚠️ Gemini no disponible: falta la librería google-generativeai.")
     elif not GEMINI_KEY:
-        st.info("⚠️ No configurada GEMINI_API_KEY en secrets o entorno.")
+        st.info("⚠️ No configurada GEMINI_API_KEY.")
 
-def chat_with_gemini(messages):
-    if not GENAI_AVAILABLE:
-        return "⚠ La librería google-generativeai no está disponible."
-    if not GEMINI_KEY:
-        return "⚠ No hay GEMINI_API_KEY configurada."
-    prompt = "\n\n".join([f"[{m['role'].upper()}]\n{m['content']}" for m in messages]) + "\n\n[ASSISTANT]\nResponde clara y didácticamente."
-    try:
-        model = genai.GenerativeModel("gemini-2.5-pro")
-        response = model.generate_content(prompt)
-        text = getattr(response, "text", None)
-        if not text and hasattr(response, "candidates") and response.candidates:
-            text = getattr(response.candidates[0], "content", str(response))
-        return text or str(response)
-    except Exception as e:
-        return f"⚠ Error en Gemini: {e}"
+def chat_gemini_interface():
+    st.header("🤖 Chat Epidemiológico con Gemini")
+    if "chat_historial" not in st.session_state:
+        st.session_state.chat_historial = [{"role":"system","content":"Eres un asistente experto en epidemiología, amable y didáctico."}]
+    user_input = st.text_area("Pregunta algo sobre epidemiología:", key="chat_input")
+    if st.button("Enviar pregunta"):
+        if user_input.strip():
+            st.session_state.chat_historial.append({"role":"user","content":user_input})
+            respuesta = "⚠ Gemini no está disponible."
+            if GENAI_AVAILABLE and GEMINI_KEY:
+                try:
+                    model = genai.GenerativeModel("gemini-2.5-pro")
+                    prompt = "\n\n".join([f"[{m['role'].upper()}]\n{m['content']}" for m in st.session_state.chat_historial]) + "\n\n[ASSISTANT]\n"
+                    response = model.generate_content(prompt)
+                    text = getattr(response, "text", None)
+                    if not text and hasattr(response, "candidates") and response.candidates:
+                        text = getattr(response.candidates[0], "content", None)
+                    respuesta = text or "⚠ No se recibió respuesta válida."
+                except Exception as e:
+                    respuesta = f"⚠ Error en Gemini: {e}"
+            st.session_state.chat_historial.append({"role":"assistant","content":respuesta})
+    for mensaje in st.session_state.chat_historial:
+        role = mensaje["role"]
+        contenido = mensaje["content"]
+        if role == "user":
+            st.markdown(f"**Tú:** {contenido}")
+        elif role == "assistant":
+            st.markdown(f"**Asistente:** {contenido}")
 
-# ----------- PANTALLA INICIAL --------------
-def pantalla_inicio():
-    st.markdown(
-        """
-        <div class="centered">
-            <div class="titulo">🧠 Epidemiología 101</div>
-            <div class="subtitulo">¿Qué quieres aprender hoy?</div>
-        </div>
-        """, unsafe_allow_html=True)
-    opcion = st.selectbox("", list(menu_items.keys()), key="inicio_dropdown")
-    if opcion != "":
-        st.session_state.seccion_actual = menu_items[opcion]
-        st.experimental_rerun()
+# --------- SECCIONES CON CONTENIDO Y VIDEOS --------------
+def seccion_contenido(titulo, texto, video_url=None):
+    st.header(titulo)
+    st.markdown(texto)
+    if video_url:
+        st.video(video_url)
 
-# ----------- BARRA LATERAL --------------
-def barra_lateral():
-    st.sidebar.title("🧪 Epidemiología 101")
-    st.sidebar.markdown("""
-    👩‍⚕️ Creado por Yolanda Muvdi, Enfermera Epidemióloga  
-    📧 [ymuvdi@gmail.com](mailto:ymuvdi@gmail.com)  
-    🔗 [LinkedIn](https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/)
-    """)
-    opcion_sidebar = st.sidebar.radio("Selecciona una sección:", list(menu_items.keys()), index=list(menu_items.values()).index(st.session_state.seccion_actual))
-    if menu_items[opcion_sidebar] != st.session_state.seccion_actual:
-        st.session_state.seccion_actual = menu_items[opcion_sidebar]
-        st.experimental_rerun()
+def seccion_ejercicios():
+    st.header("🧪 Ejercicios Prácticos de Epidemiología")
 
-# ----------- SECCIONES --------------
-def mostrar_contenido():
-    s = st.session_state.seccion_actual
-    if s == "Inicio":
-        pantalla_inicio()
+    preguntas = [
+        {
+            "pregunta": "¿Cuál es la medida de frecuencia que calcula nuevos casos en un período de tiempo?",
+            "opciones": ["Prevalencia", "Incidencia", "Mortalidad", "Tasa bruta"],
+            "correcta": "Incidencia"
+        },
+        {
+            "pregunta": "¿Qué tipo de estudio es el que sigue a un grupo de individuos a lo largo del tiempo?",
+            "opciones": ["Estudio transversal", "Cohorte", "Caso-control", "Ensayo clínico"],
+            "correcta": "Cohorte"
+        },
+        {
+            "pregunta": "¿Qué significa un Odds Ratio mayor a 1?",
+            "opciones": ["No hay asociación", "Asociación positiva", "Asociación negativa", "Error en datos"],
+            "correcta": "Asociación positiva"
+        }
+    ]
 
-    elif s == "conceptos_basicos":
-        st.header("📌 Conceptos Básicos")
-        st.markdown("""
-        Ciencia que estudia la frecuencia, distribución y determinantes de las enfermedades en poblaciones humanas, y aplica este conocimiento al control de problemas de salud.
-        """)
-        st.video("https://www.youtube.com/watch?v=qVFP-IkyWgQ")
+    if "ejercicio_indice" not in st.session_state:
+        st.session_state.ejercicio_indice = 0
+    if "ejercicio_puntaje" not in st.session_state:
+        st.session_state.ejercicio_puntaje = 0
 
-    elif s == "medidas_asociacion":
-        st.header("📈 Medidas de Asociación")
-        st.markdown("Explicación de medidas de asociación en epidemiología.")
-        st.video("https://www.youtube.com/watch?v=d61E24xvRfI")
+    if st.session_state.ejercicio_indice < len(preguntas):
+        p = preguntas[st.session_state.ejercicio_indice]
+        st.subheader(f"Pregunta {st.session_state.ejercicio_indice+1} de {len(preguntas)}")
+        respuesta = st.radio(p["pregunta"], p["opciones"], key="respuesta_ejercicio")
 
-    elif s == "disenos_estudio":
-        st.header("📊 Diseños de Estudio")
-        st.markdown("Descripción de diseños de estudio epidemiológicos.")
-        st.video("https://www.youtube.com/watch?v=y6odn6E8yRs")
-
-    elif s == "sesgos_errores":
-        st.header("⚠️ Sesgos y Errores")
-        st.markdown("Tipos y ejemplos de sesgos en epidemiología.")
-        st.video("https://www.youtube.com/watch?v=1kyFIyG37qc")
-
-    elif s == "glosario_interactivo":
-        st.header("📚 Glosario Interactivo")
-        st.markdown("Aquí irá tu glosario interactivo con términos epidemiológicos.")
-
-    elif s == "ejercicios_practicos":
-        st.header("🧪 Ejercicios Prácticos")
-        st.markdown("Ejercicios para practicar tus conocimientos.")
-
-    elif s == "tablas_2x2":
-        st.header("📊 Tablas 2x2 y Cálculos")
-        st.markdown("Calcula medidas de asociación desde tablas 2x2.")
-
-        col1, col2 = st.columns(2)
-        with col1:
-            a = st.number_input("Casos Expuestos (a)", min_value=0, value=10)
-            b = st.number_input("No Casos Expuestos (b)", min_value=0, value=20)
-        with col2:
-            c = st.number_input("Casos No Expuestos (c)", min_value=0, value=5)
-            d = st.number_input("No Casos No Expuestos (d)", min_value=0, value=30)
-
-        if st.button("Calcular Medidas de Asociación"):
-            a_corr, b_corr, c_corr, d_corr, corregido = corregir_ceros(a,b,c,d)
-            rr, rr_l, rr_u = ic_riesgo_relativo(a_corr,b_corr,c_corr,d_corr)
-            or_, or_l, or_u = ic_odds_ratio(a_corr,b_corr,c_corr,d_corr)
-            rd, rd_l, rd_u = diferencia_riesgos(a_corr,b_corr,c_corr,d_corr)
-            p_val, test_name = calcular_p_valor(a_corr,b_corr,c_corr,d_corr)
-
-            st.markdown(interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_val, test_name))
-            plot_forest(rr, rr_l, rr_u, or_, or_l, or_u)
-            plot_barras_expuestos(a,b,c,d)
-
-    elif s == "visualizacion_datos":
-        st.header("📉 Visualización de Datos")
-        st.markdown("Próximamente: herramientas para crear gráficos interactivos.")
-
-    elif s == "multimedia_youtube":
-        st.header("🎥 Multimedia YouTube")
-        st.markdown("""
-        - Introducción a la Epidemiología: [Video](https://www.youtube.com/watch?v=qVFP-IkyWgQ)  
-        - Medidas de Asociación: [Video](https://www.youtube.com/watch?v=d61E24xvRfI)  
-        - Diseños de Estudio: [Video](https://www.youtube.com/watch?v=y6odn6E8yRs)  
-        - Sesgos y Errores: [Video](https://www.youtube.com/watch?v=1kyFIyG37qc)
-        """)
-
-    elif s == "chat_gemini":
-        st.header("🤖 Chat Epidemiológico con Gemini")
-        if not GENAI_AVAILABLE or not GEMINI_KEY:
-            st.warning("⚠️ Gemini no está configurado o no está disponible.")
-            return
-        chat_history = st.session_state.get("chat_history", [])
-        if "input_text" not in st.session_state:
-            st.session_state.input_text = ""
-
-        with st.form("form_gemini", clear_on_submit=True):
-            user_input = st.text_area("Pregunta a Gemini:", height=100)
-            submit = st.form_submit_button("Enviar")
-            if submit and user_input.strip():
-                chat_history.append({"role": "user", "content": user_input})
-                respuesta = chat_with_gemini(chat_history)
-                chat_history.append({"role": "assistant", "content": respuesta})
-                st.session_state.chat_history = chat_history
-
-        for msg in chat_history:
-            if msg["role"] == "user":
-                st.markdown(f"**Tú:** {msg['content']}")
+        if st.button("Responder ejercicio"):
+            if respuesta == p["correcta"]:
+                st.success("¡Correcto!")
+                st.session_state.ejercicio_puntaje += 1
             else:
-                st.markdown(f"**Gemini:** {msg['content']}")
+                st.error(f"Incorrecto. La respuesta correcta es: {p['correcta']}")
+            st.session_state.ejercicio_indice += 1
+    else:
+        st.write(f"Terminaste todos los ejercicios con {st.session_state.ejercicio_puntaje} respuestas correctas de {len(preguntas)}")
+        if st.session_state.ejercicio_puntaje == len(preguntas):
+            st.balloons()
+            st.success("🎉 Excelente, dominaste estos ejercicios.")
+        elif st.session_state.ejercicio_puntaje >= len(preguntas)*0.7:
+            st.success("¡Muy bien! Sigue practicando para mejorar aún más.")
+        else:
+            st.info("Sigue estudiando, lo importante es avanzar.")
+        if st.button("Reiniciar ejercicios"):
+            st.session_state.ejercicio_indice = 0
+            st.session_state.ejercicio_puntaje = 0
 
-    elif s == "gamificacion":
-        st.header("🏆 Gamificación")
+# --------- TABLAS 2x2 Y CÁLCULOS -------------
+def seccion_tablas_calculos():
+    st.header("📊 Tablas 2x2 y Cálculos Epidemiológicos")
+    st.markdown("Introduce los valores de la tabla 2x2 para calcular medidas de asociación:")
+
+    a = st.number_input("Casos expuestos (a)", min_value=0, value=10, step=1)
+    b = st.number_input("No casos expuestos (b)", min_value=0, value=15, step=1)
+    c = st.number_input("Casos no expuestos (c)", min_value=0, value=5, step=1)
+    d = st.number_input("No casos no expuestos (d)", min_value=0, value=20, step=1)
+
+    if st.button("Calcular medidas"):
+        A, B, C, D, corregido = corregir_ceros(a, b, c, d)
+        rr, rr_l, rr_u = ic_riesgo_relativo(A,B,C,D)
+        or_, or_l, or_u = ic_odds_ratio(A,B,C,D)
+        rd, rd_l, rd_u = diferencia_riesgos(A,B,C,D)
+        p_val, test_name = calcular_p_valor(A,B,C,D)
+
+        st.markdown(f"""
+        **Resultados:**
+
+        - Riesgo Relativo (RR): {rr:.3f} (IC95% {rr_l:.3f} - {rr_u:.3f})  
+        - Odds Ratio (OR): {or_:.3f} (IC95% {or_l:.3f} - {or_u:.3f})  
+        - Diferencia de Riesgos (RD): {rd:.3f} (IC95% {rd_l:.3f} - {rd_u:.3f})  
+        - Valor p ({test_name}): {p_val:.4f}  
+        """)
+
+        if p_val < 0.05:
+            st.success("🎯 Asociación estadísticamente significativa (p < 0.05).")
+        else:
+            st.warning("⚠ No hay asociación estadísticamente significativa (p ≥ 0.05).")
+
+        plot_forest(rr, rr_l, rr_u, or_, or_l, or_u)
+        plot_barras_expuestos(a,b,c,d)
+
+# -------- MULTIMEDIA YOUTUBE --------
+def seccion_multimedia():
+    st.header("🎥 Videos para Aprender Epidemiología")
+    videos = {
+        "Introducción a Epidemiología": "https://www.youtube.com/watch?v=6T_oIjzx6e8",
+        "Medidas de Asociación": "https://www.youtube.com/watch?v=3EL8Dwb-OIk",
+        "Sesgos en Estudios Epidemiológicos": "https://www.youtube.com/watch?v=VJlx6z2u94w"
+    }
+    for titulo, url in videos.items():
+        st.subheader(titulo)
+        st.video(url)
+
+# --------- MENÚ LATERAL Y NAVEGACIÓN ---------
+def main():
+    st.sidebar.title("🧪 Epidemiología 101")
+    opciones = [
+        "Inicio",
+        "Conceptos Básicos",
+        "Medidas Completas",
+        "Diseños de Estudio",
+        "Sesgos y Errores",
+        "Glosario Interactivo",
+        "Ejercicios Prácticos",
+        "Tablas 2x2 y Cálculos",
+        "Visualización de Datos",
+        "Multimedia YouTube",
+        "Gamificación",
+        "Chat Epidemiológico"
+    ]
+
+    # Dropdown que oculta título al seleccionar otro
+    seleccion = st.sidebar.selectbox("Seleccione sección", opciones)
+
+    # Título principal solo si está en inicio
+    if seleccion == "Inicio":
+        st.title("🧠 Bienvenida a Epidemiología 101")
+        st.markdown("""
+        Este espacio está creado para ti, para dominar la epidemiología con contenido claro, ejercicios prácticos, visualizaciones y hasta gamificación para hacerlo divertido.  
+        Selecciona una sección en la barra lateral para comenzar.
+        """)
+        return
+
+    # Secciones
+    if seleccion == "Conceptos Básicos":
+        texto = """
+        ### ¿Qué es Epidemiología?
+
+        La epidemiología es la ciencia que estudia la frecuencia, distribución y determinantes de enfermedades o eventos relacionados con la salud en poblaciones humanas.  
+        Permite identificar factores de riesgo, evaluar intervenciones y guiar políticas de salud pública.
+
+        ---
+        ### Medidas de Frecuencia
+
+        - Prevalencia: proporción de individuos con la enfermedad en un momento o periodo.  
+        - Incidencia: número de casos nuevos en un tiempo definido.  
+        - Mortalidad: número de muertes en una población.
+
+        """
+        seccion_contenido("Conceptos Básicos", texto)
+
+    elif seleccion == "Medidas Completas":
+        texto = """
+        ### Medidas de Asociación
+
+        - Riesgo Relativo (RR): razón de incidencia en expuestos vs no expuestos.  
+        - Odds Ratio (OR): odds de exposición en casos vs controles.  
+        - Diferencia de Riesgos (RD): diferencia absoluta en incidencia entre grupos.
+
+        ---
+        ### Intervalos de Confianza e Importancia Estadística
+
+        El IC 95% indica el rango plausible para la medida en la población.  
+        Un valor p < 0.05 indica asociación estadísticamente significativa.
+
+        """
+        seccion_contenido("Medidas Completas", texto)
+
+    elif seleccion == "Diseños de Estudio":
+        texto = """
+        ### Principales Diseños de Estudio
+
+        - Estudio Transversal: análisis puntual, prevalencia.  
+        - Estudio de Cohorte: seguimiento a lo largo del tiempo, incidencia.  
+        - Estudio Caso-Control: comparativo retrospectivo para factores de riesgo.  
+        - Ensayo Clínico: intervención asignada aleatoriamente para evaluar tratamientos.
+
+        """
+        seccion_contenido("Diseños de Estudio", texto)
+
+    elif seleccion == "Sesgos y Errores":
+        texto = """
+        ### Sesgos Comunes en Epidemiología
+
+        - Sesgo de Selección: error en la inclusión de participantes.  
+        - Sesgo de Información: errores en medición o clasificación.  
+        - Confusión: factor externo asociado a exposición y resultado que distorsiona la asociación.
+
+        ---
+        ### Cómo Minimizar Sesgos
+
+        Diseño riguroso, uso de controles, cegamiento y análisis estadísticos ajustados.
+
+        """
+        seccion_contenido("Sesgos y Errores", texto)
+
+    elif seleccion == "Glosario Interactivo":
+        st.header("📚 Glosario Interactivo")
+        glosario = {
+            "Epidemiología": "Ciencia que estudia la distribución y determinantes de eventos de salud.",
+            "Incidencia": "Número de casos nuevos de enfermedad en un tiempo determinado.",
+            "Prevalencia": "Proporción de individuos con la enfermedad en un momento específico.",
+            "Riesgo Relativo": "Medida que compara la incidencia entre expuestos y no expuestos.",
+            "Odds Ratio": "Medida de asociación usada en estudios caso-control.",
+            "Sesgo": "Error sistemático que distorsiona resultados de estudios.",
+        }
+        termino = st.selectbox("Selecciona un término para ver su definición:", sorted(glosario.keys()))
+        st.write(f"**{termino}:** {glosario[termino]}")
+
+    elif seleccion == "Ejercicios Prácticos":
+        seccion_ejercicios()
+
+    elif seleccion == "Tablas 2x2 y Cálculos":
+        seccion_tablas_calculos()
+
+    elif seleccion == "Visualización de Datos":
+        st.header("📉 Visualización de Datos")
+        st.info("En construcción: próximamente podrás cargar tus datos y graficarlos interactivo.")
+
+    elif seleccion == "Multimedia YouTube":
+        seccion_multimedia()
+
+    elif seleccion == "Gamificación":
         gamificacion()
 
-# ----------- MAIN ---------
-def main():
-    if st.session_state.seccion_actual == "Inicio":
-        pantalla_inicio()
+    elif seleccion == "Chat Epidemiológico":
+        chat_gemini_interface()
+
     else:
-        barra_lateral()
-        mostrar_contenido()
+        st.warning("Sección no encontrada. Intenta otra opción.")
 
 if __name__ == "__main__":
     main()
+
 
