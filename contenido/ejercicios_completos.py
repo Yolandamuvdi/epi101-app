@@ -109,8 +109,6 @@ preguntas = [
         "respuesta_correcta": "Tercera variable que distorsiona asociación",
         "nivel": "Intermedio"
     },
-    # ... y así sucesivamente para las siguientes preguntas:
-
     {
         "pregunta": "¿Qué mide la tasa de letalidad?",
         "opciones": [
@@ -144,9 +142,6 @@ preguntas = [
         "respuesta_correcta": "Selecciona personas por desenlace",
         "nivel": "Intermedio"
     },
-    # Sigue agregando niveles en cada pregunta siguiendo esta lógica según complejidad del concepto
-
-    # Última pregunta como ejemplo:
     {
         "pregunta": "¿Qué es la prevalencia puntual?",
         "opciones": [
