@@ -9,6 +9,16 @@ import os
 import numpy as np
 import math
 
+# =========================================
+# CONFIGURACIÓN DE GEMINI
+# =========================================
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+
+def chat_with_gemini(prompt):
+    model = genai.GenerativeModel("gemini-pro")
+    response = model.generate_content(prompt)
+    return response.text
+
 # Intentar importar SciPy para pruebas estadísticas
 try:
     from scipy.stats import chi2_contingency, fisher_exact
