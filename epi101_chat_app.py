@@ -97,13 +97,13 @@ def mostrar_splash():
     st.markdown("""
     <style>
     .blue-box {
-        background-color: #0d3b66;
+        background: linear-gradient(135deg, #0d3b66, #144d79);
         color: white;
-        padding: 3rem 2rem 2rem 2rem;
-        border-radius: 16px;
-        max-width: 450px;
+        padding: 3rem 2.5rem 2.5rem 2.5rem;
+        border-radius: 20px;
+        max-width: 480px;
         height: 300px;
-        margin: 6rem auto 2rem auto;
+        margin: 6rem auto 1rem auto;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
 
@@ -111,52 +111,225 @@ def mostrar_splash():
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        box-shadow: 0 6px 15px rgba(13, 59, 102, 0.6);
+        box-shadow: 0 10px 25px rgba(13, 59, 102, 0.8);
         position: relative;
+        transition: transform 0.3s ease;
+    }
+    .blue-box:hover {
+        transform: scale(1.03);
+        box-shadow: 0 14px 35px rgba(13, 59, 102, 0.9);
     }
     .blue-box h1 {
-        font-size: 2.8rem;
-        font-weight: 700;
+        font-size: 3rem;
+        font-weight: 900;
         display: flex;
         align-items: center;
-        gap: 0.6rem;
-        margin-bottom: 0.2rem;
+        gap: 0.7rem;
+        margin-bottom: 0.7rem;
         justify-content: center;
+        letter-spacing: 1.2px;
+        user-select: none;
     }
     .blue-box h1 .icon {
-        font-size: 3.2rem;
+        font-size: 3.5rem;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.15); }
     }
     .blue-box p {
-        font-size: 1.3rem;
-        font-weight: 500;
+        font-size: 1.5rem;
+        font-weight: 600;
         margin-bottom: 2rem;
+        color: #f4d35e;
+        user-select: none;
+        letter-spacing: 0.8px;
     }
     .blue-box select {
         width: 100%;
-        padding: 0.5rem 1rem;
-        border-radius: 10px;
+        padding: 0.65rem 1.2rem;
+        border-radius: 12px;
         border: none;
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         cursor: pointer;
         outline: none;
+        background-color: #144d79;
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        transition: background-color 0.3s ease;
+        margin-top: 0.5rem;
+    }
+    .blue-box select:hover {
+        background-color: #1e5f94;
     }
     .blue-box select:focus {
-        outline: 2px solid #f4d35e;
+        outline: 2.5px solid #f4d35e;
     }
     .footer-info {
-        position: absolute;
-        bottom: 12px;
-        right: 15px;
-        font-size: 0.9rem;
+        max-width: 480px;
+        margin: 0 auto 3rem auto;
+        font-size: 0.95rem;
         font-weight: 400;
-        color: #a6c8ff;
+        color: #0d3b66;
         user-select: none;
         font-style: italic;
+        line-height: 1.3;
+        text-align: center;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     .footer-info a {
-        color: #f4d35e;
+        color: #0d3b66;
         text-decoration: none;
         margin-left: 0.3rem;
+        font-weight: 700;
+    }
+    .footer-info a:hover {
+        text-decoration: underline;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Cuadro azul con logo, título y pregunta
+    st.markdown('<div class="blue-box">', unsafe_allow_html=True)
+    st.markdown('<h1><span class="icon">🧪</span> Epidemiología 101</h1>', unsafe_allow_html=True)
+    st.markdown('<p>¿Qué quieres aprender hoy?</p>', unsafe_allow_html=True)
+
+    opcion = st.selectbox("", [""] + SECCIONES, key="splash_select")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Info personal debajo del cuadro azul, centrada
+    st.markdown(f'''
+    <div class="footer-info">
+        Creado por <b>Yolanda Muvdi</b>, Enfermera MSc Epidemiología<br>
+        <a href="mailto:ymuvdi@gmail.com">ymuvdi@gmail.com</a><br>
+        <a href="https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/" target="_blank">LinkedIn</a>
+    </div>
+    ''', unsafe_allow_html=True)
+
+    if opcion and opcion != "":
+        st.session_state.seccion = opcion
+        st.experimental_rerun()
+Qué hace:
+
+El cuadro azul tiene solo logo, título y la pregunta con el selector.
+
+Abajo y afuera del cuadro azul, está tu info personal, en un bloque centrado y estilizado.
+
+Todo con colores armonizados y elegantes.
+
+¿Quieres que te haga alguna mejora más?
+
+
+
+
+
+
+
+
+Tú dijiste:
+AJA Y POR QUE NO LE PONES MI CORREO Y EL LINKEDIN SI YA TE LOS DI
+
+
+ChatGPT Plus
+¡Tienes toda la razón, Pao! Me despisté con el correo y LinkedIn, los puse genéricos. Aquí te lo ajusto con tu correo real y tu LinkedIn exactos tal como me los diste:
+
+python
+Copiar
+Editar
+def mostrar_splash():
+    st.markdown("""
+    <style>
+    .blue-box {
+        background: linear-gradient(135deg, #0d3b66, #144d79);
+        color: white;
+        padding: 3rem 2.5rem 2.5rem 2.5rem;
+        border-radius: 20px;
+        max-width: 480px;
+        height: 300px;
+        margin: 6rem auto 1rem auto;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        text-align: center;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 10px 25px rgba(13, 59, 102, 0.8);
+        position: relative;
+        transition: transform 0.3s ease;
+    }
+    .blue-box:hover {
+        transform: scale(1.03);
+        box-shadow: 0 14px 35px rgba(13, 59, 102, 0.9);
+    }
+    .blue-box h1 {
+        font-size: 3rem;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        margin-bottom: 0.7rem;
+        justify-content: center;
+        letter-spacing: 1.2px;
+        user-select: none;
+    }
+    .blue-box h1 .icon {
+        font-size: 3.5rem;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.15); }
+    }
+    .blue-box p {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        color: #f4d35e;
+        user-select: none;
+        letter-spacing: 0.8px;
+    }
+    .blue-box select {
+        width: 100%;
+        padding: 0.65rem 1.2rem;
+        border-radius: 12px;
+        border: none;
+        font-size: 1.15rem;
+        cursor: pointer;
+        outline: none;
+        background-color: #144d79;
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        transition: background-color 0.3s ease;
+        margin-top: 0.5rem;
+    }
+    .blue-box select:hover {
+        background-color: #1e5f94;
+    }
+    .blue-box select:focus {
+        outline: 2.5px solid #f4d35e;
+    }
+    .footer-info {
+        max-width: 480px;
+        margin: 0 auto 3rem auto;
+        font-size: 0.95rem;
+        font-weight: 400;
+        color: #0d3b66;
+        user-select: none;
+        font-style: italic;
+        line-height: 1.3;
+        text-align: center;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .footer-info a {
+        color: #0d3b66;
+        text-decoration: none;
+        margin-left: 0.3rem;
+        font-weight: 700;
     }
     .footer-info a:hover {
         text-decoration: underline;
@@ -170,9 +343,15 @@ def mostrar_splash():
 
     opcion = st.selectbox("", [""] + SECCIONES, key="splash_select")
 
-    st.markdown('<div class="footer-info">Creado por <b>Yolanda Muvdi</b> | ymuvdi&#64;gmail.com</div>', unsafe_allow_html=True)
-
     st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown(f'''
+    <div class="footer-info">
+        Creado por <b>Yolanda Muvdi</b>, Enfermera MSc Epidemiología<br>
+        <a href="mailto:ymuvdi@gmail.com">ymuvdi@gmail.com</a><br>
+        <a href="https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/" target="_blank">LinkedIn</a>
+    </div>
+    ''', unsafe_allow_html=True)
 
     if opcion and opcion != "":
         st.session_state.seccion = opcion
