@@ -64,6 +64,9 @@ else:
     except Exception as e:
         st.warning(f"Advertencia al configurar Gemini: {e}")
 
+# -------------------------
+# Función de chat con Gemini
+# -------------------------
 def chat_with_gemini_messages(messages):
     """
     Envía historial (lista de dicts role/content) a Gemini y devuelve texto.
@@ -83,14 +86,14 @@ def chat_with_gemini_messages(messages):
     prompt = "\n\n".join(convo) + "\n\n[ASSISTANT]\nResponde de forma clara y concisa, con tono didáctico."
 
     try:
-        # Usar modelo actualizado
-        model = genai.GenerativeModel("gemini-2.0-pro")
+        # Usar modelo actualizado y compatible
+        model = genai.GenerativeModel("gemini-2.5-pro")
         response = model.generate_content(prompt)
 
-        # Diferentes versiones de la lib pueden devolver text o candidates
+        # Manejo flexible de respuesta
         text = getattr(response, "text", None)
         if not text:
-            if hasattr(response, "candidates") and len(response.candidates) > 0:
+            if hasattr(response, "candidates") and response.candidates:
                 parts = getattr(response.candidates[0], "content", None)
                 if hasattr(parts, "parts"):
                     text = "".join([p.text for p in parts.parts if hasattr(p, "text")])
@@ -107,6 +110,7 @@ def chat_with_gemini_messages(messages):
 # Utilidades para cargar contenido local
 # -------------------------
 def cargar_md(ruta):
+    """Carga contenido de un archivo Markdown."""
     try:
         with open(ruta, encoding="utf-8") as f:
             return f.read()
@@ -114,6 +118,7 @@ def cargar_md(ruta):
         return f"Error cargando archivo: {e}"
 
 def cargar_py_variable(path_py, var_name):
+    """Carga una variable desde un archivo Python externo."""
     namespace = {}
     try:
         with open(path_py, "r", encoding="utf-8") as f:
