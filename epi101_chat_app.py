@@ -2,55 +2,30 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import pandas as pd
-import importlib.util
-import sys
-import os
 import numpy as np
 import math
-import google.generativeai as genai
+import os
 
-# =========================================
-# CONFIGURACIÓN DE GEMINI
-# =========================================
-api_key = st.secrets.get("GEMINI_API_KEY")
-if not api_key:
-    st.error("❌ No se encontró la clave GEMINI_API_KEY en secrets.toml. El chat no funcionará.")
-else:
-    genai.configure(api_key=api_key)
+# Gemini client
+try:
+    import google.generativeai as genai
+    GENAI_AVAILABLE = True
+except Exception:
+    GENAI_AVAILABLE = False
 
-def chat_with_gemini(prompt: str) -> str:
-    """
-    Envía un prompt a Gemini y devuelve la respuesta en texto plano.
-    Si ocurre un error, lo devuelve como mensaje.
-    """
-    if not api_key:
-        return "⚠ No se encontró la clave de API de Gemini."
-    try:
-        model = genai.GenerativeModel("gemini-pro")
-        response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return f"⚠ Error en la conexión con Gemini: {e}"
-
-# =========================================
-# IMPORTAR LIBRERÍAS PARA PRUEBAS ESTADÍSTICAS
-# =========================================
+# SciPy (opcional)
 try:
     from scipy.stats import chi2_contingency, fisher_exact
     SCIPY_AVAILABLE = True
-except ImportError:
+except Exception:
     SCIPY_AVAILABLE = False
 
-# =========================================
-# CONFIGURACIÓN DE LA PÁGINA STREAMLIT
-# =========================================
-st.set_page_config(
-    page_title="Epidemiología 101",
-    page_icon="🧪",
-    layout="wide"
-)
+# -------------------------
+# Configuración Streamlit
+# -------------------------
+st.set_page_config(page_title="Epidemiología 101", page_icon="🧪", layout="wide")
 
-# Estilo visual personalizado
+# Estilo
 st.markdown("""
     <style>
     body, .block-container {
@@ -66,33 +41,62 @@ st.markdown("""
         border-radius: 12px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
-    .title {
-        font-size: 3rem;
-        font-weight: 900;
-        color: #0d3b66;
-        margin-bottom: 0.2rem;
-    }
-    .subtitle {
-        font-size: 1.3rem;
-        color: #3e5c76;
-        margin-bottom: 2rem;
-        font-weight: 500;
-    }
+    .title { font-size: 2.6rem; font-weight: 800; color: #0d3b66; margin-bottom: 0.2rem; }
+    .subtitle { font-size: 1.1rem; color: #3e5c76; margin-bottom: 1.2rem; font-weight:500; }
     </style>
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="title">🧠 Epidemiología 101 - Asistente educativo</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Plataforma integral para el aprendizaje de conceptos clave de epidemiología, salud pública y análisis de datos, creada por Yolanda Muvdi.</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Plataforma para aprender epidemiología, creada por Yolanda Muvdi.</div>', unsafe_allow_html=True)
 
-# API KEY check (Streamlit Secrets)
-if "OPENAI_API_KEY" in st.secrets:
-    openai.api_key = st.secrets["OPENAI_API_KEY"]
-    st.success("✅ Clave API detectada correctamente.")
+# -------------------------
+# Configuración Gemini (segura)
+# -------------------------
+GEMINI_KEY = st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
+if not GENAI_AVAILABLE:
+    st.warning("La librería `google-generativeai` no está instalada. El chat no estará disponible.")
+elif not GEMINI_KEY:
+    st.warning("❌ No se encontró GEMINI_API_KEY en secrets o variables de entorno. El chat no funcionará.")
 else:
-    st.error("❌ No se encontró OPENAI_API_KEY. Ve al panel de Secrets en Streamlit Cloud y agrégala.")
-    # no st.stop() — dejamos la app correr sin chat si no hay clave
-    # st.stop()
+    try:
+        genai.configure(api_key=GEMINI_KEY)
+    except Exception as e:
+        st.warning(f"Advertencia al configurar Gemini: {e}")
 
+def chat_with_gemini_messages(messages):
+    """
+    messages: lista de dicts {'role':'system'|'user'|'assistant','content': str}
+    Devolvemos texto plano.
+    """
+    if not GENAI_AVAILABLE:
+        return "⚠ La librería google-generativeai no está disponible en este entorno."
+    if not GEMINI_KEY:
+        return "⚠ No hay GEMINI_API_KEY configurada."
+    # Convertir historial a un prompt concatenado simple (mantener roles)
+    convo = []
+    for m in messages:
+        role = m.get("role", "user")
+        content = m.get("content", "")
+        convo.append(f"[{role.upper()}]\n{content}")
+    prompt = "\n\n".join(convo) + "\n\n[ASSISTANT]\nResponde de forma clara y concisa, con tono didáctico."
+    try:
+        model = genai.GenerativeModel("gemini-pro")
+        response = model.generate_content(prompt)
+        # response may have `.text` or `.candidates` depending on lib version
+        text = getattr(response, "text", None)
+        if not text:
+            # try parse candidates
+            if hasattr(response, "candidates") and len(response.candidates) > 0:
+                text = response.candidates[0].content
+            else:
+                text = str(response)
+        return text
+    except Exception as e:
+        return f"⚠ Error en la conexión con Gemini: {e}"
+
+# -------------------------
+# Utilidades para cargar contenido local
+# -------------------------
 def cargar_md(ruta):
     try:
         with open(ruta, encoding="utf-8") as f:
@@ -101,9 +105,6 @@ def cargar_md(ruta):
         return f"Error cargando archivo: {e}"
 
 def cargar_py_variable(path_py, var_name):
-    """
-    Carga una variable de un archivo .py sin eval, usando exec en un dict seguro.
-    """
     namespace = {}
     try:
         with open(path_py, "r", encoding="utf-8") as f:
@@ -113,7 +114,9 @@ def cargar_py_variable(path_py, var_name):
     except Exception:
         return None
 
-# Pestañas de navegación
+# -------------------------
+# Pestañas principales
+# -------------------------
 tabs = st.tabs([
     "Conceptos Básicos",
     "Medidas de Asociación",
@@ -129,10 +132,9 @@ tabs = st.tabs([
 # --- TAB 0: Conceptos Básicos
 with tabs[0]:
     st.header("📌 Conceptos Básicos de Epidemiología")
-    # si tienes el .md, lo carga; si no, muestra mensaje breve
     contenido = cargar_md("contenido/conceptosbasicos.md")
     if contenido.startswith("Error cargando"):
-        st.write("Aquí iría el contenido de 'Conceptos Básicos'. Coloca 'contenido/conceptosbasicos.md' para mostrarlo.")
+        st.write("Aquí iría el contenido de 'Conceptos Básicos'. Agrega 'contenido/conceptosbasicos.md' para mostrarlo.")
     else:
         st.markdown(contenido)
 
@@ -141,7 +143,7 @@ with tabs[1]:
     st.header("📈 Medidas de Asociación")
     contenido = cargar_md("contenido/medidas_completas.md")
     if contenido.startswith("Error cargando"):
-        st.write("Aquí iría el contenido de 'Medidas de Asociación'. Coloca 'contenido/medidas_completas.md' para mostrarlo.")
+        st.write("Aquí iría 'Medidas de Asociación'. Agrega 'contenido/medidas_completas.md'.")
     else:
         st.markdown(contenido)
 
@@ -150,7 +152,7 @@ with tabs[2]:
     st.header("📊 Diseños de Estudio Epidemiológico")
     contenido = cargar_md("contenido/disenos_completos.md")
     if contenido.startswith("Error cargando"):
-        st.write("Aquí iría el contenido de 'Diseños de Estudio'. Coloca 'contenido/disenos_completos.md' para mostrarlo.")
+        st.write("Aquí iría 'Diseños de Estudio'. Agrega 'contenido/disenos_completos.md'.")
     else:
         st.markdown(contenido)
 
@@ -159,7 +161,7 @@ with tabs[3]:
     st.header("⚠️ Sesgos y Errores")
     contenido = cargar_md("contenido/sesgos_completos.md")
     if contenido.startswith("Error cargando"):
-        st.write("Aquí iría el contenido de 'Sesgos y Errores'. Coloca 'contenido/sesgos_completos.md' para mostrarlo.")
+        st.write("Aquí iría 'Sesgos y Errores'. Agrega 'contenido/sesgos_completos.md'.")
     else:
         st.markdown(contenido)
 
@@ -190,18 +192,16 @@ with tabs[5]:
                 else:
                     st.error(f"❌ Incorrecto. Respuesta correcta: {q['respuesta_correcta']}")
 
-# --- TAB 6: TABLAS 2x2 Y CÁLCULOS (MEJORADA) ---
+# --- TAB 6: Tablas 2x2 y cálculos (completo) ---
 with tabs[6]:
     st.header("📊 Tablas 2x2 y Cálculos Epidemiológicos")
 
-    # Botón para cargar ejemplo (guarda en session_state)
     if st.button("📌 Cargar ejemplo"):
         st.session_state["a_val"] = 30
         st.session_state["b_val"] = 70
         st.session_state["c_val"] = 10
         st.session_state["d_val"] = 90
 
-    # Valores por defecto (para mantener entre interacciones)
     a_default = st.session_state.get("a_val", 0)
     b_default = st.session_state.get("b_val", 0)
     c_default = st.session_state.get("c_val", 0)
@@ -217,29 +217,22 @@ with tabs[6]:
 
     if st.button("Calcular medidas"):
         try:
-            # Guardar originales (enteros)
             a0, b0, c0, d0 = int(a), int(b), int(c), int(d)
-
-            # Validación de filas vacías
             if (a0 + b0) == 0 or (c0 + d0) == 0:
                 st.error("Las filas de 'Casos' o 'Controles' no pueden ser todas cero. Ingresa valores válidos.")
             else:
-                # Aplicar corrección Haldane-Anscombe si hay ceros
+                # Haldane-Anscombe correction if any zero
                 a_adj, b_adj, c_adj, d_adj = a0, b0, c0, d0
                 if 0 in [a0, b0, c0, d0]:
-                    a_adj = a0 + 0.5
-                    b_adj = b0 + 0.5
-                    c_adj = c0 + 0.5
-                    d_adj = d0 + 0.5
+                    a_adj += 0.5; b_adj += 0.5; c_adj += 0.5; d_adj += 0.5
                     st.info("⚠️ Se aplicó corrección de Haldane-Anscombe por presencia de ceros.")
 
                 # Incidencias (proporciones)
                 inc_exp = a_adj / (a_adj + b_adj)
                 inc_noexp = c_adj / (c_adj + d_adj)
 
-                # RR y su IC (usando aproximación log)
+                # RR (log-approx) & CI
                 rr = inc_exp / inc_noexp if inc_noexp > 0 else np.nan
-                # evitar dividir por cero en SE: usamos a_adj etc.
                 try:
                     se_log_rr = math.sqrt((1 / a_adj - 1 / (a_adj + b_adj)) + (1 / c_adj - 1 / (c_adj + d_adj)))
                 except Exception:
@@ -249,7 +242,7 @@ with tabs[6]:
                 else:
                     ci95_rr = (np.nan, np.nan)
 
-                # OR y su IC
+                # OR & CI
                 orr = (a_adj * d_adj) / (b_adj * c_adj) if (b_adj * c_adj) > 0 else np.nan
                 try:
                     se_log_or = math.sqrt(1 / a_adj + 1 / b_adj + 1 / c_adj + 1 / d_adj)
@@ -260,7 +253,7 @@ with tabs[6]:
                 else:
                     ci95_or = (np.nan, np.nan)
 
-                # RD (Diferencia de riesgos) y su IC
+                # RD & CI
                 rd = inc_exp - inc_noexp
                 try:
                     se_rd = math.sqrt((inc_exp * (1 - inc_exp) / (a_adj + b_adj)) + (inc_noexp * (1 - inc_noexp) / (c_adj + d_adj)))
@@ -271,17 +264,16 @@ with tabs[6]:
                 else:
                     ci95_rd = (np.nan, np.nan)
 
-                # RAE, FAE, RAP, FAP, NNT
-                rae = rd  # Riesgo atribuible en expuestos (absoluto)
-                fae = (rae / inc_exp) if inc_exp != 0 else None  # Fracción atribuible en expuestos
+                # Attributable measures
+                rae = rd
+                fae = (rae / inc_exp) if inc_exp != 0 else None
                 pexp = (a0 + b0) / (a0 + b0 + c0 + d0)
-                rap = pexp * rd  # Riesgo atribuible poblacional (absoluto)
-                # riesgo poblacional (Ipop) = (a+c) / N
+                rap = pexp * rd
                 ipop = (a0 + c0) / (a0 + b0 + c0 + d0) if (a0 + b0 + c0 + d0) > 0 else None
                 fap = (rap / ipop) if (ipop is not None and ipop != 0) else None
                 nnt = None if rd == 0 else 1 / abs(rd)
 
-                # Mostrar tabla original en formato 2x2
+                # Show original table
                 st.markdown("**Tabla 2x2 (original)**")
                 df_tabla = pd.DataFrame({
                     "Expuestos": [a0, c0],
@@ -289,7 +281,7 @@ with tabs[6]:
                 }, index=["Casos", "Controles"])
                 st.table(df_tabla)
 
-                # Mostrar resultados
+                # Results
                 st.subheader("📈 Resultados")
                 st.write(f"Incidencia — Expuestos: {inc_exp:.4f}")
                 st.write(f"Incidencia — No expuestos: {inc_noexp:.4f}")
@@ -307,35 +299,24 @@ with tabs[6]:
                 st.info(f"RD = {rd:.4f} (IC95%: {ci95_rd[0]:.4f} – {ci95_rd[1]:.4f})")
 
                 st.write(f"Riesgo atribuible en expuestos (RAE): {rae:.4f}")
-                if fae is not None:
-                    st.write(f"Fracción atribuible en expuestos (FAE): {fae:.2%}")
-                else:
-                    st.write("FAE: No calculable")
-
+                st.write(f"Fracción atribuible en expuestos (FAE): {fae:.2%}" if fae is not None else "FAE: No calculable")
                 st.write(f"Riesgo atribuible poblacional (RAP): {rap:.4f}")
-                if fap is not None:
-                    st.write(f"Fracción atribuible poblacional (FAP): {fap:.2%}")
-                else:
-                    st.write("FAP: No calculable")
+                st.write(f"Fracción atribuible poblacional (FAP): {fap:.2%}" if fap is not None else "FAP: No calculable")
+                st.write(f"NNT: {nnt:.2f}" if nnt is not None else "NNT: No calculable (RD = 0)")
 
-                if nnt is not None:
-                    st.write(f"NNT (Número Necesario a Tratar/Evitar): {nnt:.2f}")
-                else:
-                    st.write("NNT: No calculable (RD = 0)")
-
-                # Interpretación automática (breve)
+                # Quick interpretation
                 st.subheader("🧾 Interpretación rápida")
                 if not np.isnan(rr):
                     if rr > 1:
-                        st.warning(f"RR={rr:.2f}: asociación positiva — los expuestos tienen aproximadamente {(rr-1)*100:.0f}% más riesgo relativo que los no expuestos.")
+                        st.warning(f"RR={rr:.2f}: asociación positiva — expuestos ≈ {(rr-1)*100:.0f}% más riesgo.")
                     elif rr < 1:
-                        st.success(f"RR={rr:.2f}: posible efecto protector — los expuestos tienen aproximadamente {(1-rr)*100:.0f}% menos riesgo relativo.")
+                        st.success(f"RR={rr:.2f}: posible efecto protector — expuestos ≈ {(1-rr)*100:.0f}% menos riesgo.")
                     else:
-                        st.info("RR≈1: no se observan diferencias en riesgo relativo entre los grupos.")
+                        st.info("RR≈1: no diferencia en riesgo relativo.")
                 else:
                     st.info("No se puede interpretar RR con los datos actuales.")
 
-                # Pruebas estadísticas (usando datos originales sin corrección para Chi2/Fisher)
+                # Statistical tests if SciPy available
                 if SCIPY_AVAILABLE:
                     try:
                         tabla_orig = np.array([[a0, b0], [c0, d0]])
@@ -347,9 +328,9 @@ with tabs[6]:
                     except Exception as e:
                         st.info(f"No se pudo calcular Chi²/Fisher: {e}")
                 else:
-                    st.info("Instala SciPy (`pip install scipy`) para obtener Chi² y Fisher.")
+                    st.info("Instala SciPy (`pip install scipy`) para Chi² y Fisher.")
 
-                # Gráfico de incidencias (con % sobre barras)
+                # Plot incidences
                 fig, ax = plt.subplots(figsize=(6, 3))
                 bars = ax.bar(["Expuestos", "No expuestos"], [inc_exp, inc_noexp],
                               color=["#ff9999", "#99ccff"], edgecolor="black")
@@ -360,14 +341,13 @@ with tabs[6]:
                     ax.text(bar.get_x() + bar.get_width() / 2, val + 0.02, f"{val:.1%}", ha="center", va="bottom", fontsize=9)
                 st.pyplot(fig)
 
-                # Preparar dataframe de resultados y botón descarga CSV
+                # Prepare results dataframe & download
                 df_resultados = pd.DataFrame({
                     "Medida": ["RR", "OR", "RD", "RAE", "FAE", "RAP", "FAP", "NNT"],
                     "Valor": [rr, orr, rd, rae, fae, rap, fap, nnt],
                     "IC95_inf": [ci95_rr[0], ci95_or[0], ci95_rd[0], None, None, None, None, None],
                     "IC95_sup": [ci95_rr[1], ci95_or[1], ci95_rd[1], None, None, None, None, None]
                 })
-
                 csv = df_resultados.to_csv(index=False).encode("utf-8")
                 st.download_button("📥 Descargar resultados CSV", csv, "epi2x2_resultados.csv", "text/csv")
 
@@ -402,36 +382,37 @@ with tabs[7]:
         except Exception as e:
             st.error(f"Error al leer el CSV: {e}")
 
-# --- TAB 8: Chat ---
+# --- TAB 8: Chat (Gemini) ---
 with tabs[8]:
     st.header("💬 Chat con Epidemiología 101")
+
+    # Initialize session message history
     if "messages" not in st.session_state:
         st.session_state["messages"] = [{
             "role": "system",
             "content": "Eres un docente experto en epidemiología. Explica conceptos y resuelve preguntas con claridad y evidencia."
         }]
-    # Mostrar mensajes anteriores
+
+    # Show history
     for msg in st.session_state["messages"]:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
-    # Entrada de usuario
-    if prompt := st.chat_input("Haz tu pregunta de epidemiología..."):
+        # Use st.chat_message when available
+        try:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
+        except Exception:
+            # fallback
+            st.write(f"**{msg['role']}**: {msg['content']}")
+
+    # Input
+    prompt = st.chat_input("Haz tu pregunta de epidemiología...")
+    if prompt:
         st.session_state["messages"].append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
-        with st.chat_message("assistant"):
-            try:
-                # Si no tienes API key en secrets, este bloque fallará; capturamos y mostramos error amigable
-                if not hasattr(openai, "api_key") or openai.api_key is None:
-                    st.error("No hay API key de OpenAI configurada en Streamlit Secrets. Agrega OPENAI_API_KEY si quieres usar el chat.")
-                else:
-                    response = openai.chat.completions.create(
-                        model="gpt-3.5-turbo",
-                        messages=st.session_state["messages"]
-                    )
-                    reply = response.choices[0].message.content
-                    st.markdown(reply)
-                    st.session_state["messages"].append({"role": "assistant", "content": reply})
-            except Exception as e:
-                st.error(f"Error al comunicarse con OpenAI: {e}")
 
+        with st.chat_message("assistant"):
+            reply = chat_with_gemini_messages(st.session_state["messages"])
+            st.markdown(reply)
+            st.session_state["messages"].append({"role": "assistant", "content": reply})
+
+# End of file
