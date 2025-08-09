@@ -307,6 +307,7 @@ def main():
                     st.error(f"❌ Incorrecto. Respuesta correcta: {p['respuesta_correcta']}")
     else:
         st.info("Archivo 'contenido/ejercicios_completos.py' no encontrado o variable 'preguntas' no definida.")
+        
     elif seleccion == "📊 Tablas 2x2 y Cálculos":
         st.header(seleccion)
         if "a" not in st.session_state: st.session_state.a = 10
