@@ -22,7 +22,7 @@ try:
 except Exception:
     SCIPY_AVAILABLE = False
 
-# Secciones con emojis
+# -- Constantes y Secciones con emojis --
 SECCIONES = [
     ("🧪", "Inicio"),
     ("📌", "Conceptos Básicos"),
@@ -47,6 +47,7 @@ if "puntaje_gamificacion" not in st.session_state:
 # -------- FUNCIONES --------
 
 def mostrar_footer():
+    # Footer fijo abajo con tus datos, visible siempre
     st.markdown("""
     <style>
     .footer {
@@ -61,11 +62,13 @@ def mostrar_footer():
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         font-size: 0.9rem;
         z-index: 9999;
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.3);
     }
     .footer a {
         color: #a6c8ff;
         text-decoration: none;
         margin-left: 0.6rem;
+        font-weight: 600;
     }
     .footer a:hover {
         text-decoration: underline;
@@ -82,66 +85,76 @@ def mostrar_splash():
     st.markdown("""
     <style>
     .container {
-        max-width: 540px;
-        margin: 4rem auto 3rem auto;
+        max-width: 580px;
+        margin: 5rem auto 3rem auto;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
         color: #1b263b;
         user-select: none;
+        background: linear-gradient(135deg, #e0f0ff, #f7fbff);
+        border-radius: 18px;
+        padding: 2.5rem 2rem 3rem 2rem;
+        box-shadow: 0 12px 20px rgba(39,76,119,0.25);
+        transition: box-shadow 0.3s ease;
+    }
+    .container:hover {
+        box-shadow: 0 20px 30px rgba(39,76,119,0.4);
     }
     .title {
-        font-size: 3.8rem;
+        font-size: 4rem;
         font-weight: 900;
-        margin-bottom: 0.3rem;
+        margin-bottom: 0.5rem;
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 1rem;
+        gap: 1.2rem;
         color: #274c77;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.12);
     }
     .title .icon {
-        font-size: 4.8rem;
-        animation: pulse 2.5s infinite ease-in-out;
+        font-size: 5rem;
+        animation: pulse 3s infinite ease-in-out;
         color: #0d3b66;
+        filter: drop-shadow(0 0 4px #1c56a0cc);
     }
     @keyframes pulse {
         0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.12); }
+        50% { transform: scale(1.1); }
     }
     .question {
-        font-size: 1.9rem;
-        font-weight: 600;
-        margin-bottom: 2rem;
+        font-size: 2.1rem;
+        font-weight: 700;
+        margin-bottom: 2.5rem;
         color: #415a77;
-        letter-spacing: 0.6px;
+        letter-spacing: 0.5px;
     }
     .custom-selectbox select {
         width: 100%;
-        padding: 1.1rem 1.7rem;
-        border-radius: 14px;
-        border: 2.5px solid #274c77;
-        font-size: 1.3rem;
+        padding: 1.3rem 2rem;
+        border-radius: 20px;
+        border: 3px solid #274c77;
+        font-size: 1.5rem;
         font-weight: 700;
         color: #1b263b;
-        background-color: #f7f9fc;
+        background-color: #f0f6ff;
         cursor: pointer;
         appearance: none;
         -webkit-appearance: none;
         -moz-appearance: none;
-        box-shadow: 0 6px 12px rgba(0,0,0,0.07);
-        background-image: url("data:image/svg+xml;utf8,<svg fill='%23274c77' height='28' viewBox='0 0 24 24' width='28' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+        box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+        background-image: url("data:image/svg+xml;utf8,<svg fill='%23274c77' height='30' viewBox='0 0 24 24' width='30' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
         background-repeat: no-repeat;
-        background-position: right 1.3rem center;
-        background-size: 1.2rem;
-        transition: border-color 0.3s ease;
+        background-position: right 1.5rem center;
+        background-size: 1.5rem;
+        transition: border-color 0.4s ease;
     }
     .custom-selectbox select:hover {
-        border-color: #274c77cc;
+        border-color: #0d3b66cc;
     }
     .custom-selectbox select:focus {
         outline: none;
         border-color: #0d3b66;
-        box-shadow: 0 0 16px #0d3b66aa;
+        box-shadow: 0 0 20px #0d3b66aa;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -151,29 +164,72 @@ def mostrar_splash():
     st.markdown('<div class="question">¿Qué quieres aprender hoy?</div>', unsafe_allow_html=True)
 
     opciones = [f"{icon}  {texto}" for icon, texto in SECCIONES]
-    opcion = st.selectbox("", [""] + opciones, key="splash_select", label_visibility="collapsed")
+    opcion = st.selectbox("", [""] + opciones, key="splash_select", label_visibility="collapsed", help="Selecciona una sección para comenzar")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
     if opcion and opcion != "":
-        # Guardar solo el texto sin emoji para estado
         texto_sin_emoji = opcion.split(" ", 1)[1] if " " in opcion else opcion
         st.session_state.seccion = texto_sin_emoji
         st.experimental_rerun()
 
-# Función para mostrar título con emoji en cada sección
+def mostrar_sidebar():
+    with st.sidebar:
+        st.markdown("## Menú de Secciones")
+        seccion_actual = st.session_state.get("seccion", None)
+        # Aquí para radio: recibe lista de strings, construyo lista solo con texto para el valor
+        opciones_texto = [texto for _, texto in SECCIONES]
+        idx_actual = opciones_texto.index(seccion_actual) if seccion_actual in opciones_texto else 0
+        seccion = st.radio(
+            "Navega por la app:",
+            opciones_texto,
+            index=idx_actual,
+            label_visibility="collapsed",
+        )
+        if seccion != seccion_actual:
+            st.session_state.seccion = seccion
+            st.experimental_rerun()
+
+        st.markdown("---")
+        st.markdown("""
+        <small style="color:#0d3b66;">
+        Creado por <b>Yolanda Muvdi</b><br>
+        ymuvdi&#64;gmail.com<br>
+        <a href="https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/" target="_blank" style="color:#0d3b66;">LinkedIn</a>
+        </small>
+        """, unsafe_allow_html=True)
+
 def mostrar_titulo_con_emoji(seccion_texto):
     emoji = next((icon for icon, texto in SECCIONES if texto == seccion_texto), "")
-    st.markdown(f"<h1 style='display:flex; align-items:center; gap:0.6rem; font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif; color:#0d3b66;'>"
-                f"<span style='font-size:3rem;'>{emoji}</span>{seccion_texto}</h1>", unsafe_allow_html=True)
+    st.markdown(f"""
+    <h1 style="
+        display:flex; 
+        align-items:center; 
+        gap:0.8rem; 
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        color:#0d3b66;
+        text-shadow: 1px 1px 1px rgba(0,0,0,0.1);
+    ">
+        <span style="font-size:3.6rem;">{emoji}</span>{seccion_texto}
+    </h1>
+    """, unsafe_allow_html=True)
 
-# Aquí incluirás las funciones de cada sección (ejemplo Inicio y Gamificación con niveles y confeti)
+# Aquí funciones placeholder o con contenido para secciones:
 
 def mostrar_inicio():
     mostrar_titulo_con_emoji("Inicio")
-    st.write("¡Bienvenido/a a Epidemiología 101! Usa el menú o el dropdown para navegar las secciones.")
+    st.write(
+        """
+        Bienvenido/a a **Epidemiología 101**, tu espacio para aprender de forma fácil, clara y práctica sobre 
+        epidemiología y salud pública.  
+        
+        Usa el menú lateral o el dropdown para navegar entre las secciones.  
+        
+        Aquí encontrarás desde conceptos básicos hasta ejercicios, tablas 2x2, gamificación con niveles y más.
+        """
+    )
+    st.info("¿Listo para comenzar? Elige una sección arriba y ¡a aprender!")
 
-# Gamificación con niveles, confeti, puntajes y felicitaciones
 def mostrar_gamificacion():
     mostrar_titulo_con_emoji("Gamificación")
 
@@ -247,7 +303,7 @@ def mostrar_gamificacion():
 
     st.markdown(f"**Puntaje total:** {st.session_state.puntaje_gamificacion}")
 
-# Otras secciones placeholder:
+# Placeholder para las otras secciones (puedes completar después)
 def mostrar_conceptos_basicos():
     mostrar_titulo_con_emoji("Conceptos Básicos")
     st.write("Contenido de conceptos básicos aquí...")
@@ -290,30 +346,12 @@ def mostrar_chat_epidemiologico():
 
 # ------------ MAIN -------------
 
-def mostrar_sidebar():
-    with st.sidebar:
-        st.markdown("## Menú de Secciones")
-        seccion_actual = st.session_state.get("seccion", None)
-        seccion = st.radio("Navega por la app:", SECCIONES, index=SECCIONES.index(seccion_actual) if seccion_actual in SECCIONES else 0)
-        if seccion != seccion_actual:
-            st.session_state.seccion = seccion
-            st.experimental_rerun()
-
-        st.markdown("---")
-        st.markdown("""
-        <small style="color:#0d3b66;">
-        Creado por <b>Yolanda Muvdi</b><br>
-        ymuvdi&#64;gmail.com<br>
-        <a href="https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/" target="_blank" style="color:#0d3b66;">LinkedIn</a>
-        </small>
-        """, unsafe_allow_html=True)
-
 def main():
     st.set_page_config(
         page_title="Epidemiología 101",
         page_icon="🧪",
         layout="wide",
-        initial_sidebar_state="collapsed",
+        initial_sidebar_state="expanded",
     )
 
     if st.session_state.seccion is None:
@@ -351,4 +389,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
