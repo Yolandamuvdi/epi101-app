@@ -1,7 +1,6 @@
 streamlit
 pandas
 matplotlib
-openai>=1.0.0
 scipy
 numpy
 statsmodels
