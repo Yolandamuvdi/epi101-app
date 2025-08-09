@@ -73,6 +73,7 @@ def chat_with_gemini_messages(messages):
         return "⚠ La librería google-generativeai no está disponible en este entorno."
     if not GEMINI_KEY:
         return "⚠ No hay GEMINI_API_KEY configurada."
+
     # Convertir historial a prompt simple
     convo = []
     for m in messages:
@@ -80,17 +81,25 @@ def chat_with_gemini_messages(messages):
         content = m.get("content", "")
         convo.append(f"[{role.upper()}]\n{content}")
     prompt = "\n\n".join(convo) + "\n\n[ASSISTANT]\nResponde de forma clara y concisa, con tono didáctico."
+
     try:
-        model = genai.GenerativeModel("gemini-pro")
+        # Usar modelo actualizado
+        model = genai.GenerativeModel("gemini-2.0-pro")
         response = model.generate_content(prompt)
+
         # Diferentes versiones de la lib pueden devolver text o candidates
         text = getattr(response, "text", None)
         if not text:
             if hasattr(response, "candidates") and len(response.candidates) > 0:
-                text = response.candidates[0].content
+                parts = getattr(response.candidates[0], "content", None)
+                if hasattr(parts, "parts"):
+                    text = "".join([p.text for p in parts.parts if hasattr(p, "text")])
+                else:
+                    text = str(parts)
             else:
                 text = str(response)
         return text
+
     except Exception as e:
         return f"⚠ Error en la conexión con Gemini: {e}"
 
