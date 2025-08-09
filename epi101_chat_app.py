@@ -420,6 +420,4 @@ else:
         st.info("Sección no encontrada. Por favor vuelve al inicio.")
 
 
-)
-
 
