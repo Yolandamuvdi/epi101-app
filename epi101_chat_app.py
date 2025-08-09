@@ -212,33 +212,7 @@ def mostrar_splash():
     if opcion and opcion != "":
         st.session_state.seccion = opcion
         st.experimental_rerun()
-Qué hace:
 
-El cuadro azul tiene solo logo, título y la pregunta con el selector.
-
-Abajo y afuera del cuadro azul, está tu info personal, en un bloque centrado y estilizado.
-
-Todo con colores armonizados y elegantes.
-
-¿Quieres que te haga alguna mejora más?
-
-
-
-
-
-
-
-
-Tú dijiste:
-AJA Y POR QUE NO LE PONES MI CORREO Y EL LINKEDIN SI YA TE LOS DI
-
-
-ChatGPT Plus
-¡Tienes toda la razón, Pao! Me despisté con el correo y LinkedIn, los puse genéricos. Aquí te lo ajusto con tu correo real y tu LinkedIn exactos tal como me los diste:
-
-python
-Copiar
-Editar
 def mostrar_splash():
     st.markdown("""
     <style>
