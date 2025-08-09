@@ -293,9 +293,9 @@ def mostrar_chat_epidemiologico():
 def mostrar_sidebar():
     with st.sidebar:
         st.markdown("## Menú de Secciones")
-        opciones = [texto for _, texto in SECCIONES]
-        seccion = st.radio("Navega por la app:", opciones, index=opciones.index(st.session_state.seccion) if st.session_state.seccion in opciones else 0)
-        if seccion != st.session_state.seccion:
+        seccion_actual = st.session_state.get("seccion", None)
+        seccion = st.radio("Navega por la app:", SECCIONES, index=SECCIONES.index(seccion_actual) if seccion_actual in SECCIONES else 0)
+        if seccion != seccion_actual:
             st.session_state.seccion = seccion
             st.experimental_rerun()
 
