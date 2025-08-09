@@ -93,24 +93,22 @@ def mostrar_footer():
     """, unsafe_allow_html=True)
 
 # Splash inicial
+import streamlit as st
+
 def mostrar_splash():
     st.markdown("""
     <style>
     .blue-box {
         background: linear-gradient(135deg, #0d3b66, #144d79);
         color: white;
-        padding: 3rem 2.5rem 3rem 2.5rem;
+        padding: 3rem 2.5rem 4rem 2.5rem;
         border-radius: 20px;
         max-width: 480px;
-        height: 300px;
         margin: 6rem auto 1rem auto;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
         box-shadow: 0 10px 25px rgba(13, 59, 102, 0.8);
+        position: relative;
         user-select: none;
     }
     .blue-box h1 {
@@ -119,7 +117,7 @@ def mostrar_splash():
         display: flex;
         align-items: center;
         gap: 0.7rem;
-        margin-bottom: 0.7rem;
+        margin-bottom: 1rem;
         justify-content: center;
         letter-spacing: 1.2px;
     }
@@ -134,72 +132,48 @@ def mostrar_splash():
     .blue-box p {
         font-size: 1.5rem;
         font-weight: 600;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
         color: #f4d35e;
         letter-spacing: 0.8px;
     }
-    .blue-box select {
-        width: 100%;
-        padding: 0.65rem 1.2rem;
-        border-radius: 12px;
-        border: none;
-        font-size: 1.15rem;
-        cursor: pointer;
-        outline: none;
-        background-color: #144d79;
-        color: white;
-        font-weight: 600;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        transition: background-color 0.3s ease;
-        margin-top: 0.5rem;
+    /* Aquí ocultamos el label predeterminado del selectbox */
+    .stSelectbox > label {
+        display: none;
     }
-    .blue-box select:hover {
-        background-color: #1e5f94;
-    }
-    .blue-box select:focus {
-        outline: 2.5px solid #f4d35e;
-    }
-    .footer-info {
+    /* Ajustamos el área del selectbox para que parezca dentro del cuadro */
+    .custom-selectbox {
         max-width: 480px;
-        margin: 0 auto 3rem auto;
-        font-size: 0.95rem;
-        font-weight: 400;
-        color: #0d3b66;
-        user-select: none;
-        font-style: italic;
-        line-height: 1.3;
-        text-align: center;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .footer-info a {
-        color: #0d3b66;
-        text-decoration: none;
-        margin-left: 0.3rem;
-        font-weight: 700;
-    }
-    .footer-info a:hover {
-        text-decoration: underline;
+        margin: -30px auto 40px auto; /* negativo para subirlo sobre el cuadro */
+        background: linear-gradient(135deg, #0d3b66, #144d79);
+        padding: 0 10px 10px 10px;
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # CUADRO AZUL CON LOGO, TEXTO, PREGUNTA Y DROPDOWN
-    st.markdown('<div class="blue-box">', unsafe_allow_html=True)
-    st.markdown('<h1><span class="icon">🧪</span> Epidemiología 101</h1>', unsafe_allow_html=True)
-    st.markdown('<p>¿Qué quieres aprender hoy?</p>', unsafe_allow_html=True)
-
-    opcion = st.selectbox("", [""] + SECCIONES, key="splash_select")
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # INFO PERSONAL DEBAJO DEL CUADRO, CENTRADO Y FUERA DEL DIV AZUL
-    st.markdown(f'''
-    <div class="footer-info">
-        Creado por <b>Yolanda Muvdi</b>, Enfermera MSc Epidemiología<br>
-        <a href="mailto:ymuvdi@gmail.com">ymuvdi@gmail.com</a><br>
-        <a href="https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/" target="_blank">LinkedIn</a>
-    </div>
+    # Cuadro azul solo con texto y logo
+    st.markdown('''
+        <div class="blue-box">
+            <h1><span class="icon">🧪</span> Epidemiología 101</h1>
+            <p>¿Qué quieres aprender hoy?</p>
+        </div>
     ''', unsafe_allow_html=True)
+
+    # Selectbox con estilo personalizado para parecer dentro del cuadro
+    with st.container():
+        st.markdown('<div class="custom-selectbox">', unsafe_allow_html=True)
+        opcion = st.selectbox("", [""] + SECCIONES, key="splash_select")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # Info personal fuera del cuadro azul
+    st.markdown(f'''
+        <div style="max-width: 480px; margin: 0 auto 3rem auto; text-align: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #0d3b66; font-style: italic;">
+            Creado por <b>Yolanda Muvdi</b>, Enfermera MSc Epidemiología<br>
+            <a href="mailto:ymuvdi@gmail.com">ymuvdi@gmail.com</a><br>
+            <a href="https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/" target="_blank">LinkedIn</a>
+        </div>
+    ''' , unsafe_allow_html=True)
 
     if opcion and opcion != "":
         st.session_state.seccion = opcion
