@@ -99,74 +99,81 @@ import streamlit as st
 SECCIONES = ["Datos", "Enfermedades", "Estadísticas", "Genética", "Prevención"]
 
 def mostrar_splash():
+   import streamlit as st
+
+# Opciones con icono (emoji) para simular logo dentro del dropdown
+SECCIONES = [
+    ("📊", "Datos"),
+    ("🦠", "Enfermedades"),
+    ("📈", "Estadísticas"),
+    ("🧬", "Genética"),
+    ("🩺", "Prevención")
+]
+
+def mostrar_splash():
     st.markdown("""
     <style>
-    /* Fuente y centrado general */
     .container {
         max-width: 520px;
         margin: 5rem auto 2rem auto;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
-        color: #0d3b66;
+        color: #1b263b;
         user-select: none;
     }
-    /* Logo y título */
     .title {
-        font-size: 3.4rem;
+        font-size: 3.6rem;
         font-weight: 900;
-        margin-bottom: 0.3rem;
+        margin-bottom: 0.4rem;
         display: flex;
         justify-content: center;
         align-items: center;
         gap: 1rem;
-        color: #144d79;
+        color: #1b263b;
     }
     .title .icon {
         font-size: 4.5rem;
-        animation: pulse 2s infinite;
+        animation: pulse 2.5s infinite ease-in-out;
+        color: #274c77;
     }
     @keyframes pulse {
         0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.15); }
+        50% { transform: scale(1.12); }
     }
-    /* Pregunta */
     .question {
-        font-size: 1.9rem;
+        font-size: 1.8rem;
         font-weight: 600;
-        color: #f4d35e;
-        margin-bottom: 2rem;
-        letter-spacing: 0.8px;
+        margin-bottom: 1.5rem;
+        color: #415a77;
+        letter-spacing: 0.6px;
     }
-    /* Selectbox personalizado */
     .custom-selectbox select {
         width: 100%;
-        padding: 0.9rem 1.5rem;
-        border-radius: 14px;
-        border: 2px solid #144d79;
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #144d79;
-        background-color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        border: 2px solid #274c77;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1b263b;
+        background-color: #f7f9fc;
         cursor: pointer;
         appearance: none;
         -webkit-appearance: none;
         -moz-appearance: none;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        transition: border-color 0.3s ease;
-        background-image: url("data:image/svg+xml;utf8,<svg fill='%23144d79' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+        box-shadow: 0 4px 8px rgba(0,0,0,0.07);
+        background-image: url("data:image/svg+xml;utf8,<svg fill='%23274c77' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
         background-repeat: no-repeat;
         background-position: right 1rem center;
         background-size: 1rem;
     }
     .custom-selectbox select:hover {
-        border-color: #f4d35e;
+        border-color: #274c77cc;
     }
     .custom-selectbox select:focus {
         outline: none;
-        border-color: #f4d35e;
-        box-shadow: 0 0 10px #f4d35eaa;
+        border-color: #274c77;
+        box-shadow: 0 0 12px #274c77aa;
     }
-    /* Info personal discreta abajo */
     .footer-info {
         margin-top: 3rem;
         font-size: 1rem;
@@ -174,9 +181,10 @@ def mostrar_splash():
         color: #555;
         font-style: italic;
         line-height: 1.4;
+        text-align: center;
     }
     .footer-info a {
-        color: #144d79;
+        color: #274c77;
         text-decoration: none;
         margin-left: 0.3rem;
         font-weight: 700;
@@ -187,24 +195,25 @@ def mostrar_splash():
     </style>
     """, unsafe_allow_html=True)
 
-    # Contenedor general
+    # Contenedor principal
     st.markdown('<div class="container">', unsafe_allow_html=True)
 
-    # Logo + título
+    # Título con logo animado
     st.markdown('<div class="title"><span class="icon">🧪</span> Epidemiología 101</div>', unsafe_allow_html=True)
 
     # Pregunta
     st.markdown('<div class="question">¿Qué quieres aprender hoy?</div>', unsafe_allow_html=True)
 
-    # Dropdown
+    # Dropdown con emojis como “iconos” al inicio de cada opción
+    opciones_formateadas = [f"{icono}  {texto}" for icono, texto in SECCIONES]
     with st.container():
         st.markdown('<div class="custom-selectbox">', unsafe_allow_html=True)
-        opcion = st.selectbox("", [""] + SECCIONES, key="splash_select")
+        opcion = st.selectbox("", [""] + opciones_formateadas, key="splash_select")
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)  # fin container
 
-    # Info personal abajo, fuera del contenedor principal para no saturar
+    # Info personal abajo
     st.markdown(f'''
     <div class="footer-info">
         Creado por <b>Yolanda Muvdi</b>, Enfermera MSc Epidemiología<br>
@@ -213,10 +222,12 @@ def mostrar_splash():
     </div>
     ''', unsafe_allow_html=True)
 
-    # Acción si se selecciona una opción
+    # Al seleccionar una opción (quitamos el icono para guardar solo el texto)
     if opcion and opcion != "":
-        st.session_state.seccion = opcion
+        texto_sin_icono = opcion.split(' ', 1)[1] if ' ' in opcion else opcion
+        st.session_state.seccion = texto_sin_icono
         st.experimental_rerun()
+
 # Menú lateral fijo
 def mostrar_sidebar():
     with st.sidebar:
