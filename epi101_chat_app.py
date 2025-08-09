@@ -5,6 +5,8 @@ import pandas as pd
 import importlib.util
 import sys
 import os
+import numpy as np
+import math
 
 st.set_page_config(page_title="Epidemiología 101", page_icon="🧪", layout="wide")
 
@@ -61,10 +63,13 @@ def cargar_py_variable(path_py, var_name):
     Carga una variable de un archivo .py sin eval, usando exec en un dict seguro.
     """
     namespace = {}
-    with open(path_py, "r", encoding="utf-8") as f:
-        code = f.read()
-    exec(code, namespace)
-    return namespace.get(var_name, None)
+    try:
+        with open(path_py, "r", encoding="utf-8") as f:
+            code = f.read()
+        exec(code, namespace)
+        return namespace.get(var_name, None)
+    except Exception as e:
+        return None
 
 # Pestañas de navegación
 tabs = st.tabs([
@@ -120,76 +125,106 @@ with tabs[5]:
                 else:
                     st.error(f"❌ Incorrecto. Respuesta correcta: {q['respuesta_correcta']}")
 
+# -----------------------------
+# PESTAÑA MEJORADA: tabs[6]
+# -----------------------------
 with tabs[6]:
     st.header("📊 Tablas 2x2 y Cálculos Epidemiológicos")
+
+    # Botón de ejemplo: carga valores de ejemplo en session_state
+    if st.button("📌 Cargar ejemplo"):
+        st.session_state["a_val"] = 30
+        st.session_state["b_val"] = 70
+        st.session_state["c_val"] = 10
+        st.session_state["d_val"] = 90
+
+    # obtener valores previos si existen (para mantener entre interacciones)
+    a_default = st.session_state.get("a_val", 0)
+    b_default = st.session_state.get("b_val", 0)
+    c_default = st.session_state.get("c_val", 0)
+    d_default = st.session_state.get("d_val", 0)
+
     col1, col2 = st.columns(2)
     with col1:
-        a = st.number_input("Casos con exposición (a)", min_value=0, step=1)
-        b = st.number_input("Casos sin exposición (b)", min_value=0, step=1)
+        a = st.number_input("Casos con exposición (a)", min_value=0, step=1, value=a_default)
+        b = st.number_input("Casos sin exposición (b)", min_value=0, step=1, value=b_default)
     with col2:
-        c = st.number_input("Controles con exposición (c)", min_value=0, step=1)
-        d = st.number_input("Controles sin exposición (d)", min_value=0, step=1)
-    if st.button("Calcular RR y OR"):
+        c = st.number_input("Controles con exposición (c)", min_value=0, step=1, value=c_default)
+        d = st.number_input("Controles sin exposición (d)", min_value=0, step=1, value=d_default)
+
+    if st.button("Calcular medidas"):
         try:
-            rr = (a / (a + b)) / (c / (c + d)) if (a + b) > 0 and (c + d) > 0 else None
-            orr = (a * d) / (b * c) if b > 0 and c > 0 else None
-            if rr:
-                st.success(f"RR: {rr:.2f}")
+            # Guardar originales para pruebas
+            a0, b0, c0, d0 = int(a), int(b), int(c), int(d)
+
+            # Validación mínima
+            if (a0 + b0) == 0 or (c0 + d0) == 0:
+                st.error("Las filas de Casos o Controles no pueden ser todas cero. Ingresa valores válidos.")
             else:
-                st.warning("No se puede calcular RR con los datos proporcionados.")
-            if orr:
-                st.success(f"OR: {orr:.2f}")
-            else:
-                st.warning("No se puede calcular OR con los datos proporcionados.")
-        except Exception as e:
-            st.error(f"Error en los cálculos: {e}")
+                # Aplicar corrección de Haldane-Anscombe si hay ceros en alguna celda
+                a_adj, b_adj, c_adj, d_adj = a0, b0, c0, d0
+                applied_correction = False
+                if 0 in [a0, b0, c0, d0]:
+                    a_adj = a0 + 0.5
+                    b_adj = b0 + 0.5
+                    c_adj = c0 + 0.5
+                    d_adj = d0 + 0.5
+                    applied_correction = True
+                    st.info("⚠️ Corrección Haldane-Anscombe aplicada por presencia de cero(s).")
 
-with tabs[7]:
-    st.header("📈 Visualización de Datos")
-    st.markdown("Carga tus datos en formato CSV para graficar.")
-    uploaded_file = st.file_uploader("Sube un archivo CSV", type=["csv"])
-    if uploaded_file is not None:
-        df = pd.read_csv(uploaded_file)
-        st.dataframe(df)
-        col_x = st.selectbox("Selecciona variable para eje X", df.columns)
-        col_y = st.selectbox("Selecciona variable para eje Y", df.columns)
-        tipo = st.selectbox("Tipo de gráfico", ["Barras", "Líneas", "Dispersión"])
+                # Incidencias
+                inc_exp = a_adj / (a_adj + b_adj)
+                inc_noexp = c_adj / (c_adj + d_adj)
 
-        fig, ax = plt.subplots()
-        if tipo == "Barras":
-            ax.bar(df[col_x], df[col_y])
-        elif tipo == "Líneas":
-            ax.plot(df[col_x], df[col_y])
-        elif tipo == "Dispersión":
-            ax.scatter(df[col_x], df[col_y])
+                # Risk Ratio (RR) y su IC logarítmico
+                rr = inc_exp / inc_noexp if inc_noexp > 0 else np.nan
+                se_log_rr = math.sqrt((1 / a_adj - 1 / (a_adj + b_adj)) + (1 / c_adj - 1 / (c_adj + d_adj)))
+                ci95_rr = (math.exp(math.log(rr) - 1.96 * se_log_rr), math.exp(math.log(rr) + 1.96 * se_log_rr)) if rr > 0 else (np.nan, np.nan)
 
-        ax.set_xlabel(col_x)
-        ax.set_ylabel(col_y)
-        ax.set_title(f"{tipo} entre {col_x} y {col_y}")
-        st.pyplot(fig)
+                # Odds Ratio (OR) y su IC
+                orr = (a_adj * d_adj) / (b_adj * c_adj) if (b_adj * c_adj) > 0 else np.nan
+                se_log_or = math.sqrt(1 / a_adj + 1 / b_adj + 1 / c_adj + 1 / d_adj)
+                ci95_or = (math.exp(math.log(orr) - 1.96 * se_log_or), math.exp(math.log(orr) + 1.96 * se_log_or)) if orr > 0 else (np.nan, np.nan)
 
-with tabs[8]:
-    st.header("💬 Chat con Epidemiología 101")
-    if "messages" not in st.session_state:
-        st.session_state["messages"] = [{
-            "role": "system",
-            "content": "Eres un docente experto en epidemiología. Explica conceptos y resuelve preguntas con claridad y evidencia."
-        }]
-    for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
-    if prompt := st.chat_input("Haz tu pregunta de epidemiología..."):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        with st.chat_message("assistant"):
-            try:
-                response = openai.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=st.session_state.messages
-                )
-                reply = response.choices[0].message.content
-                st.markdown(reply)
-                st.session_state.messages.append({"role": "assistant", "content": reply})
-            except Exception as e:
-                st.error(f"Error al comunicarse con OpenAI: {e}")
+                # Diferencia de riesgos (RD) y su IC
+                rd = inc_exp - inc_noexp
+                se_rd = math.sqrt((inc_exp * (1 - inc_exp) / (a_adj + b_adj)) + (inc_noexp * (1 - inc_noexp) / (c_adj + d_adj)))
+                ci95_rd = (rd - 1.96 * se_rd, rd + 1.96 * se_rd)
+
+                # Medidas adicionales
+                rae = rd  # Riesgo atribuible en expuestos
+                fae = (rae / inc_exp) if inc_exp != 0 else None  # Fracción atribuible en expuestos
+                pexp = (a0 + b0) / (a0 + b0 + c0 + d0)  # proporción expuestos en población
+                rap = pexp * rd  # Riesgo atribuible poblacional
+                # Fracción atribuible poblacional (FAP) = RAP / riesgo poblacional (Ipop)
+                ipop = (a0 + c0) / (a0 + b0 + c0 + d0)
+                fap = (rap / ipop) if ipop != 0 else None
+                nnt = None if rd == 0 else 1 / abs(rd)
+
+                # Mostrar tabla 2x2 original
+                st.markdown("**Tabla 2x2 (original)**")
+                df_table = pd.DataFrame({
+                    "Expuestos": [a0, c0],
+                    "No expuestos": [b0, d0]
+                }, index=["Casos", "Controles"])
+                st.table(df_table)
+
+                # Resultados
+                st.subheader("📈 Resultados")
+                st.write(f"Incidencia — Expuestos: {inc_exp:.4f}")
+                st.write(f"Incidencia — No expuestos: {inc_noexp:.4f}")
+
+                if not np.isnan(rr):
+                    st.success(f"RR = {rr:.3f} (IC95%: {ci95_rr[0]:.3f} – {ci95_rr[1]:.3f})")
+                else:
+                    st.warning("RR no calculable con los datos proporcionados.")
+
+                if not np.isnan(orr):
+                    st.success(f"OR = {orr:.3f} (IC95%: {ci95_or[0]:.3f} – {ci95_or[1]:.3f})")
+                else:
+                    st.warning("OR no calculable con los datos proporcionados.")
+
+                st.info(f"RD = {rd:.4f} (IC95%: {ci95_rd[0]:.4f} – {ci95_rd[1]:.4f})")
+                st.write(f"Riesgo atribuible en expuestos (RAE): {rae:.4f}")
+                st.write(f"Fracción atribuible en expuestos (FAE): {fae:.2%}" if fae is not None else
+
