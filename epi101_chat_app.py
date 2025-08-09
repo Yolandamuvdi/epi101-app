@@ -286,21 +286,27 @@ def main():
         else:
             st.info("Archivo 'contenido/glosario_completo.py' no encontrado o variable 'glosario' no definida.")
 
-    elif seleccion == "🧪 Ejercicios Prácticos":
-        st.header(seleccion)
-        preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
-        if preguntas:
-            for i, p in enumerate(preguntas):
-                st.subheader(f"Pregunta {i+1} (Nivel {p['nivel']})")
-                respuesta = st.radio(p["pregunta"], p["opciones"], key=f"ej_{i}")
-                if st.button(f"Verificar respuesta {i+1}", key=f"btn_{i}"):
-                    if respuesta == p["respuesta_correcta"]:
-                        st.success("✅ Correcto")
-                    else:
-                        st.error(f"❌ Incorrecto. Respuesta correcta: {p['respuesta_correcta']}")
-        else:
-            st.info("Archivo 'contenido/ejercicios_completos.py' no encontrado o variable 'preguntas' no definida.")
+   elif seleccion == "🧪 Ejercicios Prácticos":
+    st.header(seleccion)
+    preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
 
+    # Depuración rápida para revisar las preguntas cargadas y sus claves
+    st.write("Cantidad de preguntas cargadas:", len(preguntas) if preguntas else 0)
+    for i, p in enumerate(preguntas or []):
+        st.write(f"Pregunta {i+1} keys:", list(p.keys()))
+
+    if preguntas:
+        for i, p in enumerate(preguntas):
+            nivel = p.get("nivel", "No definido")  # Evita error si no hay 'nivel'
+            st.subheader(f"Pregunta {i+1} (Nivel {nivel})")
+            respuesta = st.radio(p["pregunta"], p["opciones"], key=f"ej_{i}")
+            if st.button(f"Verificar respuesta {i+1}", key=f"btn_{i}"):
+                if respuesta == p["respuesta_correcta"]:
+                    st.success("✅ Correcto")
+                else:
+                    st.error(f"❌ Incorrecto. Respuesta correcta: {p['respuesta_correcta']}")
+    else:
+        st.info("Archivo 'contenido/ejercicios_completos.py' no encontrado o variable 'preguntas' no definida.")
     elif seleccion == "📊 Tablas 2x2 y Cálculos":
         st.header(seleccion)
         if "a" not in st.session_state: st.session_state.a = 10
