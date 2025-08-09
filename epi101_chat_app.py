@@ -9,7 +9,7 @@ import random
 from streamlit_extras.let_it_rain import rain
 
 # Configuración general
-st.set_page_config(page_title="🧠 Epidemiología 101", page_icon="🧪", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="🧠 Epidemiología 101", page_icon="🧪", layout="wide")
 
 # --- Estilos CSS ---
 st.markdown("""
@@ -52,7 +52,6 @@ st.markdown("""
     a:hover {
         text-decoration: underline;
     }
-    /* Responsive para móviles */
     @media (max-width: 768px) {
         .stButton>button {
             width: 100% !important;
@@ -62,15 +61,16 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Funciones para cargar contenido
+# Carga contenido markdown
 @st.cache_data(show_spinner=False)
 def cargar_md(ruta):
     try:
         with open(ruta, encoding="utf-8") as f:
             return f.read()
-    except Exception:
+    except:
         return None
 
+# Carga variables python desde archivos
 @st.cache_data(show_spinner=False)
 def cargar_py_variable(ruta_py, var_name):
     ns = {}
@@ -78,10 +78,10 @@ def cargar_py_variable(ruta_py, var_name):
         with open(ruta_py, encoding="utf-8") as f:
             exec(f.read(), ns)
         return ns.get(var_name)
-    except Exception:
+    except:
         return None
 
-# Funciones epidemiológicas básicas para tablas 2x2
+# Funciones epidemiológicas para 2x2
 def corregir_ceros(a,b,c,d):
     if 0 in [a,b,c,d]:
         return a+0.5, b+0.5, c+0.5, d+0.5, True
@@ -179,19 +179,12 @@ def mostrar_mensaje_nivel(nivel, puntaje, total):
     st.success(mensajes.get(nivel, "¡Felicidades!"))
 
 def filtrar_preguntas_por_nivel(preguntas, nivel):
-    if nivel == "Básico":
-        return [p for p in preguntas if p["nivel"] == "Básico"]
-    elif nivel == "Intermedio":
-        return [p for p in preguntas if p["nivel"] == "Intermedio"]
-    elif nivel == "Avanzado":
-        return [p for p in preguntas if p["nivel"] == "Avanzado"]
-    else:
-        return [p for p in preguntas if p["nivel"] == "Experto/Messi"]
+    return [p for p in preguntas if p["nivel"] == nivel]
 
-# --- Página principal y navegación ---
+# --- Navegación ---
 def pagina_inicio():
     st.title("🧠 Epidemiología 101")
-    st.markdown("¿Qué quieres aprender hoy? Selecciona una sección:")
+    st.markdown("Bienvenido/a a Epidemiología 101, ¿qué quieres aprender hoy? Selecciona una sección:")
     opciones = [
         "📌 Conceptos Básicos",
         "📈 Medidas de Asociación",
@@ -206,126 +199,122 @@ def pagina_inicio():
         "🎯 Gamificación"
     ]
     seleccion = st.selectbox("Selecciona sección", opciones)
+    if st.button("Ir a la sección"):
+        st.session_state.seccion = seleccion
     return seleccion
 
 def barra_lateral(seleccion_actual):
     st.sidebar.title("🧪 Epidemiología 101")
     st.sidebar.markdown("""
-    👩‍⚕️ Creado por Yolanda Muvdi, Enfermera Epidemióloga  
-    📧 [ymuvdi@gmail.com](mailto:ymuvdi@gmail.com)  
-    🔗 [LinkedIn](https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/)
+👩‍⚕️ Creado por Yolanda Muvdi, Enfermera Epidemióloga  
+📧 [ymuvdi@gmail.com](mailto:ymuvdi@gmail.com)  
+🔗 [LinkedIn](https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/)
     """)
     opciones = [
-        ("📌 Conceptos Básicos", "Conceptos Básicos"),
-        ("📈 Medidas de Asociación", "Medidas de Asociación"),
-        ("📊 Diseños de Estudio", "Diseños de Estudio"),
-        ("⚠️ Sesgos y Errores", "Sesgos y Errores"),
-        ("📚 Glosario Interactivo", "Glosario Interactivo"),
-        ("🧪 Ejercicios Prácticos", "Ejercicios Prácticos"),
-        ("📊 Tablas 2x2 y Cálculos", "Tablas 2x2 y Cálculos"),
-        ("📊 Visualización de Datos", "Visualización de Datos"),
-        ("🎥 Multimedia YouTube", "Multimedia YouTube"),
-        ("🤖 Chat Epidemiológico", "Chat Epidemiológico"),
-        ("🎯 Gamificación", "Gamificación")
+        "📌 Conceptos Básicos",
+        "📈 Medidas de Asociación",
+        "📊 Diseños de Estudio",
+        "⚠️ Sesgos y Errores",
+        "📚 Glosario Interactivo",
+        "🧪 Ejercicios Prácticos",
+        "📊 Tablas 2x2 y Cálculos",
+        "📊 Visualización de Datos",
+        "🎥 Multimedia YouTube",
+        "🤖 Chat Epidemiológico",
+        "🎯 Gamificación"
     ]
-    opciones_texto = [x[0] for x in opciones]
-    seleccion_sidebar = st.sidebar.radio("Ir a sección:", opciones_texto, index=[x[0] for x in opciones].index(f"📌 {seleccion_actual}") if seleccion_actual else 0)
-    # Convertir texto a clave
-    seleccion_clave = dict(opciones)[seleccion_sidebar]
-    return seleccion_clave
+    seleccion_sidebar = st.sidebar.radio("Ir a sección:", opciones, index=opciones.index(seleccion_actual) if seleccion_actual in opciones else 0)
+    if seleccion_sidebar != seleccion_actual:
+        st.session_state.seccion = seleccion_sidebar
+    return st.session_state.seccion
 
 def main():
     if "seccion" not in st.session_state:
         st.session_state.seccion = None
         st.session_state.nivel_gamificacion = None
-        st.session_state.respuestas = {}
+        st.session_state.preguntas_gamificacion = []
+        st.session_state.index_pregunta = 0
+        st.session_state.respuestas_correctas = 0
 
     if st.session_state.seccion is None:
-        seleccion = pagina_inicio()
-        if st.button("Ir a la sección"):
-            st.session_state.seccion = seleccion.replace("📌 ","").replace("📈 ","").replace("📊 ","").replace("⚠️ ","").replace("📚 ","").replace("🧪 ","").replace("🎥 ","").replace("🤖 ","").replace("🎯 ","")
-            st.experimental_rerun()
+        pagina_inicio()
         return
 
-    seleccion = barra_lateral(st.session_state.seccion)
+    barra_lateral(st.session_state.seccion)
+    seleccion = st.session_state.seccion
 
-    # Contenido de secciones
-    if seleccion == "Conceptos Básicos":
-        st.header("📌 Conceptos Básicos")
+    # Secciones y su contenido
+    if seleccion == "📌 Conceptos Básicos":
+        st.header(seleccion)
         contenido = cargar_md("contenido/conceptosbasicos.md")
         if contenido:
             st.markdown(contenido)
         else:
-            st.info("Agrega el archivo 'contenido/conceptosbasicos.md' para mostrar el contenido.")
+            st.info("Archivo 'contenido/conceptosbasicos.md' no encontrado.")
 
-    elif seleccion == "Medidas de Asociación":
-        st.header("📈 Medidas de Asociación")
+    elif seleccion == "📈 Medidas de Asociación":
+        st.header(seleccion)
         contenido = cargar_md("contenido/medidas_completas.md")
         if contenido:
             st.markdown(contenido)
         else:
-            st.info("Agrega el archivo 'contenido/medidas_completas.md' para mostrar el contenido.")
+            st.info("Archivo 'contenido/medidas_completas.md' no encontrado.")
 
-    elif seleccion == "Diseños de Estudio":
-        st.header("📊 Diseños de Estudio")
+    elif seleccion == "📊 Diseños de Estudio":
+        st.header(seleccion)
         contenido = cargar_md("contenido/disenos_completos.md")
         if contenido:
             st.markdown(contenido)
         else:
-            st.info("Agrega el archivo 'contenido/disenos_completos.md' para mostrar el contenido.")
+            st.info("Archivo 'contenido/disenos_completos.md' no encontrado.")
 
-    elif seleccion == "Sesgos y Errores":
-        st.header("⚠️ Sesgos y Errores")
+    elif seleccion == "⚠️ Sesgos y Errores":
+        st.header(seleccion)
         contenido = cargar_md("contenido/sesgos_completos.md")
         if contenido:
             st.markdown(contenido)
         else:
-            st.info("Agrega el archivo 'contenido/sesgos_completos.md' para mostrar el contenido.")
+            st.info("Archivo 'contenido/sesgos_completos.md' no encontrado.")
 
-    elif seleccion == "Glosario Interactivo":
-        st.header("📚 Glosario Interactivo")
+    elif seleccion == "📚 Glosario Interactivo":
+        st.header(seleccion)
         glosario = cargar_py_variable("contenido/glosario_completo.py", "glosario")
         if glosario:
             for termino, definicion in glosario.items():
                 with st.expander(termino):
                     st.write(definicion)
         else:
-            st.info("Agrega 'contenido/glosario_completo.py' con variable ⁠ glosario ⁠.")
+            st.info("Archivo 'contenido/glosario_completo.py' no encontrado o variable 'glosario' no definida.")
 
-    elif seleccion == "Ejercicios Prácticos":
-        st.header("🧪 Ejercicios Prácticos")
+    elif seleccion == "🧪 Ejercicios Prácticos":
+        st.header(seleccion)
         preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
         if preguntas:
-            correctas = 0
             for i, p in enumerate(preguntas):
                 st.subheader(f"Pregunta {i+1} (Nivel {p['nivel']})")
-                respuesta = st.radio(p["pregunta"], p["opciones"], key=f"preg_{i}")
+                respuesta = st.radio(p["pregunta"], p["opciones"], key=f"ej_{i}")
                 if st.button(f"Verificar respuesta {i+1}", key=f"btn_{i}"):
                     if respuesta == p["respuesta_correcta"]:
                         st.success("✅ Correcto")
-                        correctas += 1
                     else:
                         st.error(f"❌ Incorrecto. Respuesta correcta: {p['respuesta_correcta']}")
-            if correctas == len(preguntas) and len(preguntas) > 0:
-                st.balloons()
-                st.success("¡Felicidades! Has completado todos los ejercicios.")
         else:
-            st.info("Agrega 'contenido/ejercicios_completos.py' con variable ⁠ preguntas ⁠.")
+            st.info("Archivo 'contenido/ejercicios_completos.py' no encontrado o variable 'preguntas' no definida.")
 
-    elif seleccion == "Tablas 2x2 y Cálculos":
-        st.header("📊 Tablas 2x2 y Cálculos Epidemiológicos")
+    elif seleccion == "📊 Tablas 2x2 y Cálculos":
+        st.header(seleccion)
         if "a" not in st.session_state: st.session_state.a = 10
         if "b" not in st.session_state: st.session_state.b = 20
         if "c" not in st.session_state: st.session_state.c = 5
         if "d" not in st.session_state: st.session_state.d = 40
         col1, col2 = st.columns(2)
         with col1:
-            st.session_state.a = st.number_input("Casos expuestos (a)", min_value=0, value=st.session_state.a, step=1, key="input_a")
-            st.session_state.b = st.number_input("No casos expuestos (b)", min_value=0, value=st.session_state.b, step=1, key="input_b")
+            st.session_state.a = st.number_input("Casos expuestos (a)", min_value=0, value=st.session_state.a, step=1)
+            st.session_state.b = st.number_input("No casos expuestos (b)", min_value=0, value=st.session_state.b, step=1)
         with col2:
-            st.session_state.c = st.number_input("Casos no expuestos (c)", min_value=0, value=st.session_state.c, step=1, key="input_c")
-            st.session_state.d = st.number_input("No casos no expuestos (d)", min_value=0, value=st.session_state.d, step=1, key="input_d")
-        if st.button("Calcular medidas y mostrar gráficos"):
+            st.session_state.c = st.number_input("Casos no expuestos (c)", min_value=0, value=st.session_state.c, step=1)
+            st.session_state.d = st.number_input("No casos no expuestos (d)", min_value=0, value=st.session_state.d, step=1)
+        if st.button("Calcular"):
             a, b, c, d = st.session_state.a, st.session_state.b, st.session_state.c, st.session_state.d
             total = a+b+c+d
             if total == 0:
@@ -342,17 +331,16 @@ def main():
                 plot_forest(rr, rr_l, rr_u, or_, or_l, or_u)
                 plot_barras_expuestos(a,b,c,d)
 
-    elif seleccion == "Visualización de Datos":
-        st.header("📊 Visualización de Datos")
+    elif seleccion == "📊 Visualización de Datos":
+        st.header(seleccion)
         uploaded_file = st.file_uploader("Carga un archivo CSV para gráficos exploratorios", type=["csv"])
         if uploaded_file:
             try:
                 df = pd.read_csv(uploaded_file)
                 st.dataframe(df.head())
-                st.markdown("### Gráfico de barras de la primera columna numérica")
-                cols_numericas = df.select_dtypes(include=np.number).columns.tolist()
-                if cols_numericas:
-                    col = cols_numericas[0]
+                num_cols = df.select_dtypes(include=np.number).columns.tolist()
+                if num_cols:
+                    col = num_cols[0]
                     fig, ax = plt.subplots()
                     df[col].value_counts().plot(kind='bar', ax=ax, color='#0d3b66')
                     ax.set_title(f"Distribución de {col}")
@@ -360,12 +348,12 @@ def main():
                 else:
                     st.info("No se detectaron columnas numéricas para graficar.")
             except Exception as e:
-                st.error(f"Error al leer el archivo CSV: {e}")
+                st.error(f"Error leyendo CSV: {e}")
         else:
             st.info("Carga un archivo CSV para ver gráficos dinámicos.")
 
-    elif seleccion == "Multimedia YouTube":
-        st.header("🎥 Videos Recomendados")
+    elif seleccion == "🎥 Multimedia YouTube":
+        st.header(seleccion)
         videos = {
             "Introducción a Epidemiología": "https://www.youtube.com/watch?v=qVFP-IkyWgQ",
             "Medidas de Asociación": "https://www.youtube.com/watch?v=d61E24xvRfI",
@@ -376,45 +364,37 @@ def main():
             st.markdown(f"**{titulo}**")
             st.video(url)
 
-    elif seleccion == "Chat Epidemiológico":
-        st.header("🤖 Chat Epidemiológico (Gemini AI)")
-        st.info("Esta función está integrada y lista para usarse. Escribe tus consultas epidemiológicas abajo.")
-        pregunta = st.text_input("Escribe tu pregunta epidemiológica aquí:")
+    elif seleccion == "🤖 Chat Epidemiológico":
+        st.header(seleccion)
+        st.info("Función integrada para consultas epidemiológicas.")
+        pregunta = st.text_input("Escribe tu pregunta epidemiológica:")
         if st.button("Enviar"):
-            # Aquí va la integración con Gemini API o tu modelo AI
+            # Aquí puedes integrar tu modelo Gemini AI o similar
             st.success(f"Respuesta simulada para: {pregunta}")
 
-    elif seleccion == "Gamificación":
-        st.header("🎯 Gamificación Epidemiológica")
+    elif seleccion == "🎯 Gamificación":
+        st.header(seleccion)
         niveles = ["Básico", "Intermedio", "Avanzado", "Experto/Messi"]
-        if "nivel_gamificacion" not in st.session_state:
-            st.session_state.nivel_gamificacion = None
-            st.session_state.puntaje = 0
-            st.session_state.total = 0
-            st.session_state.index_pregunta = 0
-            st.session_state.respuestas_correctas = 0
 
         if st.session_state.nivel_gamificacion is None:
             nivel = st.selectbox("¿En qué nivel consideras que estás?", niveles)
             if st.button("Comenzar quiz"):
                 st.session_state.nivel_gamificacion = nivel
-                # Cargar preguntas filtradas
                 preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
                 if preguntas:
                     st.session_state.preguntas_gamificacion = filtrar_preguntas_por_nivel(preguntas, nivel)
-                    st.session_state.total = len(st.session_state.preguntas_gamificacion)
-                    st.session_state.index_pregunta = 0
-                    st.session_state.respuestas_correctas = 0
                 else:
-                    st.error("No hay preguntas disponibles para gamificación.")
-                st.experimental_rerun()
+                    st.error("No hay preguntas disponibles.")
+                st.session_state.index_pregunta = 0
+                st.session_state.respuestas_correctas = 0
+
         else:
-            preguntas = st.session_state.get("preguntas_gamificacion", [])
+            preguntas = st.session_state.preguntas_gamificacion
             idx = st.session_state.index_pregunta
 
             if idx < len(preguntas):
                 p = preguntas[idx]
-                st.subheader(f"Pregunta {idx+1} de {len(preguntas)}")
+                st.subheader(f"Pregunta {idx+1} de {len(preguntas)} (Nivel {st.session_state.nivel_gamificacion})")
                 respuesta = st.radio(p["pregunta"], p["opciones"], key=f"gam_preg_{idx}")
                 if st.button("Responder", key=f"gam_btn_{idx}"):
                     if respuesta == p["respuesta_correcta"]:
@@ -423,18 +403,28 @@ def main():
                     else:
                         st.error(f"❌ Incorrecto. Respuesta correcta: {p['respuesta_correcta']}")
                     st.session_state.index_pregunta += 1
-                    st.experimental_rerun()
+
             else:
                 mostrar_confeti()
-                mostrar_mensaje_nivel(st.session_state.nivel_gamificacion, st.session_state.respuestas_correctas, len(preguntas))
+                mostrar_mensaje_nivel(st.session_state.nivel_gamificacion,
+                                      st.session_state.respuestas_correctas,
+                                      len(preguntas))
                 if st.button("Reiniciar gamificación"):
                     st.session_state.nivel_gamificacion = None
                     st.session_state.index_pregunta = 0
                     st.session_state.respuestas_correctas = 0
-                    st.experimental_rerun()
+
+    # Footer con tus datos
+    st.markdown("---")
+    st.markdown("""
+    <footer style="text-align:center; font-size:0.9rem; color:#555;">
+    Creado por Yolanda Muvdi - Enfermera Epidemióloga |  
+    📧 <a href="mailto:ymuvdi@gmail.com">ymuvdi@gmail.com</a> |  
+    🔗 <a href="https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/" target="_blank">LinkedIn</a>
+    </footer>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
-
 
 
