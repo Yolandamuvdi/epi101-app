@@ -365,54 +365,50 @@ def main():
         for titulo, url in videos.items():
             st.markdown(f"**{titulo}**")
             st.video(url)
-            
-             elif seleccion == "🤖 Chat Epidemiológico":
+
+    elif seleccion == "🤖 Chat Epidemiológico":
         st.header(seleccion)
         pregunta = st.text_input("Escribe tu pregunta epidemiológica:")
         if st.button("Enviar"):
             st.success(f"Respuesta simulada para: {pregunta}")
 
-
     elif seleccion == "🎯 Gamificación":
-    st.header(seleccion)
+        st.header(seleccion)
 
-    # Ejemplo mínimo de preguntas con niveles definidos
-    preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
+        preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
 
-    if preguntas:
-        # Inicializar variables en sesión para gamificación
-        if "index_pregunta" not in st.session_state:
-            st.session_state.index_pregunta = 0
-            st.session_state.respuestas_correctas = 0
-            st.session_state.nivel_gamificacion = "Básico"
-
-        pregunta_actual = preguntas[st.session_state.index_pregunta]
-        nivel = pregunta_actual.get("nivel", "Básico")  # Poner Básico por defecto si no viene
-
-        st.subheader(f"Pregunta {st.session_state.index_pregunta + 1} (Nivel {nivel})")
-        respuesta_usuario = st.radio(pregunta_actual["pregunta"], pregunta_actual["opciones"], key="gam_pregunta")
-
-        if st.button("Verificar respuesta y siguiente"):
-            correcta = pregunta_actual["respuesta_correcta"]
-            if respuesta_usuario == correcta:
-                st.success("✅ Correcto")
-                st.session_state.respuestas_correctas += 1
-            else:
-                st.error(f"❌ Incorrecto. Respuesta correcta: {correcta}")
-
-            # Avanzar a la siguiente pregunta o reiniciar
-            if st.session_state.index_pregunta + 1 < len(preguntas):
-                st.session_state.index_pregunta += 1
-            else:
-                st.balloons()
-                st.success(f"🎉 Terminaste todas las preguntas con {st.session_state.respuestas_correctas} aciertos de {len(preguntas)}")
+        if preguntas:
+            if "index_pregunta" not in st.session_state:
                 st.session_state.index_pregunta = 0
                 st.session_state.respuestas_correctas = 0
+                st.session_state.nivel_gamificacion = "Básico"
 
-    else:
-        st.info("Archivo 'contenido/ejercicios_completos.py' no encontrado o variable 'preguntas' no definida.")
+            pregunta_actual = preguntas[st.session_state.index_pregunta]
+            nivel = pregunta_actual.get("nivel", "Básico")
 
+            st.subheader(f"Pregunta {st.session_state.index_pregunta + 1} (Nivel {nivel})")
+            respuesta_usuario = st.radio(pregunta_actual["pregunta"], pregunta_actual["opciones"], key="gam_pregunta")
+
+            if st.button("Verificar respuesta y siguiente"):
+                correcta = pregunta_actual["respuesta_correcta"]
+                if respuesta_usuario == correcta:
+                    st.success("✅ Correcto")
+                    st.session_state.respuestas_correctas += 1
+                else:
+                    st.error(f"❌ Incorrecto. Respuesta correcta: {correcta}")
+
+                if st.session_state.index_pregunta + 1 < len(preguntas):
+                    st.session_state.index_pregunta += 1
+                else:
+                    mostrar_confeti()
+                    st.success(f"🎉 Terminaste todas las preguntas con {st.session_state.respuestas_correctas} aciertos de {len(preguntas)}")
+                    st.session_state.index_pregunta = 0
+                    st.session_state.respuestas_correctas = 0
+
+        else:
+            st.info("Archivo 'contenido/ejercicios_completos.py' no encontrado o variable 'preguntas' no definida.")
 
 if __name__ == "__main__":
     main()
+
 
