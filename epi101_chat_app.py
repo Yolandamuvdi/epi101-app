@@ -3,9 +3,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-import os
 
-# Import Google Generative AI (Gemini)
+# Google Gemini AI (opcional)
 try:
     import google.generativeai as genai
     GENAI_AVAILABLE = True
@@ -19,7 +18,6 @@ try:
 except Exception:
     SCIPY_AVAILABLE = False
 
-# Variables globales menú
 SECCIONES = [
     "Inicio",
     "Conceptos Básicos",
@@ -35,17 +33,15 @@ SECCIONES = [
     "Chat Epidemiológico"
 ]
 
-# Inicializar estado sesión
+# Inicializar estado
 if "seccion" not in st.session_state:
     st.session_state.seccion = None
-
 if "puntaje_gamificacion" not in st.session_state:
     st.session_state.puntaje_gamificacion = 0
-
 if "chat_messages" not in st.session_state:
     st.session_state.chat_messages = []
 
-# --- Funciones para cargar contenido (Markdown y Python) ---
+# Funciones para cargar contenido externo
 @st.cache_data(show_spinner=False)
 def cargar_md(ruta):
     try:
@@ -64,7 +60,7 @@ def cargar_py_variable(ruta_py, var_name):
     except Exception:
         return None
 
-# --- Función para mostrar footer fijo con info de Yolanda ---
+# Footer fijo abajo
 def mostrar_footer():
     st.markdown("""
     <style>
@@ -96,34 +92,40 @@ def mostrar_footer():
     </div>
     """, unsafe_allow_html=True)
 
-# --- Splash inicial simple ---
+# Splash inicial
 def mostrar_splash():
     st.markdown("""
     <style>
     .splash {
+        background-color: #0d3b66;
+        height: 80vh;
         display: flex;
         flex-direction: column;
-        align-items: center;
         justify-content: center;
-        height: 80vh;
+        align-items: center;
+        color: white;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        color: #0d3b66;
     }
     .splash h1 {
-        font-size: 3.5rem;
-        margin-bottom: 0.2rem;
+        font-size: 4rem;
+        margin-bottom: 1rem;
     }
     .splash p {
-        font-size: 1.3rem;
+        font-size: 1.5rem;
         margin-bottom: 2rem;
-        font-weight: 500;
     }
     select {
-        font-size: 1.1rem;
-        padding: 0.5rem 0.7rem;
+        font-size: 1.2rem;
+        padding: 0.6rem 0.8rem;
         border-radius: 6px;
-        border: 2px solid #0d3b66;
-        width: 300px;
+        border: none;
+        width: 320px;
+        max-width: 90vw;
+        cursor: pointer;
+    }
+    select:focus {
+        outline: none;
+        border: 2px solid #f4d35e;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -132,7 +134,7 @@ def mostrar_splash():
     st.markdown("🧪 <h1>Bienvenido/a a Epidemiología 101</h1>", unsafe_allow_html=True)
     st.markdown("<p>¿Qué quieres aprender hoy?</p>", unsafe_allow_html=True)
 
-    opcion = st.selectbox("Selecciona la sección", [""] + SECCIONES)
+    opcion = st.selectbox("", [""] + SECCIONES, key="splash_select")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -140,7 +142,7 @@ def mostrar_splash():
         st.session_state.seccion = opcion
         st.experimental_rerun()
 
-# --- Función para menú lateral ---
+# Menú lateral fijo
 def mostrar_sidebar():
     with st.sidebar:
         st.markdown("## Menú de Secciones")
@@ -158,10 +160,10 @@ def mostrar_sidebar():
         </small>
         """, unsafe_allow_html=True)
 
-# --- Funciones para cada sección ---
+# Secciones (ejemplos con placeholders)
 def mostrar_inicio():
     st.title("🧪 Inicio")
-    st.write("¡Bienvenido/a a Epidemiología 101! Explora las secciones usando el menú lateral.")
+    st.write("¡Bienvenido/a a Epidemiología 101! Usa el menú lateral para navegar por las secciones.")
 
 def mostrar_conceptos_basicos():
     st.title("📌 Conceptos Básicos")
@@ -209,25 +211,20 @@ def mostrar_ejercicios_practicos():
     st.title("🧪 Ejercicios Prácticos")
     preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
     if preguntas:
-        respuestas_correctas = 0
         for i, q in enumerate(preguntas):
             st.subheader(f"Pregunta {i+1}")
             respuesta = st.radio(q['pregunta'], q['opciones'], key=f"q{i}")
             if st.button(f"Verificar respuesta {i+1}", key=f"btn_{i}"):
                 if respuesta == q['respuesta_correcta']:
                     st.success("✅ Correcto")
-                    respuestas_correctas += 1
                 else:
                     st.error(f"❌ Incorrecto. La respuesta correcta es: {q['respuesta_correcta']}")
-        if respuestas_correctas == len(preguntas) and len(preguntas) > 0:
-            st.success("🌟 ¡Felicidades! Completaste todos los ejercicios.")
     else:
         st.info("Agrega 'contenido/ejercicios_completos.py' con variable preguntas.")
 
 def mostrar_tablas_2x2():
     st.title("📊 Tablas 2x2 y Cálculos Epidemiológicos")
 
-    # Valores por defecto
     if "a" not in st.session_state:
         st.session_state.a = 10
     if "b" not in st.session_state:
@@ -250,65 +247,63 @@ def mostrar_tablas_2x2():
         total = a+b+c+d
         if total == 0:
             st.error("Por favor ingresa valores mayores que cero.")
+            return
+
+        a_, b_, c_, d_ = a, b, c, d
+        corregido = False
+        if 0 in [a,b,c,d]:
+            a_ += 0.5
+            b_ += 0.5
+            c_ += 0.5
+            d_ += 0.5
+            corregido = True
+
+        risk1 = a_/(a_+b_)
+        risk2 = c_/(c_+d_)
+        rr = risk1/risk2
+        se_log_rr = math.sqrt(1/a_ - 1/(a_+b_) + 1/c_ - 1/(c_+d_))
+        z = norm.ppf(0.975)
+        rr_l = math.exp(math.log(rr) - z*se_log_rr)
+        rr_u = math.exp(math.log(rr) + z*se_log_rr)
+
+        or_ = (a_*d_)/(b_*c_)
+        se_log_or = math.sqrt(1/a_ + 1/b_ + 1/c_ + 1/d_)
+        or_l = math.exp(math.log(or_) - z*se_log_or)
+        or_u = math.exp(math.log(or_) + z*se_log_or)
+
+        rd = risk1 - risk2
+        se_rd = math.sqrt((risk1*(1-risk1))/(a_+b_) + (risk2*(1-risk2))/(c_+d_))
+        rd_l = rd - z*se_rd
+        rd_u = rd + z*se_rd
+
+        p_val = None
+        test_name = "No disponible"
+        if SCIPY_AVAILABLE:
+            table = np.array([[a,b],[c,d]])
+            chi2, p_val, dof, expected = chi2_contingency(table, correction=False)
+            test_name = "Chi-cuadrado sin corrección"
+            if (expected < 5).any():
+                _, p_val = fisher_exact(table)
+                test_name = "Fisher exacto"
+
+        st.markdown(f"""
+        **Resultados Epidemiológicos:**
+
+        - Riesgo Relativo (RR): {rr:.3f} (IC95% {rr_l:.3f} - {rr_u:.3f})  
+        - Odds Ratio (OR): {or_:.3f} (IC95% {or_l:.3f} - {or_u:.3f})  
+        - Diferencia de Riesgos (RD): {rd:.3f} (IC95% {rd_l:.3f} - {rd_u:.3f})  
+        - Valor p ({test_name}): {p_val if p_val else 'N/A'}  
+        """)
+
+        if p_val and p_val < 0.05:
+            st.success("🎯 Asociación estadísticamente significativa (p < 0.05).")
+        elif p_val:
+            st.warning("⚠️ No significativa estadísticamente (p ≥ 0.05).")
         else:
-            # Corrección para ceros
-            a_, b_, c_, d_ = a, b, c, d
-            corregido = False
-            if 0 in [a,b,c,d]:
-                a_ += 0.5
-                b_ += 0.5
-                c_ += 0.5
-                d_ += 0.5
-                corregido = True
+            st.info("⚠️ No se pudo calcular valor p.")
 
-            risk1 = a_/(a_+b_)
-            risk2 = c_/(c_+d_)
-            rr = risk1/risk2
-            se_log_rr = math.sqrt(1/a_ - 1/(a_+b_) + 1/c_ - 1/(c_+d_))
-            z = norm.ppf(0.975)
-            rr_l = math.exp(math.log(rr) - z*se_log_rr)
-            rr_u = math.exp(math.log(rr) + z*se_log_rr)
-
-            or_ = (a_*d_)/(b_*c_)
-            se_log_or = math.sqrt(1/a_ + 1/b_ + 1/c_ + 1/d_)
-            or_l = math.exp(math.log(or_) - z*se_log_or)
-            or_u = math.exp(math.log(or_) + z*se_log_or)
-
-            rd = risk1 - risk2
-            se_rd = math.sqrt((risk1*(1-risk1))/(a_+b_) + (risk2*(1-risk2))/(c_+d_))
-            rd_l = rd - z*se_rd
-            rd_u = rd + z*se_rd
-
-            # P valor
-            if SCIPY_AVAILABLE:
-                table = np.array([[a,b],[c,d]])
-                chi2, p_val, dof, expected = chi2_contingency(table, correction=False)
-                test_name = "Chi-cuadrado sin corrección"
-                if (expected < 5).any():
-                    _, p_val = fisher_exact(table)
-                    test_name = "Fisher exacto"
-            else:
-                p_val = None
-                test_name = "scipy no disponible"
-
-            st.markdown(f"""
-            **Resultados Epidemiológicos:**
-
-            - Riesgo Relativo (RR): {rr:.3f} (IC95% {rr_l:.3f} - {rr_u:.3f})  
-            - Odds Ratio (OR): {or_:.3f} (IC95% {or_l:.3f} - {or_u:.3f})  
-            - Diferencia de Riesgos (RD): {rd:.3f} (IC95% {rd_l:.3f} - {rd_u:.3f})  
-            - Valor p ({test_name}): {p_val if p_val else 'N/A'}  
-            """)
-
-            if p_val and p_val < 0.05:
-                st.success("🎯 Asociación estadísticamente significativa (p < 0.05).")
-            elif p_val:
-                st.warning("⚠️ No significativa estadísticamente (p ≥ 0.05).")
-            else:
-                st.info("⚠️ No se pudo calcular valor p.")
-
-            if corregido:
-                st.info("Se aplicó corrección de 0.5 por ceros en tabla.")
+        if corregido:
+            st.info("Se aplicó corrección de 0.5 por ceros en tabla.")
 
 def mostrar_visualizacion_datos():
     st.title("📊 Visualización de Datos")
@@ -343,7 +338,7 @@ def mostrar_multimedia_youtube():
         "Sesgos y Errores Comunes": "https://www.youtube.com/watch?v=RrKhv8OdLmY"
     }
     for nombre, url in videos.items():
-        st.markdown(f"▶️ [{nombre}]({url})")
+        st.video(url)
 
 def mostrar_gamificacion():
     st.title("🎮 Gamificación")
@@ -386,7 +381,7 @@ def mostrar_gamificacion():
         ]
     }
 
-    # Detectar nivel según puntaje (ejemplo simple)
+    # Nivel según puntaje acumulado
     if st.session_state.puntaje_gamificacion < 2:
         nivel_actual = "Básico"
     elif st.session_state.puntaje_gamificacion < 4:
@@ -395,9 +390,7 @@ def mostrar_gamificacion():
         nivel_actual = "Avanzado"
 
     st.markdown(f"**Nivel actual:** {nivel_actual}")
-
     preguntas = niveles[nivel_actual]
-    puntaje = 0
 
     for i, q in enumerate(preguntas):
         st.write(f"**Pregunta {i+1}:** {q['pregunta']}")
@@ -405,74 +398,77 @@ def mostrar_gamificacion():
         if st.button(f"Verificar respuesta {i+1}", key=f"btn_gam_{nivel_actual}_{i}"):
             if respuesta == q['respuesta_correcta']:
                 st.success("¡Correcto!")
-                puntaje += 1
                 st.session_state.puntaje_gamificacion += 1
                 st.balloons()
             else:
                 st.error(f"Incorrecto. La respuesta correcta es: {q['respuesta_correcta']}")
 
-    st.write(f"**Puntaje en esta sesión:** {st.session_state.puntaje_gamificacion}")
+    st.write(f"**Puntaje total:** {st.session_state.puntaje_gamificacion}")
 
 def mostrar_chat_epidemiologico():
     st.title("💬 Chat Epidemiológico")
 
-    st.write("Funcionalidad simple de chat con Gemini AI (si disponible).")
+    st.write("Escribe tu pregunta y espera la respuesta generada por Gemini AI.")
 
-    user_input = st.text_input("Escribe tu pregunta aquí:")
+    user_input = st.text_input("Tu pregunta:")
 
     if user_input:
         st.session_state.chat_messages.append({"role": "user", "content": user_input})
 
         if GENAI_AVAILABLE:
-            try:
-                response = genai.chat.create(
-                    model="models/chat-bison-001",
-                    messages=st.session_state.chat_messages,
-                )
-                respuesta = response.last.message.content
-            except Exception as e:
-                respuesta = f"Error al generar respuesta: {e}"
+            # Configura tu API Key aquí si no lo has hecho
+            if not genai.api_key:
+                st.error("No se configuró la API key de Google Gemini. Añádela para que funcione el chat.")
+                return
+
+            respuesta = None
+            with st.spinner("Generando respuesta..."):
+                try:
+                    respuesta = genai.chat.create(
+                        model="chat-bison@001",
+                        messages=st.session_state.chat_messages
+                    )
+                    content = respuesta.last.message.get("content")
+                    st.session_state.chat_messages.append({"role": "assistant", "content": content})
+                except Exception as e:
+                    st.error(f"Error generando respuesta: {e}")
+                    return
+
+            st.markdown("**Respuesta:**")
+            st.write(content)
         else:
-            respuesta = "Gemini AI no disponible."
+            st.warning("Gemini AI no está disponible. Usa sin conexión o configura la API key.")
 
-        st.session_state.chat_messages.append({"role": "assistant", "content": respuesta})
+    if st.session_state.chat_messages:
+        st.markdown("---")
+        st.markdown("**Historial de conversación:**")
+        for msg in st.session_state.chat_messages:
+            if msg["role"] == "user":
+                st.markdown(f"**Tú:** {msg['content']}")
+            else:
+                st.markdown(f"**Asistente:** {msg['content']}")
 
-    for msg in st.session_state.chat_messages:
-        if msg['role'] == "user":
-            st.markdown(f"**Tú:** {msg['content']}")
-        else:
-            st.markdown(f"**Bot:** {msg['content']}")
+# MAIN
 
-# --- MAIN ---
 def main():
     st.set_page_config(
         page_title="Epidemiología 101",
+        page_icon="🧪",
         layout="wide",
-        initial_sidebar_state="expanded"
+        initial_sidebar_state="collapsed",
     )
 
-    # Si no hay sección elegida, mostrar splash
+    st.markdown("""
+    <style>
+    /* Scroll para sidebar fijo */
+    .css-1d391kg {overflow-y: auto !important;}
+    </style>
+    """, unsafe_allow_html=True)
+
     if st.session_state.seccion is None:
         mostrar_splash()
-        mostrar_footer()
     else:
         mostrar_sidebar()
-
-        # Contenedor principal ancho
-        st.markdown(
-            """
-            <style>
-            .main-content {
-                padding: 1rem 3rem;
-                max-width: 900px;
-                margin-left: auto;
-                margin-right: auto;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
 
         with st.container():
             if st.session_state.seccion == "Inicio":
@@ -497,9 +493,11 @@ def main():
                 mostrar_multimedia_youtube()
             elif st.session_state.seccion == "Gamificación":
                 mostrar_gamificacion()
-        elif st.session_state.seccion == "Chat Epidemiológico":
-    mostrar_chat_epidemiologico()
+            elif st.session_state.seccion == "Chat Epidemiológico":
+                mostrar_chat_epidemiologico()
+
         mostrar_footer()
+
 if __name__ == "__main__":
     main()
 
