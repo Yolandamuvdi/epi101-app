@@ -94,91 +94,140 @@ def mostrar_footer():
 
 # Splash inicial
 import streamlit as st
+# Lista de secciones con íconos (emoji) para el dropdown
+SECCIONES_CON_ICONOS = [
+    ("📊 Datos", "Datos"),
+    ("🦠 Enfermedades", "Enfermedades"),
+    ("📈 Estadísticas", "Estadísticas"),
+    ("🧬 Genética", "Genética"),
+    ("🩺 Prevención", "Prevención"),
+]
 
 def mostrar_splash():
     st.markdown("""
     <style>
+    /* Cuadro azul principal */
     .blue-box {
         background: linear-gradient(135deg, #0d3b66, #144d79);
         color: white;
-        padding: 3rem 2.5rem 4rem 2.5rem;
-        border-radius: 20px;
-        max-width: 480px;
-        margin: 6rem auto 1rem auto;
+        padding: 3.5rem 3rem 3.5rem 3rem;
+        border-radius: 24px;
+        max-width: 520px;
+        min-height: 380px;
+        margin: 6rem auto 2rem auto;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
-        box-shadow: 0 10px 25px rgba(13, 59, 102, 0.8);
-        position: relative;
+        box-shadow: 0 15px 40px rgba(13, 59, 102, 0.85);
         user-select: none;
     }
     .blue-box h1 {
-        font-size: 3rem;
+        font-size: 3.6rem;
         font-weight: 900;
         display: flex;
         align-items: center;
-        gap: 0.7rem;
-        margin-bottom: 1rem;
         justify-content: center;
-        letter-spacing: 1.2px;
+        gap: 1rem;
+        margin-bottom: 1.2rem;
+        letter-spacing: 1.5px;
     }
     .blue-box h1 .icon {
-        font-size: 3.5rem;
+        font-size: 4.5rem;
         animation: pulse 2s infinite;
     }
     @keyframes pulse {
         0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.15); }
+        50% { transform: scale(1.2); }
     }
     .blue-box p {
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 3rem;
         color: #f4d35e;
-        letter-spacing: 0.8px;
+        letter-spacing: 1px;
     }
-    /* Aquí ocultamos el label predeterminado del selectbox */
-    .stSelectbox > label {
-        display: none;
+    /* Dropdown personalizado */
+    .custom-selectbox select {
+        width: 100%;
+        padding: 0.9rem 1.5rem;
+        border-radius: 16px;
+        border: none;
+        font-size: 1.3rem;
+        cursor: pointer;
+        outline: none;
+        background-color: #144d79;
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transition: background-color 0.3s ease;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 1rem;
+        position: relative;
     }
-    /* Ajustamos el área del selectbox para que parezca dentro del cuadro */
-    .custom-selectbox {
-        max-width: 480px;
-        margin: -30px auto 40px auto; /* negativo para subirlo sobre el cuadro */
-        background: linear-gradient(135deg, #0d3b66, #144d79);
-        padding: 0 10px 10px 10px;
-        border-radius: 12px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    .custom-selectbox select:hover {
+        background-color: #1e5f94;
+    }
+    .custom-selectbox select:focus {
+        outline: 3px solid #f4d35e;
+    }
+    /* Info personal abajo */
+    .footer-info {
+        max-width: 520px;
+        margin: 0 auto 3rem auto;
+        font-size: 1rem;
+        font-weight: 400;
+        color: #0d3b66;
+        font-style: italic;
+        line-height: 1.4;
+        text-align: center;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        user-select: none;
+    }
+    .footer-info a {
+        color: #0d3b66;
+        text-decoration: none;
+        margin-left: 0.3rem;
+        font-weight: 700;
+    }
+    .footer-info a:hover {
+        text-decoration: underline;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # Cuadro azul solo con texto y logo
-    st.markdown('''
-        <div class="blue-box">
-            <h1><span class="icon">🧪</span> Epidemiología 101</h1>
-            <p>¿Qué quieres aprender hoy?</p>
-        </div>
-    ''', unsafe_allow_html=True)
+    # Contenido del cuadro azul
+    st.markdown('<div class="blue-box">', unsafe_allow_html=True)
+    st.markdown('<h1><span class="icon">🧪</span> Epidemiología 101</h1>', unsafe_allow_html=True)
+    st.markdown('<p>¿Qué quieres aprender hoy?</p>', unsafe_allow_html=True)
 
-    # Selectbox con estilo personalizado para parecer dentro del cuadro
+    # Dropdown con íconos en las opciones usando formato emoji + texto
+    opciones_con_icono = [f"{icono}  {texto}" for icono, texto in SECCIONES_CON_ICONOS]
     with st.container():
         st.markdown('<div class="custom-selectbox">', unsafe_allow_html=True)
-        opcion = st.selectbox("", [""] + SECCIONES, key="splash_select")
+        opcion = st.selectbox("", [""] + opciones_con_icono, key="splash_select")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # Info personal fuera del cuadro azul
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Info personal debajo del cuadro azul
     st.markdown(f'''
-        <div style="max-width: 480px; margin: 0 auto 3rem auto; text-align: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #0d3b66; font-style: italic;">
-            Creado por <b>Yolanda Muvdi</b>, Enfermera MSc Epidemiología<br>
-            <a href="mailto:ymuvdi@gmail.com">ymuvdi@gmail.com</a><br>
-            <a href="https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/" target="_blank">LinkedIn</a>
-        </div>
-    ''' , unsafe_allow_html=True)
+    <div class="footer-info">
+        Creado por <b>Yolanda Muvdi</b>, Enfermera MSc Epidemiología<br>
+        <a href="mailto:ymuvdi@gmail.com">ymuvdi@gmail.com</a><br>
+        <a href="https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/" target="_blank">LinkedIn</a>
+    </div>
+    ''', unsafe_allow_html=True)
 
+    # Acción al seleccionar
     if opcion and opcion != "":
-        st.session_state.seccion = opcion
+        # Extraemos solo el texto sin emoji para la lógica interna
+        texto_sin_emoji = opcion.split(' ', 1)[1] if ' ' in opcion else opcion
+        st.session_state.seccion = texto_sin_emoji
         st.experimental_rerun()
-
 # Menú lateral fijo
 def mostrar_sidebar():
     with st.sidebar:
