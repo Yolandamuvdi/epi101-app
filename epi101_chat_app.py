@@ -73,24 +73,28 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- Variables y configuraciones ---
-SECCIONES = {
-    "🏠 Inicio": "inicio",
-    "📌 Conceptos Básicos": "conceptos",
-    "📈 Medidas de Asociación": "medidas",
-    "📊 Diseños de Estudio": "disenos",
-    "⚠️ Sesgos y Errores": "sesgos",
-    "📚 Glosario Interactivo": "glosario",
-    "🧪 Ejercicios Prácticos": "ejercicios",
-    "📊 Tablas 2x2 y Cálculos": "tablas",
-    "🎥 Videos Educativos": "videos",
-    "🎮 Gamificación": "gamificacion",
-    "🤖 Chat IA Epidemiológica": "chat",
-}
+# -------------------- SIDEBAR CON NAVEGACIÓN --------------------
+st.sidebar.title("🧪 Epidemiología 101")
+st.sidebar.markdown("""
+👩‍⚕️ Creado por Yolanda Muvdi, Enfermera Epidemióloga  
+📧 [ymuvdi@gmail.com](mailto:ymuvdi@gmail.com)  
+🔗 [LinkedIn](https://www.linkedin.com/in/yolanda-paola-muvdi-muvdi-778b73152/)
+""")
 
-# --- Inicializar sesión ---
-if "seccion_actual" not in st.session_state:
-    st.session_state.seccion_actual = None
+menu = st.sidebar.radio("Ir a sección:", [
+    "Inicio",
+    "Conceptos Básicos",
+    "Medidas de Asociación",
+    "Diseños de Estudio",
+    "Sesgos y Errores",
+    "Glosario Interactivo",
+    "Ejercicios Prácticos",
+    "Tablas 2x2 y Cálculos",
+    "Visualización de Datos",
+    "Multimedia YouTube",
+    "Gamificación",
+    "Chat Epidemiológico"
+])
 
 # -------------------- FUNCIONES DE CARGA --------------------
 @st.cache_data(show_spinner=False)
@@ -190,7 +194,7 @@ def plot_forest(rr, rr_l, rr_u, or_, or_l, or_u):
     st.pyplot(fig, use_container_width=True)
 
 def plot_barras_expuestos(a,b,c,d):
-    labels = ["Casos expuestos (a)", "No casos expuestos (b)", "Casos no expuestos (c)", "No casos no expuestos (d)"]
+    labels = ["Casos expuestos", "No casos expuestos", "Casos no expuestos", "No casos no expuestos"]
     valores = [a,b,c,d]
     colores = ['#0d3b66', '#3e5c76', '#82a0bc', '#b0c4de']
     fig, ax = plt.subplots()
@@ -241,183 +245,306 @@ def chat_with_gemini(messages):
 
 # -------------------- CONTENIDO PRINCIPAL --------------------
 
-if st.session_state.seccion_actual is None:
-    # Landing
-    st.markdown(
-        """
-        <h1 style="text-align:center; font-size:4rem; color:#0d3b66; font-weight:900; user-select:none;">
-        Bienvenido/a a <br> Epidemiología 101
-        </h1>
-        <h3 style="text-align:center; margin-top:-10px; font-weight:600; color:#144a91; user-select:none;">
-        Hecho por Yolanda Muvdi
-        </h3>
-        <p style="text-align:center; font-size:1.5rem; color:#0d3b66; margin-top:40px; user-select:none;">
-        ¿Qué quieres aprender hoy?
-        </p>
-        """, unsafe_allow_html=True
-    )
-    opcion = st.selectbox(
-        "Selecciona la sección:",
-        options=list(SECCIONES.keys()),
-        index=0,
-        label_visibility="collapsed",
-        help="Elige una sección para comenzar",
-    )
-    if st.button("Ir a la sección"):
-        st.session_state.seccion_actual = SECCIONES[opcion]
-        st.experimental_rerun()
+if menu == "Inicio":
+    st.title("🧪 Bienvenido/a a Epidemiología 101")
+    st.markdown("""
+    Bienvenido/a a la masterclass interactiva de Epidemiología creada por **Yolanda Muvdi**, Enfermera Epidemióloga.  
+    Explora las secciones del menú para aprender conceptos, hacer ejercicios, usar calculadoras epidemiológicas y más.
+    """)
+
+elif menu == "Conceptos Básicos":
+    st.header("📌 Conceptos Básicos")
+    contenido = cargar_md("contenido/conceptosbasicos.md")
+    if contenido:
+        st.markdown(contenido)
+    else:
+        st.info("Agrega el archivo 'contenido/conceptosbasicos.md' para mostrar el contenido.")
+
+elif menu == "Medidas de Asociación":
+    st.header("📈 Medidas de Asociación")
+    contenido = cargar_md("contenido/medidas_completas.md")
+    if contenido:
+        st.markdown(contenido)
+    else:
+        st.info("Agrega el archivo 'contenido/medidas_completas.md' para mostrar el contenido.")
+
+elif menu == "Diseños de Estudio":
+    st.header("📊 Diseños de Estudio")
+    contenido = cargar_md("contenido/disenos_completos.md")
+    if contenido:
+        st.markdown(contenido)
+    else:
+        st.info("Agrega el archivo 'contenido/disenos_completos.md' para mostrar el contenido.")
+
+elif menu == "Sesgos y Errores":
+    st.header("⚠️ Sesgos y Errores")
+    contenido = cargar_md("contenido/sesgos_completos.md")
+    if contenido:
+        st.markdown(contenido)
+    else:
+        st.info("Agrega el archivo 'contenido/sesgos_completos.md' para mostrar el contenido.")
+
+elif menu == "Glosario Interactivo":
+    st.header("📚 Glosario Interactivo")
+    glosario = cargar_py_variable("contenido/glosario_completo.py", "glosario")
+    if glosario:
+        for termino, definicion in glosario.items():
+            with st.expander(termino):
+                st.write(definicion)
+    else:
+        st.info("Agrega 'contenido/glosario_completo.py' con variable `glosario`.")
+
+elif menu == "Ejercicios Prácticos":
+    st.header("🧪 Ejercicios Prácticos")
+    preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
+    if preguntas:
+        respuestas_correctas = 0
+        for i, q in enumerate(preguntas):
+            st.subheader(f"Pregunta {i+1}")
+            respuesta = st.radio(q['pregunta'], q['opciones'], key=f"q{i}")
+            if st.button(f"Verificar respuesta {i+1}", key=f"btn_{i}"):
+                if respuesta == q['respuesta_correcta']:
+                    st.success("✅ Correcto")
+                    respuestas_correctas += 1
+                    mostrar_insignia("ejercicio_correcto")
+                else:
+                    st.error(f"❌ Incorrecto. La respuesta correcta es: {q['respuesta_correcta']}")
+        if respuestas_correctas == len(preguntas) and len(preguntas) > 0:
+            mostrar_insignia("completo")
+    else:
+        st.info("Agrega 'contenido/ejercicios_completos.py' con variable `preguntas`.")
+
+elif menu == "Tablas 2x2 y Cálculos":
+    st.header("📊 Tablas 2x2 y Cálculos Epidemiológicos")
+
+    if "a" not in st.session_state:
+        st.session_state.a = 10
+    if "b" not in st.session_state:
+        st.session_state.b = 20
+    if "c" not in st.session_state:
+        st.session_state.c = 5
+    if "d" not in st.session_state:
+        st.session_state.d = 40
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.session_state.a = st.number_input("Casos expuestos (a)", min_value=0, value=st.session_state.a, step=1, key="input_a")
+        st.session_state.b = st.number_input("No casos expuestos (b)", min_value=0, value=st.session_state.b, step=1, key="input_b")
+    with col2:
+        st.session_state.c = st.number_input("Casos no expuestos (c)", min_value=0, value=st.session_state.c, step=1, key="input_c")
+        st.session_state.d = st.number_input("No casos no expuestos (d)", min_value=0, value=st.session_state.d, step=1, key="input_d")
+
+    if st.button("Calcular medidas y mostrar gráficos"):
+        a, b, c, d = st.session_state.a, st.session_state.b, st.session_state.c, st.session_state.d
+        total = a+b+c+d
+        if total == 0:
+            st.error("Por favor ingresa valores mayores que cero.")
+        else:
+            a_, b_, c_, d_, corregido = corregir_ceros(a,b,c,d)
+            rr, rr_l, rr_u = ic_riesgo_relativo(a_,b_,c_,d_)
+            or_, or_l, or_u = ic_odds_ratio(a_,b_,c_,d_)
+            rd, rd_l, rd_u = diferencia_riesgos(a_,b_,c_,d_)
+            p_val, test_name = calcular_p_valor(int(a_), int(b_), int(c_), int(d_))
+
+            st.markdown(interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_val, test_name))
+
+            if corregido:
+                st.warning("Se aplicó corrección de 0.5 en celdas con valor 0 para cálculos.")
+
+            plot_forest(rr, rr_l, rr_u, or_, or_l, or_u)
+            plot_barras_expuestos(a,b,c,d)
+
+elif menu == "Visualización de Datos":
+    st.header("📊 Visualización de Datos")
+
+    uploaded_file = st.file_uploader("Carga un archivo CSV para gráficos exploratorios", type=["csv"])
+
+    if uploaded_file:
+        try:
+            df = pd.read_csv(uploaded_file)
+            st.write("Vista previa de los datos cargados:")
+            st.dataframe(df.head())
+
+            columnas = df.columns.tolist()
+            columna = st.selectbox("Selecciona columna para gráfico", columnas)
+
+            tipo_grafico = st.radio("Tipo de gráfico", ("Boxplot", "Histograma"))
+
+            if tipo_grafico == "Boxplot":
+                fig, ax = plt.subplots()
+                ax.boxplot(df[columna].dropna())
+                ax.set_title(f"Boxplot de {columna}")
+                st.pyplot(fig)
+            else:
+                fig, ax = plt.subplots()
+                ax.hist(df[columna].dropna(), bins=20, color='#0d3b66', alpha=0.7)
+                ax.set_title(f"Histograma de {columna}")
+                st.pyplot(fig)
+
+        except Exception as e:
+            st.error(f"Error leyendo archivo CSV: {e}")
+
+elif menu == "Multimedia YouTube":
+    st.header("📺 Multimedia - Videos Epidemiología")
+
+    videos = {
+        "Introducción a Epidemiología": "https://www.youtube.com/watch?v=Z4JDr11G0N4",
+        "Medidas de Asociación": "https://www.youtube.com/watch?v=pD9Oa88kqQI",
+        "Diseños de Estudios Epidemiológicos": "https://www.youtube.com/watch?v=sP4kzERW6wo",
+        "Sesgos y Errores Comunes": "https://www.youtube.com/watch?v=RrKhv8OdLmY"
+    }
+
+    for nombre, url in videos.items():
+        st.write(f"▶️ [{nombre}]({url})")
+
+elif menu == "Gamificación":
+    st.header("🎮 Gamificación - Elige tu nivel epidemiológico")
+
+    niveles = {
+        "Básico": [
+            {
+                "pregunta": "¿Qué es una tasa en epidemiología?",
+                "opciones": ["Un número sin unidades", "Número de eventos por unidad de tiempo", "Una medida de asociación", "Ninguna"],
+                "respuesta_correcta": "Número de eventos por unidad de tiempo"
+            },
+            {
+                "pregunta": "¿Qué significa IR para un estudio?",
+                "opciones": ["Incidencia", "Incidencia acumulada", "Riesgo relativo", "Odds ratio"],
+                "respuesta_correcta": "Incidencia"
+            }
+        ],
+        "Intermedio": [
+            {
+                "pregunta": "¿Cuál es la fórmula para Riesgo Relativo?",
+                "opciones": ["a/(a+b)", "c/(c+d)", "(a/(a+b)) / (c/(c+d))", "a/c"],
+                "respuesta_correcta": "(a/(a+b)) / (c/(c+d))"
+            },
+            {
+                "pregunta": "¿Qué test estadístico se usa para tablas 2x2 con celdas pequeñas?",
+                "opciones": ["Chi-cuadrado", "Fisher exacto", "T de Student", "ANOVA"],
+                "respuesta_correcta": "Fisher exacto"
+            }
+        ],
+        "Avanzado": [
+            {
+                "pregunta": "¿Cuál es la interpretación correcta de un OR > 1?",
+                "opciones": [
+                    "Asociación negativa",
+                    "Asociación positiva",
+                    "No hay asociación",
+                    "Error en el estudio"
+                ],
+                "respuesta_correcta": "Asociación positiva"
+            },
+            {
+                "pregunta": "¿Qué asunción es clave para el uso del Riesgo Relativo?",
+                "opciones": [
+                    "Diseño transversal",
+                    "Estudio de cohorte",
+                    "Estudio de casos y controles",
+                    "Estudio ecológico"
+                ],
+                "respuesta_correcta": "Estudio de cohorte"
+            }
+        ]
+    }
+
+    # Inicializar puntaje en sesión
+    if "puntaje_gamificacion" not in st.session_state:
+        st.session_state.puntaje_gamificacion = 0
+
+    nivel_elegido = st.selectbox("Selecciona el nivel:", options=list(niveles.keys()))
+    preguntas = niveles[nivel_elegido]
+
+    st.write(f"### Nivel seleccionado: {nivel_elegido}")
+
+    for i, pregunta in enumerate(preguntas):
+        st.subheader(f"Pregunta {i+1}")
+        seleccion = st.radio(pregunta["pregunta"], pregunta["opciones"], key=f"preg_{nivel_elegido}_{i}")
+
+        if st.button(f"Verificar respuesta {i+1}", key=f"btn_{nivel_elegido}_{i}"):
+            if seleccion == pregunta["respuesta_correcta"]:
+                st.success("✅ Correcto!")
+                st.session_state.puntaje_gamificacion += 1
+            else:
+                st.error(f"❌ Incorrecto. Respuesta correcta: {pregunta['respuesta_correcta']}")
+
+    st.markdown(f"### Puntaje acumulado: {st.session_state.puntaje_gamificacion} / {len(preguntas)}")
+
+    if st.session_state.puntaje_gamificacion == len(preguntas) and len(preguntas) > 0:
+        st.balloons()
+        st.success(f"🎉 ¡Nivel {nivel_elegido} completado! Ahora desbloqueas un mini-juego.")
+
+        if nivel_elegido == "Básico":
+            st.write("**Mini-juego:** Adivina el término epidemiológico a partir de la definición.")
+            definiciones = {
+                "Incidencia": "Número de casos nuevos de una enfermedad en un periodo de tiempo.",
+                "Prevalencia": "Número total de casos existentes en un momento dado.",
+                "Cohorte": "Grupo de personas seguidas en el tiempo para estudiar la incidencia."
+            }
+            termino_correcto = np.random.choice(list(definiciones.keys()))
+            definicion = definiciones[termino_correcto]
+            respuesta_usuario = st.text_input("¿Cuál es el término?", key="input_mini_basico")
+
+            if st.button("Verificar término"):
+                if respuesta_usuario.strip().lower() == termino_correcto.lower():
+                    st.success("¡Correcto! Eres un crack básico.")
+                else:
+                    st.error(f"Incorrecto, la respuesta era: {termino_correcto}")
+
+        elif nivel_elegido == "Intermedio":
+            st.write("**Mini-juego:** Calcula el Riesgo Relativo con datos dados.")
+            st.write("Datos: a=30, b=70, c=15, d=85")
+            rr = (30/(30+70)) / (15/(15+85))
+            rr_user = st.number_input("Ingresa el RR calculado (3 decimales):", format="%.3f", key="input_mini_intermedio")
+
+            if st.button("Verificar cálculo RR"):
+                if abs(rr_user - rr) < 0.001:
+                    st.success(f"¡Correcto! RR = {rr:.3f}")
+                else:
+                    st.error(f"Incorrecto. El RR correcto es {rr:.3f}")
+
+        elif nivel_elegido == "Avanzado":
+            st.write("**Mini-juego:** Interpreta el siguiente resultado.")
+            st.write("OR = 1.8 (IC95% 1.2-2.7), p=0.03")
+            interpretacion = st.radio("¿Qué significa?", options=[
+                "Asociación estadísticamente significativa y positiva",
+                "No hay asociación",
+                "Error en el análisis",
+                "Asociación negativa"
+            ], key="input_mini_avanzado")
+
+            if st.button("Verificar interpretación"):
+                if interpretacion == "Asociación estadísticamente significativa y positiva":
+                    st.success("¡Correcto! Bien interpretado.")
+                else:
+                    st.error("Incorrecto, esa no es la interpretación correcta.")
+
+elif menu == "Chat Epidemiológico":
+    st.header("💬 Chat Epidemiológico - Pregunta lo que quieras")
+
+    if "chat_messages" not in st.session_state:
+        st.session_state.chat_messages = []
+
+    user_input = st.text_area("Escribe tu pregunta o tema", height=100)
+
+    if st.button("Enviar"):
+        if user_input.strip():
+            st.session_state.chat_messages.append({"role": "user", "content": user_input.strip()})
+
+            respuesta = chat_with_gemini(st.session_state.chat_messages)
+            st.session_state.chat_messages.append({"role": "assistant", "content": respuesta})
+
+    for i, msg in enumerate(st.session_state.chat_messages):
+        if msg["role"] == "user":
+            st.markdown(f"**Tú:** {msg['content']}")
+        else:
+            st.markdown(f"**Epidemiología AI:** {msg['content']}")
 
 else:
-    # Sidebar y contenido
-    with st.sidebar:
-        st.markdown("<h2 style='color:#0d3b66; font-weight:900;'>🧪 Epidemiología 101</h2>", unsafe_allow_html=True)
-        if st.button("🏠 Volver al inicio"):
-            st.session_state.seccion_actual = None
-            st.experimental_rerun()
-        st.markdown("---")
-        for nombre, key in SECCIONES.items():
-            if key == "inicio":
-                continue
-            style = "font-weight:bold; color:#0d3b66;" if st.session_state.seccion_actual == key else "color:#0d3b66;"
-            if st.button(f"{nombre}", key=key):
-                st.session_state.seccion_actual = key
-                st.experimental_rerun()
+    st.info("Selecciona una sección en el menú lateral para comenzar.")
 
-    # Mostrar contenido por sección
-    if st.session_state.seccion_actual == "conceptos":
-        st.header("📌 Conceptos Básicos")
-        contenido = cargar_md("contenido/conceptosbasicos.md")
-        if contenido:
-            st.markdown(contenido)
-        else:
-            st.info("Agrega el archivo 'contenido/conceptosbasicos.md' para mostrar el contenido.")
 
-    elif st.session_state.seccion_actual == "medidas":
-        st.header("📈 Medidas de Asociación")
-        contenido = cargar_md("contenido/medidas_completas.md")
-        if contenido:
-            st.markdown(contenido)
-        else:
-            st.info("Agrega el archivo 'contenido/medidas_completas.md' para mostrar el contenido.")
-
-    elif st.session_state.seccion_actual == "disenos":
-        st.header("📊 Diseños de Estudio")
-        contenido = cargar_md("contenido/disenos_completos.md")
-        if contenido:
-            st.markdown(contenido)
-        else:
-            st.info("Agrega el archivo 'contenido/disenos_completos.md' para mostrar el contenido.")
-
-    elif st.session_state.seccion_actual == "sesgos":
-        st.header("⚠️ Sesgos y Errores")
-        contenido = cargar_md("contenido/sesgos_completos.md")
-        if contenido:
-            st.markdown(contenido)
-        else:
-            st.info("Agrega el archivo 'contenido/sesgos_completos.md' para mostrar el contenido.")
-
-    elif st.session_state.seccion_actual == "glosario":
-        st.header("📚 Glosario Interactivo")
-        glosario = cargar_py_variable("contenido/glosario_completo.py", "glosario")
-        if glosario:
-            for termino, definicion in glosario.items():
-                with st.expander(termino):
-                    st.write(definicion)
-        else:
-            st.info("Agrega 'contenido/glosario_completo.py' con variable `glosario`.")
-
-    elif st.session_state.seccion_actual == "ejercicios":
-        st.header("🧪 Ejercicios Prácticos")
-        preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
-        if preguntas:
-            respuestas_correctas = 0
-            for i, q in enumerate(preguntas):
-                st.subheader(f"Pregunta {i+1}")
-                respuesta = st.radio(q['pregunta'], q['opciones'], key=f"q{i}")
-                if st.button(f"Verificar respuesta {i+1}", key=f"btn_{i}"):
-                    if respuesta == q['respuesta_correcta']:
-                        st.success("✅ Correcto")
-                        respuestas_correctas += 1
-                        mostrar_insignia("ejercicio_correcto")
-                    else:
-                        st.error(f"❌ Incorrecto. La respuesta correcta es: {q['respuesta_correcta']}")
-            if respuestas_correctas == len(preguntas) and len(preguntas) > 0:
-                mostrar_insignia("completo")
-        else:
-            st.info("Agrega 'contenido/ejercicios_completos.py' con variable `preguntas`.")
-
-    elif st.session_state.seccion_actual == "tablas":
-        st.header("📊 Tablas 2x2 y Cálculos Epidemiológicos")
-
-        if "a" not in st.session_state:
-            st.session_state.a = 10
-        if "b" not in st.session_state:
-            st.session_state.b = 20
-        if "c" not in st.session_state:
-            st.session_state.c = 5
-        if "d" not in st.session_state:
-            st.session_state.d = 40
-
-        col1, col2 = st.columns(2)
-        with col1:
-            st.session_state.a = st.number_input("Casos expuestos (a)", min_value=0, value=st.session_state.a, step=1, key="input_a")
-            st.session_state.b = st.number_input("No casos expuestos (b)", min_value=0, value=st.session_state.b, step=1, key="input_b")
-        with col2:
-            st.session_state.c = st.number_input("Casos no expuestos (c)", min_value=0, value=st.session_state.c, step=1, key="input_c")
-            st.session_state.d = st.number_input("No casos no expuestos (d)", min_value=0, value=st.session_state.d, step=1, key="input_d")
-
-        if st.button("Calcular medidas y mostrar gráficos"):
-            a, b, c, d = st.session_state.a, st.session_state.b, st.session_state.c, st.session_state.d
-            total = a+b+c+d
-            if total == 0:
-                st.error("Por favor ingresa valores mayores que cero.")
-            else:
-                a_, b_, c_, d_, corregido = corregir_ceros(a,b,c,d)
-                rr, rr_l, rr_u = ic_riesgo_relativo(a_,b_,c_,d_)
-                or_, or_l, or_u = ic_odds_ratio(a_,b_,c_,d_)
-                rd, rd_l, rd_u = diferencia_riesgos(a_,b_,c_,d_)
-                p_val, test_name = calcular_p_valor(int(a_), int(b_), int(c_), int(d_))
-
-                st.markdown(interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_val, test_name))
-
-                plot_forest(rr, rr_l, rr_u, or_, or_l, or_u)
-                plot_barras_expuestos(a, b, c, d)
-
-                if corregido:
-                    st.warning("Se aplicó corrección de 0.5 para evitar ceros en la tabla.")
-
-    elif st.session_state.seccion_actual == "videos":
-        st.header("🎥 Videos Educativos")
-        st.info("Próximamente: Videos explicativos para reforzar conceptos epidemiológicos.")
-
-    elif st.session_state.seccion_actual == "gamificacion":
-        st.header("🎮 Gamificación")
-        st.info("Aquí podrías agregar juegos, quizzes interactivos y retos para aprender más divertido.")
-
-    elif st.session_state.seccion_actual == "chat":
-        st.header("🤖 Chat IA Epidemiológica")
-        st.write("Haz preguntas sobre epidemiología, cálculos, análisis y más.")
-
-        if "chat_messages" not in st.session_state:
-            st.session_state.chat_messages = [{"role":"system","content":"Eres un experto epidemiólogo amable y claro."}]
-
-        with st.form("chat_form", clear_on_submit=True):
-            user_msg = st.text_area("Escribe tu pregunta o consulta epidemiológica aquí:", max_chars=512)
-            submitted = st.form_submit_button("Enviar")
-
-        if submitted and user_msg.strip():
-            st.session_state.chat_messages.append({"role":"user","content":user_msg.strip()})
-            respuesta = chat_with_gemini(st.session_state.chat_messages)
-            st.session_state.chat_messages.append({"role":"assistant","content":respuesta})
-
-        for msg in st.session_state.chat_messages[1:]:
-            if msg["role"] == "user":
-                st.markdown(f"**Tú:** {msg['content']}")
-            else:
-                st.markdown(f"**IA Epidemiológica:** {msg['content']}")
-
-    else:
-        st.info("Sección no encontrada. Por favor vuelve al inicio.")
 
 
 
