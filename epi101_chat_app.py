@@ -7,6 +7,13 @@ import sys
 import os
 import numpy as np
 import math
+import streamlit as st
+import pandas as pd
+import numpy as np
+import math
+import matplotlib.pyplot as plt
+from scipy.stats import chi2_contingency, fisher_exact
+
 
 st.set_page_config(page_title="Epidemiología 101", page_icon="🧪", layout="wide")
 
