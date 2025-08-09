@@ -432,12 +432,14 @@ def plot_forest_rr_or(rr, ci_rr, orr, ci_or):
     valores = [rr, orr]
     ci_inf = [ci_rr[0], ci_or[0]]
     ci_sup = [ci_rr[1], ci_or[1]]
-    colores = ['green' if v < 1 else 'red' for v in valores]
 
     y_pos = np.arange(len(medidas))
 
-    ax.errorbar(valores, y_pos, xerr=[np.array(valores) - np.array(ci_inf), np.array(ci_sup) - np.array(valores)],
-                fmt='o', color='black', ecolor=colores, elinewidth=3, capsize=5)
+    for i, (val, inf, sup) in enumerate(zip(valores, ci_inf, ci_sup)):
+        color = 'green' if val < 1 else 'red'
+        ax.errorbar(val, y_pos[i], xerr=[[val - inf], [sup - val]],
+                    fmt='o', color='black', ecolor=color, elinewidth=3, capsize=5)
+
     ax.axvline(x=1, color='grey', linestyle='--')
 
     ax.set_yticks(y_pos)
