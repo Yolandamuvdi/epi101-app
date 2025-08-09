@@ -12,7 +12,7 @@ import math
 # =========================================
 # CONFIGURACIÓN DE GEMINI
 # =========================================
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+genai.configure(api_key=st.secrets["AIzaSyACVJM2zX4lUXtU-x4Zj8M9yDnbchbNTJ8"])
 
 def chat_with_gemini(prompt):
     model = genai.GenerativeModel("gemini-pro")
