@@ -1,5 +1,6 @@
 import random
 from .ejercicios_completos import preguntas
+
 def simulacion_adaptativa(respuestas_usuario, max_preguntas=10):
     """
     Simulación adaptativa para Epidemiología 101 con mensajes motivadores.
@@ -18,12 +19,15 @@ def simulacion_adaptativa(respuestas_usuario, max_preguntas=10):
 
     # Limite máximo de preguntas
     if len(respuestas_usuario) >= max_preguntas:
-        return {"mensaje": f"🎉 ¡Simulación completada! Respondiste {len(respuestas_usuario)} preguntas. Excelente trabajo."}
+        return None, f"🎉 ¡Simulación completada! Respondiste {len(respuestas_usuario)} preguntas. Excelente trabajo."
 
     if not respuestas_usuario:
         # Primera pregunta siempre nivel Básico
         disponibles = [q for q in preguntas if q["nivel"] == "Básico" and q["pregunta"] not in usadas]
-        return random.choice(disponibles) if disponibles else None
+        if not disponibles:
+            return None, "No hay preguntas disponibles en nivel Básico."
+        pregunta = random.choice(disponibles)
+        return pregunta, "🌟 Primera pregunta, nivel Básico. ¡Tú puedes!"
 
     ultima = list(respuestas_usuario.values())[-1]
     ultimo_nivel = ultima["nivel"]
@@ -49,7 +53,7 @@ def simulacion_adaptativa(respuestas_usuario, max_preguntas=10):
 
     elif ultimo_nivel == "Avanzado":
         if acierto:
-            return {"mensaje": "🏆 ¡Felicidades! Has completado la simulación adaptativa y alcanzaste el nivel Avanzado 🎉"}
+            return None, "🏆 ¡Felicidades! Has completado la simulación adaptativa y alcanzaste el nivel Avanzado 🎉"
         nivel_siguiente = "Intermedio"
         mensaje = "⚡ Casi llegas al final. Regresas a nivel Intermedio para reforzar conocimientos."
 
@@ -64,8 +68,10 @@ def simulacion_adaptativa(respuestas_usuario, max_preguntas=10):
             siguiente_idx = (idx + i) % len(niveles_orden)
             posibles = [q for q in preguntas if q["nivel"] == niveles_orden[siguiente_idx] and q["pregunta"] not in usadas]
             if posibles:
-                return {"pregunta": random.choice(posibles), "mensaje": mensaje}
+                pregunta = random.choice(posibles)
+                return pregunta, mensaje
+        return None, "No hay más preguntas disponibles. Simulación finalizada."
 
-        return {"mensaje": "No hay más preguntas disponibles. Simulación finalizada."}
-
-    return {"pregunta": random.choice(disponibles), "mensaje": mensaje}
+    # Pregunta seleccionada
+    pregunta = random.choice(disponibles)
+    return pregunta, mensaje
