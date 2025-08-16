@@ -1,3 +1,4 @@
+import random
 from ejercicios_completos import preguntas
 
 def simulacion_adaptativa(respuestas_usuario):
@@ -10,28 +11,37 @@ def simulacion_adaptativa(respuestas_usuario):
     }
     """
 
+    # Lista de preguntas ya usadas
+    usadas = [r["pregunta"] for r in respuestas_usuario.values()]
+
     if not respuestas_usuario:
-        # Primera pregunta siempre en nivel Básico
-        return [q for q in preguntas if q["nivel"] == "Básico"][0]
+        # Primera pregunta siempre nivel Básico
+        disponibles = [q for q in preguntas if q["nivel"] == "Básico" and q["pregunta"] not in usadas]
+        return random.choice(disponibles) if disponibles else None
 
     ultima = list(respuestas_usuario.values())[-1]
     ultimo_nivel = ultima["nivel"]
     acierto = ultima["correcto"]
 
+    # Lógica adaptativa
     if ultimo_nivel == "Básico":
         if acierto:
-            return [q for q in preguntas if q["nivel"] == "Intermedio"][0]
+            nivel_siguiente = "Intermedio"
         else:
-            return [q for q in preguntas if q["nivel"] == "Básico"][1]
+            nivel_siguiente = "Básico"
 
     elif ultimo_nivel == "Intermedio":
         if acierto:
-            return [q for q in preguntas if q["nivel"] == "Avanzado"][0]
+            nivel_siguiente = "Avanzado"
         else:
-            return [q for q in preguntas if q["nivel"] == "Básico"][2]
+            nivel_siguiente = "Básico"
 
     elif ultimo_nivel == "Avanzado":
         if acierto:
             return None  # Simulación terminada
         else:
-            return [q for q in preguntas if q["nivel"] == "Intermedio"][1]
+            nivel_siguiente = "Intermedio"
+
+    # Buscar pregunta disponible en el nivel correspondiente
+    disponibles = [q for q in preguntas if q["nivel"] == nivel_siguiente and q["pregunta"] not in usadas]
+    return random.choice(disponibles) if disponibles else None
