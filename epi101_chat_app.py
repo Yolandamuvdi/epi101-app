@@ -347,44 +347,41 @@ def main():
                     st.error(f"Error consultando Gemini: {e}")
 
     elif seleccion == "🎯 Gamificación":
-    st.header(seleccion)
-    # Diccionario de historial de respuestas
-    if "respuestas_usuario" not in st.session_state:
-        st.session_state.respuestas_usuario = {}
-
-    # Llamar a la función de simulación adaptativa
-    p, mensaje = sim_adapt(st.session_state.respuestas_usuario)
-
-    if p:
-        st.subheader(p["pregunta"])
-        respuesta = st.radio("Selecciona tu respuesta", p["opciones"], key=f"gam_{st.session_state.index_pregunta}")
-        if st.button("Responder", key=f"btn_{st.session_state.index_pregunta}"):
-            correcto = respuesta == p["respuesta_correcta"]
-            # Guardar respuesta en el historial
-            st.session_state.respuestas_usuario[st.session_state.index_pregunta] = {
-                "pregunta": p["pregunta"],
-                "nivel": p["nivel"],
-                "correcto": correcto
-            }
-            if correcto:
-                st.success("✅ Correcto")
-                mostrar_confeti()
-            else:
-                st.error(f"❌ Incorrecto. Respuesta correcta: {p['respuesta_correcta']}")
-            # Mostrar mensaje motivador
-            st.info(mensaje)
-            st.session_state.index_pregunta += 1
-    else:
-        st.balloons()
-        st.success("🎉 ¡Has completado la simulación adaptativa!")
-        st.markdown(f"✔️ Respuestas correctas: {sum([r['correcto'] for r in st.session_state.respuestas_usuario.values()])}/{len(st.session_state.respuestas_usuario)}")
-        if st.button("Reiniciar simulación"):
-            st.session_state.index_pregunta = 0
+        st.header(seleccion)
+        # Diccionario de historial de respuestas
+        if "respuestas_usuario" not in st.session_state:
             st.session_state.respuestas_usuario = {}
-            st.info("Simulación reiniciada. ¡Listo para un nuevo intento! 🚀")
 
+        # Llamar a la función de simulación adaptativa
+        p, mensaje = sim_adapt(st.session_state.respuestas_usuario)
+
+        if p:
+            st.subheader(p["pregunta"])
+            respuesta = st.radio("Selecciona tu respuesta", p["opciones"], key=f"gam_{st.session_state.index_pregunta}")
+            if st.button("Responder", key=f"btn_{st.session_state.index_pregunta}"):
+                correcto = respuesta == p["respuesta_correcta"]
+                # Guardar respuesta en el historial
+                st.session_state.respuestas_usuario[st.session_state.index_pregunta] = {
+                    "pregunta": p["pregunta"],
+                    "nivel": p["nivel"],
+                    "correcto": correcto
+                }
+                if correcto:
+                    st.success("✅ Correcto")
+                    mostrar_confeti()
+                else:
+                    st.error(f"❌ Incorrecto. Respuesta correcta: {p['respuesta_correcta']}")
+                # Mostrar mensaje motivador
+                st.info(mensaje)
+                st.session_state.index_pregunta += 1
         else:
-            st.info("Archivo 'contenido/ejercicios_completos.py' no encontrado o variable 'preguntas' no definida.")
+            st.balloons()
+            st.success("🎉 ¡Has completado la simulación adaptativa!")
+            st.markdown(f"✔️ Respuestas correctas: {sum([r['correcto'] for r in st.session_state.respuestas_usuario.values()])}/{len(st.session_state.respuestas_usuario)}")
+            if st.button("Reiniciar simulación"):
+                st.session_state.index_pregunta = 0
+                st.session_state.respuestas_usuario = {}
+                st.info("Simulación reiniciada. ¡Listo para un nuevo intento! 🚀")
 
 if __name__ == "__main__":
     main()
