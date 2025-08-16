@@ -207,6 +207,7 @@ def main():
         st.session_state.nivel_gamificacion = None
         st.session_state.index_pregunta = 0
         st.session_state.respuestas_correctas = 0
+        st.session_state.respuestas_usuario = {}
 
     if st.session_state.seccion is None:
         pagina_inicio()
@@ -348,40 +349,31 @@ def main():
 
     elif seleccion == "🎯 Gamificación":
         st.header(seleccion)
-        # Diccionario de historial de respuestas
-        if "respuestas_usuario" not in st.session_state:
-            st.session_state.respuestas_usuario = {}
-
-        # Llamar a la función de simulación adaptativa
-        p, mensaje = sim_adapt(st.session_state.respuestas_usuario)
-
-        if p:
-            st.subheader(p["pregunta"])
-            respuesta = st.radio("Selecciona tu respuesta", p["opciones"], key=f"gam_{st.session_state.index_pregunta}")
-            if st.button("Responder", key=f"btn_{st.session_state.index_pregunta}"):
-                correcto = respuesta == p["respuesta_correcta"]
-                # Guardar respuesta en el historial
-                st.session_state.respuestas_usuario[st.session_state.index_pregunta] = {
-                    "pregunta": p["pregunta"],
-                    "nivel": p["nivel"],
-                    "correcto": correcto
-                }
-                if correcto:
-                    st.success("✅ Correcto")
-                    mostrar_confeti()
-                else:
-                    st.error(f"❌ Incorrecto. Respuesta correcta: {p['respuesta_correcta']}")
-                # Mostrar mensaje motivador
-                st.info(mensaje)
-                st.session_state.index_pregunta += 1
+        # Preguntar nivel inicial
+        if st.session_state.nivel_gamificacion is None:
+            nivel = st.radio("Antes de comenzar, ¿en qué nivel sientes que estás en Epidemiología?", ["Principiante", "Intermedio", "Avanzado"])
+            if st.button("Confirmar nivel"):
+                st.session_state.nivel_gamificacion = nivel
+                st.success(f"Nivel seleccionado: {nivel}")
+                st.experimental_rerun()
         else:
-            st.balloons()
-            st.success("🎉 ¡Has completado la simulación adaptativa!")
-            st.markdown(f"✔️ Respuestas correctas: {sum([r['correcto'] for r in st.session_state.respuestas_usuario.values()])}/{len(st.session_state.respuestas_usuario)}")
-            if st.button("Reiniciar simulación"):
-                st.session_state.index_pregunta = 0
-                st.session_state.respuestas_usuario = {}
-                st.info("Simulación reiniciada. ¡Listo para un nuevo intento! 🚀")
+            # Llamar a la función de simulación adaptativa
+            p, mensaje = sim_adapt(st.session_state.respuestas_usuario, nivel=st.session_state.nivel_gamificacion)
+
+            if p:
+                st.subheader(p["pregunta"])
+                respuesta = st.radio("Selecciona tu respuesta", p["opciones"], key=f"gami_{st.session_state.index_pregunta}")
+                if st.button("Verificar respuesta", key=f"btn_gami_{st.session_state.index_pregunta}"):
+                    correcta = p["respuesta_correcta"]
+                    st.session_state.respuestas_usuario[st.session_state.index_pregunta] = respuesta
+                    if respuesta == correcta:
+                        st.success("✅ Correcto!")
+                        st.session_state.respuestas_correctas +=1
+                        mostrar_confeti()
+                    else:
+                        st.error(f"❌ Incorrecto. La respuesta correcta era: {correcta}")
+                    st.session_state.index_pregunta +=1
+                    st.experimental_rerun()
 
 if __name__ == "__main__":
     main()
