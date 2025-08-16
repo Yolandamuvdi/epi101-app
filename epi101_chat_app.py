@@ -355,7 +355,7 @@ def main():
             if st.button("Confirmar nivel"):
                 st.session_state.nivel_gamificacion = nivel
                 st.success(f"Nivel seleccionado: {nivel}")
-                st.experimental_rerun()
+                
         else:
             # Llamar a la función de simulación adaptativa
             p, mensaje = sim_adapt(st.session_state.respuestas_usuario, nivel=st.session_state.nivel_gamificacion)
