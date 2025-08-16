@@ -333,7 +333,7 @@ def main():
         st.header(seleccion)
         pregunta = st.text_input("Escribe tu pregunta epidemiológica:")
         if st.button("Enviar") and pregunta:
-            api_key = os.getenv("GOOGLE_API_KEY")
+            api_key = st.secrets.get("GEMINI_API_KEY")
             if not api_key:
                 st.error("No se encontró la variable de entorno GOOGLE_API_KEY. Defínela para usar el chat.")
             else:
