@@ -1,6 +1,5 @@
 import random
-from ejercicios_completos import preguntas
-
+from .ejercicios_completos import preguntas
 def simulacion_adaptativa(respuestas_usuario, max_preguntas=10):
     """
     Simulación adaptativa para Epidemiología 101 con mensajes motivadores.
