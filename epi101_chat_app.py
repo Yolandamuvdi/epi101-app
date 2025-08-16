@@ -9,6 +9,8 @@ import random
 from streamlit_extras.let_it_rain import rain
 import google.generativeai as genai  # ✅ Importar Gemini
 
+# Importar función de simulación adaptativa
+from contenido.simulacion_adaptativa import simulacion_adaptativa as sim_adapt
 # Configuración de la API Key (debes definirla en tu entorno como variable de sistema)
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
