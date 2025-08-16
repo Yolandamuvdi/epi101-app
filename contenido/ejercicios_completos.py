@@ -1,3 +1,5 @@
+# contenido/ejercicios_completos.py
+
 preguntas = [
     {
         "pregunta": "¿Qué mide la prevalencia en epidemiología?",
@@ -154,4 +156,3 @@ preguntas = [
         "nivel": "Básico"
     }
 ]
-
