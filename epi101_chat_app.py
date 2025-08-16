@@ -353,11 +353,16 @@ def main():
             st.video(url)
 
     elif seleccion == "🤖 Chat Epidemiológico":
-        st.header(seleccion)
-        pregunta = st.text_input("Escribe tu pregunta epidemiológica:")
-        if st.button("Enviar"):
-            st.success(f"Respuesta simulada para: {pregunta}")
-
+    st.header(seleccion)
+    pregunta = st.text_input("Escribe tu pregunta epidemiológica:")
+    
+    if st.button("Enviar") and pregunta:
+        try:
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            respuesta = model.generate_content(pregunta)
+            st.write(respuesta.text)
+        except Exception as e:
+            st.error(f"Error consultando Gemini: {e}")
     elif seleccion == "🎯 Gamificación":
         st.header(seleccion)
 
