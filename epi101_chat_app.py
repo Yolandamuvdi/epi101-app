@@ -368,32 +368,28 @@ def main():
             st.session_state.respuestas_usuario = {}
 
         # Mostrar simulación adaptativa
-        preguntas = sim_adapt(st.session_state.nivel_gamificacion)
-        if preguntas:
-            idx = st.session_state.index_pregunta
-            if idx < len(preguntas):
-                pregunta_actual = preguntas[idx]
-                st.subheader(f"Pregunta {idx+1}")
-                st.write(pregunta_actual["pregunta"])
-                opciones = pregunta_actual["opciones"]
-                respuesta = st.radio("Selecciona tu respuesta:", opciones, key=f"gam_{idx}")
-                if st.button("Enviar respuesta", key=f"btn_gam_{idx}"):
-                    correcta = pregunta_actual["respuesta_correcta"]
-                    st.session_state.respuestas_usuario[idx] = {
-                        "seleccion": respuesta,
-                        "correcta": correcta
-                    }
-                    if respuesta == correcta:
-                        st.success("✅ Correcto")
-                        mostrar_confeti()
-                        st.session_state.respuestas_correctas += 1
-                    else:
-                        st.error(f"❌ Incorrecto. Respuesta correcta: {correcta}")
-                    st.session_state.index_pregunta += 1
-                    st.experimental_rerun()  # <- AQUÍ SE QUITÓ en tu nueva versión
-
+        pregunta_actual, mensaje = sim_adapt(st.session_state.respuestas_usuario)
+        if pregunta_actual:
+            idx = len(st.session_state.respuestas_usuario)
+            st.subheader(f"Pregunta {idx+1}")
+            st.write(pregunta_actual["pregunta"])
+            opciones = pregunta_actual["opciones"]
+            respuesta = st.radio("Selecciona tu respuesta:", opciones, key=f"gam_{idx}")
+            if st.button("Enviar respuesta", key=f"btn_gam_{idx}"):
+                correcta = pregunta_actual["respuesta_correcta"]
+                st.session_state.respuestas_usuario[idx] = {
+                    "seleccion": respuesta,
+                    "correcta": correcta
+                }
+                if respuesta == correcta:
+                    st.success("✅ Correcto")
+                    mostrar_confeti()
+                    st.session_state.respuestas_correctas += 1
+                else:
+                    st.error(f"❌ Incorrecto. Respuesta correcta: {correcta}")
+               
         else:
-            st.info("No se encontraron preguntas de gamificación para este nivel.")
+            st.info(mensaje if mensaje else "No se encontraron preguntas de gamificación para este nivel.")
 
 if __name__ == "__main__":
     main()
