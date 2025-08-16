@@ -10,7 +10,7 @@ from streamlit_extras.let_it_rain import rain
 import google.generativeai as genai  # ✅ Importar Gemini
 
 # Configuración de la API Key (debes definirla en tu entorno como variable de sistema)
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
 # Configuración general
 st.set_page_config(page_title="🧠 Epidemiología 101", page_icon="🧪", layout="wide")
