@@ -6,3 +6,4 @@ numpy
 statsmodels
 google-generativeai
 streamlit-extras
+seaborn
