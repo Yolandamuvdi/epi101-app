@@ -377,19 +377,15 @@ def main():
 
                 opciones = pregunta_actual["opciones"]
 
-                # Guardar respuesta seleccionada en session_state sin avanzar
+                # Usar directamente el valor del radio SIN sobrescribir session_state manualmente
                 respuesta_key = f"respuesta_{idx}"
-                if respuesta_key not in st.session_state:
-                    st.session_state[respuesta_key] = None
-
-                st.session_state[respuesta_key] = st.radio(
+                respuesta = st.radio(
                     "Selecciona tu respuesta:",
                     opciones,
                     key=respuesta_key
                 )
 
                 if st.button("Enviar respuesta", key=f"btn_{idx}"):
-                    respuesta = st.session_state[respuesta_key]
                     correcta = pregunta_actual["respuesta_correcta"]
 
                     # Guardar en historial
