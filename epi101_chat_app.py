@@ -356,7 +356,8 @@ def main():
             nivel = st.radio(
                 "Selecciona tu nivel:",
                 ["Principiante", "Intermedio", "Avanzado"],
-                index=0
+                index=0,
+                key="nivel_inicial"
             )
             if st.button("Comenzar"):
                 st.session_state.nivel_gamificacion = nivel
@@ -364,34 +365,42 @@ def main():
                 st.session_state.respuestas_correctas = 0
                 st.session_state.respuestas_usuario = {}
         else:
-            # --- Obtener pregunta adaptativa ---
+            # --- Obtener pregunta adaptativa SOLO según historial ---
             pregunta_actual, mensaje = sim_adapt(st.session_state.respuestas_usuario)
 
             if pregunta_actual is not None:
-                st.subheader(f"Pregunta {st.session_state.index_pregunta + 1}")
+                idx = st.session_state.index_pregunta
+
+                st.subheader(f"Pregunta {idx + 1}")
                 st.write(pregunta_actual["pregunta"])
                 st.info(mensaje)
 
                 opciones = pregunta_actual["opciones"]
-                respuesta = st.radio(
+
+                # Guardar respuesta seleccionada en session_state sin avanzar
+                respuesta_key = f"respuesta_{idx}"
+                if respuesta_key not in st.session_state:
+                    st.session_state[respuesta_key] = None
+
+                st.session_state[respuesta_key] = st.radio(
                     "Selecciona tu respuesta:",
                     opciones,
-                    key=f"gam_{st.session_state.index_pregunta}"
+                    key=respuesta_key
                 )
 
-                # Botón para enviar respuesta
-                if st.button("Enviar respuesta", key=f"btn_gam_{st.session_state.index_pregunta}"):
+                if st.button("Enviar respuesta", key=f"btn_{idx}"):
+                    respuesta = st.session_state[respuesta_key]
                     correcta = pregunta_actual["respuesta_correcta"]
 
                     # Guardar en historial
-                    st.session_state.respuestas_usuario[st.session_state.index_pregunta] = {
+                    st.session_state.respuestas_usuario[idx] = {
                         "pregunta": pregunta_actual["pregunta"],
                         "nivel": pregunta_actual["nivel"],
                         "correcto": respuesta == correcta,
                         "seleccion": respuesta
                     }
 
-                    # Feedback
+                    # Feedback inmediato
                     if respuesta == correcta:
                         st.success("✅ Correcto")
                         mostrar_confeti()
@@ -399,11 +408,10 @@ def main():
                     else:
                         st.error(f"❌ Incorrecto. Respuesta correcta: {correcta}")
 
-                    # Pasar a la siguiente pregunta SOLO aquí
+                    # Avanzar solo después de enviar
                     st.session_state.index_pregunta += 1
 
             else:
-                # Si ya no hay preguntas disponibles
                 st.success("🎉 Has completado el cuestionario.")
                 st.write(f"Respondiste correctamente **{st.session_state.respuestas_correctas}** preguntas.")
 
