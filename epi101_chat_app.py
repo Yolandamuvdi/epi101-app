@@ -365,51 +365,46 @@ def main():
                 st.session_state.respuestas_correctas = 0
                 st.session_state.respuestas_usuario = {}
         else:
-            # --- Obtener pregunta adaptativa SOLO según historial ---
-            pregunta_actual, mensaje = sim_adapt(st.session_state.respuestas_usuario)
+            # ✅ Inicializar pregunta actual si no existe
+            if "pregunta_actual" not in st.session_state:
+                st.session_state.pregunta_actual, st.session_state.mensaje = sim_adapt({})
 
-            if pregunta_actual is not None:
-                idx = st.session_state.index_pregunta
+            # Mostrar la pregunta actual
+            pregunta_actual = st.session_state.pregunta_actual
+            mensaje = st.session_state.mensaje
 
-                st.subheader(f"Pregunta {idx + 1}")
-                st.write(pregunta_actual["pregunta"])
-                st.info(mensaje)
+            st.subheader(f"Pregunta {st.session_state.index_pregunta + 1}")
+            st.write(pregunta_actual["pregunta"])
+            st.info(mensaje)
 
-                opciones = pregunta_actual["opciones"]
+            respuesta = st.radio(
+                "Selecciona tu respuesta:",
+                pregunta_actual["opciones"],
+                key=f"resp_temp_{st.session_state.index_pregunta}"
+            )
 
-                # ⬇️ Aquí el cambio: usamos variable local y NO tocamos session_state hasta enviar
-                respuesta = st.radio(
-                    "Selecciona tu respuesta:",
-                    opciones,
-                    key=f"resp_temp_{idx}"
+            if st.button("Enviar respuesta", key=f"btn_{st.session_state.index_pregunta}"):
+                correcta = pregunta_actual["respuesta_correcta"]
+
+                st.session_state.respuestas_usuario[st.session_state.index_pregunta] = {
+                    "pregunta": pregunta_actual["pregunta"],
+                    "nivel": pregunta_actual["nivel"],
+                    "correcto": respuesta == correcta,
+                    "seleccion": respuesta
+                }
+
+                if respuesta == correcta:
+                    st.success("✅ Correcto")
+                    mostrar_confeti()
+                    st.session_state.respuestas_correctas += 1
+                else:
+                    st.error(f"❌ Incorrecto. Respuesta correcta: {correcta}")
+
+                # 👉 Solo aquí pedimos la siguiente pregunta
+                st.session_state.index_pregunta += 1
+                st.session_state.pregunta_actual, st.session_state.mensaje = sim_adapt(
+                    st.session_state.respuestas_usuario
                 )
 
-                if st.button("Enviar respuesta", key=f"btn_{idx}"):
-                    correcta = pregunta_actual["respuesta_correcta"]
-
-                    # Guardar en historial
-                    st.session_state.respuestas_usuario[idx] = {
-                        "pregunta": pregunta_actual["pregunta"],
-                        "nivel": pregunta_actual["nivel"],
-                        "correcto": respuesta == correcta,
-                        "seleccion": respuesta
-                    }
-
-                    # Feedback inmediato
-                    if respuesta == correcta:
-                        st.success("✅ Correcto")
-                        mostrar_confeti()
-                        st.session_state.respuestas_correctas += 1
-                    else:
-                        st.error(f"❌ Incorrecto. Respuesta correcta: {correcta}")
-
-                    # Avanzar solo después de enviar
-                    st.session_state.index_pregunta += 1
-
-            else:
-                st.success("🎉 Has completado el cuestionario.")
-                st.write(f"Respondiste correctamente **{st.session_state.respuestas_correctas}** preguntas.")
-
-# --- Ejecutar ---
 if __name__ == "__main__":
     main()
