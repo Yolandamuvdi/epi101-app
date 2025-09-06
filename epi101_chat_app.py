@@ -348,40 +348,43 @@ def main():
                     st.error(f"Error consultando Gemini: {e}")
 
     elif seleccion == "🎯 Gamificación":
-        st.header(seleccion)
+    st.header(seleccion)
 
-        # Pregunta inicial de nivel si no se ha seleccionado
-        if st.session_state.nivel_gamificacion is None:
-            st.subheader("Antes de comenzar, ¿en qué nivel sientes que estás en Epidemiología?")
-            nivel = st.radio(
-                "Selecciona tu nivel:",
-                ["Principiante", "Intermedio", "Avanzado"],
-                index=0
-            )
-            if st.button("Comenzar"):
-                st.session_state.nivel_gamificacion = nivel
-                st.session_state.index_pregunta = 0
-                st.session_state.respuestas_usuario = {}
-            st.stop()  # Detiene la ejecución hasta que el usuario seleccione nivel
-
-        # Mostrar simulación adaptativa
+    # --- Selección inicial del nivel ---
+    if st.session_state.nivel_gamificacion is None:
+        st.subheader("Antes de comenzar, ¿en qué nivel sientes que estás en Epidemiología?")
+        nivel = st.radio(
+            "Selecciona tu nivel:",
+            ["Principiante", "Intermedio", "Avanzado"],
+            index=0
+        )
+        if st.button("Comenzar"):
+            st.session_state.nivel_gamificacion = nivel
+            st.session_state.index_pregunta = 0
+            st.session_state.respuestas_correctas = 0
+            st.session_state.respuestas_usuario = {}
+        # 👀 Aquí NO usamos st.stop()
+    else:
+        # --- Obtener pregunta adaptativa ---
         pregunta_actual, mensaje = sim_adapt(st.session_state.respuestas_usuario)
 
         if pregunta_actual is not None:
             st.subheader(f"Pregunta {st.session_state.index_pregunta + 1}")
             st.write(pregunta_actual["pregunta"])
             st.info(mensaje)
+
             opciones = pregunta_actual["opciones"]
+            respuesta = st.radio(
+                "Selecciona tu respuesta:",
+                opciones,
+                key=f"gam_{st.session_state.index_pregunta}"
+            )
 
-            # Guardar temporalmente la respuesta sin avanzar aún
-            respuesta = st.radio("Selecciona tu respuesta:", opciones, key=f"gam_{st.session_state.index_pregunta}")
-
-            # Botón de envío
-            enviar_key = f"btn_gam_{st.session_state.index_pregunta}"
-            if st.button("Enviar respuesta", key=enviar_key):
+            # Botón para enviar respuesta
+            if st.button("Enviar respuesta", key=f"btn_gam_{st.session_state.index_pregunta}"):
                 correcta = pregunta_actual["respuesta_correcta"]
 
-                # Guardar respuesta en el historial con todas las claves necesarias
+                # Guardar en historial
                 st.session_state.respuestas_usuario[st.session_state.index_pregunta] = {
                     "pregunta": pregunta_actual["pregunta"],
                     "nivel": pregunta_actual["nivel"],
@@ -389,6 +392,7 @@ def main():
                     "seleccion": respuesta
                 }
 
+                # Feedback
                 if respuesta == correcta:
                     st.success("✅ Correcto")
                     mostrar_confeti()
@@ -396,13 +400,10 @@ def main():
                 else:
                     st.error(f"❌ Incorrecto. Respuesta correcta: {correcta}")
 
-                # Avanzar índice de preguntas de forma segura
+                # Pasar a la siguiente pregunta SOLO aquí
                 st.session_state.index_pregunta += 1
-            st.stop()  # Detiene la ejecución hasta que el usuario envíe la respuesta
 
         else:
-            # No hay más preguntas disponibles
-            st.info(mensaje)
-
-if __name__ == "__main__":
-    main()
+            # Si ya no hay preguntas disponibles
+            st.success("🎉 Has completado el cuestionario.")
+            st.write(f"Respondiste correctamente **{st.session_state.respuestas_correctas}** preguntas.")
