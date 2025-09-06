@@ -377,12 +377,11 @@ def main():
 
                 opciones = pregunta_actual["opciones"]
 
-                # Usar directamente el valor del radio SIN sobrescribir session_state manualmente
-                respuesta_key = f"respuesta_{idx}"
+                # ⬇️ Aquí el cambio: usamos variable local y NO tocamos session_state hasta enviar
                 respuesta = st.radio(
                     "Selecciona tu respuesta:",
                     opciones,
-                    key=respuesta_key
+                    key=f"resp_temp_{idx}"
                 )
 
                 if st.button("Enviar respuesta", key=f"btn_{idx}"):
