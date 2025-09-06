@@ -347,7 +347,7 @@ def main():
                 except Exception as e:
                     st.error(f"Error consultando Gemini: {e}")
 
-        elif seleccion == "🎯 Gamificación":
+    elif seleccion == "🎯 Gamificación":
         st.header(seleccion)
 
         # --- Selección inicial del nivel ---
@@ -363,7 +363,6 @@ def main():
                 st.session_state.index_pregunta = 0
                 st.session_state.respuestas_correctas = 0
                 st.session_state.respuestas_usuario = {}
-            # 👀 Aquí NO usamos st.stop()
         else:
             # --- Obtener pregunta adaptativa ---
             pregunta_actual, mensaje = sim_adapt(st.session_state.respuestas_usuario)
@@ -407,3 +406,7 @@ def main():
                 # Si ya no hay preguntas disponibles
                 st.success("🎉 Has completado el cuestionario.")
                 st.write(f"Respondiste correctamente **{st.session_state.respuestas_correctas}** preguntas.")
+
+# --- Ejecutar ---
+if __name__ == "__main__":
+    main()
