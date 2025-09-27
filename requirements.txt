@@ -4,7 +4,6 @@
 pyyaml==6.0
 streamlit-authenticator==0.4.2
 python-dotenv==1.1.0
-streamlit-extras==0.0.11
 
 # ---------------------------
 # Core
@@ -47,3 +46,4 @@ pillow==10.1.0
 # Optional / ML
 # ---------------------------
 scikit-learn==1.3.0
+streamlit-extras==0.0.11
