@@ -1,4 +1,4 @@
-# contenido/simulacion_pro_brotes.py
+# contenido/simulacion_brotes.py
 """
 Módulo PRO: Simulación de Brotes (Integrado)
 - WHO DONs (RSS)
