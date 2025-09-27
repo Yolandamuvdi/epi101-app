@@ -1,9 +1,29 @@
+# Core
 streamlit
 pandas
-matplotlib
-scipy
 numpy
-statsmodels
-google-generativeai
-streamlit-extras
+scipy
+matplotlib
 seaborn
+statsmodels
+
+# IA / Chat educativo
+google-generativeai
+
+# UX/UI y extras
+streamlit-extras
+streamlit-authenticator
+
+# Visualización interactiva
+plotly
+folium
+streamlit_folium
+
+# Datos en tiempo real y APIs
+requests
+feedparser
+
+# Exportación
+reportlab
+pillow
+openpyxl
