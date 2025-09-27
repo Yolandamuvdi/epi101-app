@@ -222,8 +222,8 @@ def interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_va
 def plot_forest(rr, rr_l, rr_u, or_, or_l, or_u):
     fig, ax = plt.subplots(figsize=(6,3))
     ax.errorbar(x=[rr, or_], y=[2,1],
-                xerr=[[rr-rr_l, or_-or_l], [rr_u-rr, or_u-or_]],
-                fmt='o', color='#0d3b66', capsize=5, markersize=10)
+                 xerr=[[rr-rr_l, or_-or_l], [rr_u-rr, or_u-or_]],
+                 fmt='o', color='#0d3b66', capsize=5, markersize=10)
     ax.set_yticks([1,2])
     ax.set_yticklabels(["Odds Ratio (OR)", "Riesgo Relativo (RR)"])
     ax.axvline(1, color='gray', linestyle='--')
@@ -283,8 +283,8 @@ def crear_pdf_2x2(a,b,c,d, rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_va
 def make_forest_fig(rr, rr_l, rr_u, or_, or_l, or_u):
     fig, ax = plt.subplots(figsize=(6,3))
     ax.errorbar(x=[rr, or_], y=[2,1],
-                xerr=[[rr-rr_l, or_-or_l], [rr_u-rr, or_u-or_]],
-                fmt='o', color='#0d3b66', capsize=5, markersize=10)
+                 xerr=[[rr-rr_l, or_-or_l], [rr_u-rr, or_u-or_]],
+                 fmt='o', color='#0d3b66', capsize=5, markersize=10)
     ax.set_yticks([1,2])
     ax.set_yticklabels(["Odds Ratio (OR)", "Riesgo Relativo (RR)"])
     ax.axvline(1, color='gray', linestyle='--')
@@ -297,41 +297,31 @@ def make_forest_fig(rr, rr_l, rr_u, or_, or_l, or_u):
 # Auth setup (streamlit-authenticator or demo fallback)
 # ---------------------------
 def setup_auth():
-    user = {"name": None, "username": None, "auth_status": False, "role": "Demo"}
+    user = {"name": "Demo", "username": "demo", "auth_status": False, "role": "Demo"}
     if AUTH_AVAILABLE:
         try:
             # demo credentials; in prod put in secrets
             credentials = {
                 "usernames": {
                     "pro": {"name":"Paola", "password":"pro123"},
-                    "estudiante": {"name":"Estudiante", "password":"est123"},
-                    "demo": {"name":"Demo", "password":"demo"}
+                    "estudiante": {"name":"Estudiante", "password":"est123"}
                 }
             }
             authenticator = stauth.Authenticate(credentials, "epi101_cookie", "epi101_sig", cookie_expiry_days=1)
             name, auth_status, username = authenticator.login("Inicia sesión", "sidebar")
             if auth_status:
                 authenticator.logout("Cerrar sesión", "sidebar")
-            user["name"] = name
-            user["username"] = username
-            user["auth_status"] = auth_status
-            if auth_status:
+                user["name"] = name
+                user["username"] = username
+                user["auth_status"] = auth_status
                 if username == "pro":
                     user["role"] = "Pro"
                 else:
                     user["role"] = "Estudiante"
             else:
-                user["role"] = "Demo"
-            return user
+                user["auth_status"] = auth_status
         except Exception:
-            st.sidebar.warning("streamlit-authenticator falló. Entrando modo demo.")
-    # fallback: demo mode
-    if "demo_user" not in st.session_state:
-        st.session_state["demo_user"] = "Demo User"
-    user["name"] = st.session_state["demo_user"]
-    user["username"] = "demo"
-    user["auth_status"] = True
-    user["role"] = "Demo"
+            pass
     return user
 
 # ---------------------------
@@ -513,7 +503,7 @@ def main():
                 rd, rd_l, rd_u = diferencia_riesgos(a_,b,c,d)
                 p_val, test_name = calcular_p_valor(int(a_), int(b_), int(c_), int(d_))
                 st.markdown(interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u,
-                                                 rd, rd_l, rd_u, p_val, test_name))
+                                                     rd, rd_l, rd_u, p_val, test_name))
                 if corregido:
                     st.warning("Se aplicó corrección de 0.5 en celdas con valor 0 para cálculos.")
                 # show plots
