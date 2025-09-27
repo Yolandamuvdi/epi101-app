@@ -27,9 +27,10 @@ except Exception:
     def sim_adapt(prev):
         return {"pregunta":"Demo: ¿Qué es incidencia?","opciones":["A","B","C"],"respuesta_correcta":"A","nivel":"Básico"}, "Demo"
 
-# Importar módulo PRO de brotes (debe existir en contenido/simulacion_pro_brotes.py)
+# --- CAMBIO 1: Actualizar la importación del módulo de brotes ---
+# Importar módulo PRO de brotes (ahora en la raíz, renombrado a simulacion_brotes.py)
 try:
-    import contenido.simulacion_pro_brotes as brotes_mod
+    import simulacion_brotes as brotes_mod
     BROTES_AVAILABLE = True
 except Exception:
     brotes_mod = None
@@ -344,7 +345,7 @@ def pagina_inicio():
 
 def barra_lateral(seleccion_actual, user_info):
     st.sidebar.title("🧪 Epidemiología 101")
-    st.sidebar.markdown(f"👩‍⚕️ Creado por **Yolanda Muvdi**  \n**Usuario:** {user_info.get('name','-')}  \n**Rol:** {user_info.get('role','Demo')}")
+    st.sidebar.markdown(f"👩‍⚕️ Creado por **Yolanda Muvdi** \n**Usuario:** {user_info.get('name','-')} \n**Rol:** {user_info.get('role','Demo')}")
     st.sidebar.markdown("---")
     opciones = [
         "📚 Academia", "🛠️ Toolkit", "📈 Medidas de Asociación", "📊 Diseños de Estudio",
@@ -512,7 +513,7 @@ def main():
                 rd, rd_l, rd_u = diferencia_riesgos(a_,b,c,d)
                 p_val, test_name = calcular_p_valor(int(a_), int(b_), int(c_), int(d_))
                 st.markdown(interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u,
-                                                  rd, rd_l, rd_u, p_val, test_name))
+                                                 rd, rd_l, rd_u, p_val, test_name))
                 if corregido:
                     st.warning("Se aplicó corrección de 0.5 en celdas con valor 0 para cálculos.")
                 # show plots
@@ -637,30 +638,16 @@ def main():
             ranking_df = pd.DataFrame.from_dict({"Usuario":[user_info.get("name","Demo")], "Puntos":[st.session_state.get("respuestas_correctas",0)]})
             st.table(ranking_df)
 
+    # --- CAMBIO 2: Eliminar la restricción de rol "Pro" ---
     elif seleccion == "📢 Brotes (PRO)":
-        st.header("📢 Simulación de Brotes (Módulo PRO)")
-        if user_info.get("role") != "Pro":
-            st.warning("Acceso restringido: este módulo está disponible para usuarios PRO. Usa modo demo o adquiere acceso Pro.")
-            # still offer demo view of brotes summary if brotes_mod available
-            if BROTES_AVAILABLE:
-                st.info("Vista demo del módulo de brotes disponible.")
-                if st.button("Abrir demo Brotes"):
-                    try:
-                        brotes_mod.app()
-                    except Exception as e:
-                        st.error(f"Error arrancando módulo brotes: {e}")
-            else:
-                st.info("Módulo BROTES no encontrado en contenido/simulacion_pro_brotes.py")
+        st.header("📢 Simulación de Brotes")
+        if BROTES_AVAILABLE:
+            try:
+                brotes_mod.app()
+            except Exception as e:
+                st.error(f"Error arrancando módulo brotes: {e}")
         else:
-            # full PRO access
-            if BROTES_AVAILABLE:
-                try:
-                    brotes_mod.app()
-                except Exception as e:
-                    st.error(f"Error arrancando módulo brotes: {e}")
-            else:
-                st.error("Módulo 'contenido/simulacion_pro_brotes.py' no encontrado. Añade el archivo y reintenta.")
-
+            st.error("Módulo 'simulacion_brotes.py' no encontrado. Añade el archivo y reintenta.")
     # end sections
 
 # run
