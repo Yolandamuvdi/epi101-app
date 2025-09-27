@@ -2,34 +2,34 @@
 pyyaml==6.0
 streamlit-authenticator==0.4.2
 python-dotenv==1.1.0
-streamlit-extras==0.7.8  # Actualizado a una versión existente y estable.
+streamlit-extras==0.7.8
 
 # Core
-streamlit==1.50.0  # Actualizado para ser compatible con streamlit-authenticator.
-pandas==2.3.2
-numpy==2.2.6
-scipy==1.15.3
-matplotlib==3.10.6
-seaborn==0.13.2
-statsmodels==0.14.5
+streamlit==1.37.0
+pandas==2.1.0
+numpy==1.25.0
+scipy==1.11.0
+matplotlib==3.7.2
+seaborn==0.12.2
+statsmodels==0.14.0
 
 # IA / Chat educativo
-google-generativeai==0.8.5
+google-generativeai==0.0.9
 
 # Visualización interactiva
-plotly==6.3.0
-folium==0.20.0
-streamlit_folium==0.25.2
-altair==5.5.0
+plotly==5.18.0
+folium==0.16.0
+streamlit_folium==0.12.0
+altair==5.0.1
 
 # Datos en tiempo real y APIs
-requests==2.32.5
-feedparser==6.0.12
-openpyxl==3.1.5
+requests==2.32.0
+feedparser==6.0.10
+openpyxl==3.1.2
 
 # Exportación
-reportlab==4.4.4
-pillow==11.3.0
+reportlab==4.0.0
+pillow==10.1.0
 
 # Optional / ML
-scikit-learn==1.7.2
+scikit-learn==1.3.0
