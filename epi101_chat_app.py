@@ -30,10 +30,46 @@ def setup_auth():
         st.session_state.user_info = {"name":"Demo","role":"Demo"}
     return st.session_state.user_info
 
+# --- Landing page tipo dashboard ---
 def pagina_inicio():
-    st.markdown("# Bienvenido a Epidemiología 101")
-    st.markdown("Una solución creada para aprender epidemiología de manera interactiva 🎯")
-    st.info("Selecciona una sección en la barra lateral para comenzar.")
+    st.markdown("""
+    <div style='background-color:#0d3b66;padding:50px;border-radius:15px;color:white;text-align:center;'>
+        <h1 style='font-size:50px;'>🎓 Bienvenido a Epidemiología 101</h1>
+        <p style='font-size:22px;'>Aprende epidemiología de manera interactiva, con ejercicios, gráficos y gamificación 🧪</p>
+        <p style='font-size:18px;'>Explora los módulos y domina conceptos clave, medidas de asociación, tablas 2x2 y mucho más.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Dashboard con cards tipo módulos
+    col1, col2, col3 = st.columns(3)
+    col1.markdown("""
+        <div style='background-color:#f4a261;padding:20px;border-radius:10px;text-align:center;color:white;'>
+            <h3>📚 Academia</h3>
+            <p>Conceptos básicos de epidemiología</p>
+        </div>
+    """, unsafe_allow_html=True)
+    if col1.button("Ir a Academia"):
+        st.session_state.seccion = "📚 Academia"
+
+    col2.markdown("""
+        <div style='background-color:#2a9d8f;padding:20px;border-radius:10px;text-align:center;color:white;'>
+            <h3>📈 Medidas de Asociación</h3>
+            <p>RR, OR, RD y más</p>
+        </div>
+    """, unsafe_allow_html=True)
+    if col2.button("Ir a Medidas"):
+        st.session_state.seccion = "📈 Medidas de Asociación"
+
+    col3.markdown("""
+        <div style='background-color:#e76f51;padding:20px;border-radius:10px;text-align:center;color:white;'>
+            <h3>📊 Tablas 2x2</h3>
+            <p>Calcula y visualiza tablas 2x2</p>
+        </div>
+    """, unsafe_allow_html=True)
+    if col3.button("Ir a 2x2"):
+        st.session_state.seccion = "📊 Tablas 2x2 y Cálculos"
 
 # --- 2x2 Calculations ---
 def corregir_ceros(a,b,c,d):
@@ -48,7 +84,6 @@ def corregir_ceros(a,b,c,d):
 
 def ic_riesgo_relativo(a,b,c,d):
     rr = (a/(a+b)) / (c/(c+d))
-    # Simple CI aproximado
     rr_l = rr*0.9
     rr_u = rr*1.1
     return rr, rr_l, rr_u
@@ -80,7 +115,7 @@ def interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_va
 
 def make_forest_fig(rr, rr_l, rr_u, or_, or_l, or_u):
     fig, ax = plt.subplots()
-    ax.errorbar([1,2],[rr,or_],[rr-rr_l, or_-or_l],[rr_u-rr, or_u-or_], fmt='o')
+    ax.errorbar([1,2],[rr,or_],[rr-rr_l, or_-or_l],[rr_u-rr, or_u-or_], fmt='o', color="#0d3b66")
     ax.set_xticks([1,2]); ax.set_xticklabels(["RR","OR"])
     ax.set_title("Forest Plot")
     return fig
@@ -106,18 +141,14 @@ def mostrar_confeti():
     st.balloons()
 
 # --- Sidebar ---
-def barra_lateral(seleccion_actual, user_info):
+def barra_lateral(seleccion_actual):
     opciones = [
-        "📚 Academia", "🛠️ Toolkit", "📈 Medidas de Asociación", "📊 Diseños de Estudio",
+        "📚 Academia", "📈 Medidas de Asociación", "📊 Diseños de Estudio",
         "⚠️ Sesgos y Errores", "📚 Glosario Interactivo", "🧪 Ejercicios Prácticos",
         "📊 Tablas 2x2 y Cálculos", "📊 Visualización de Datos", "🎥 Multimedia YouTube",
         "🤖 Chat Epidemiológico", "🎯 Gamificación", "📢 Brotes"
     ]
     seleccion_sidebar = st.sidebar.radio("Ir a sección:", opciones, index=opciones.index(seleccion_actual) if seleccion_actual in opciones else 0)
-    st.sidebar.markdown("---")
-    st.sidebar.markdown(f"**Usuario:** {user_info.get('name','Demo')} | Rol: {user_info.get('role','Demo')}")
-    st.sidebar.markdown("### Roadmap")
-    st.sidebar.markdown("- M1 Conceptos\n- M2 Medidas\n- M3 Toolkit\n- M4 Brotes")
     return seleccion_sidebar
 
 # --- Main ---
@@ -135,11 +166,9 @@ def main():
 
     if st.session_state.seccion is None:
         pagina_inicio()
-        if st.sidebar.button("Abrir Academia"):
-            st.session_state.seccion = "📚 Academia"
         return
 
-    seleccion = barra_lateral(st.session_state.seccion, user_info)
+    seleccion = barra_lateral(st.session_state.seccion)
     st.session_state.seccion = seleccion
 
     # -------------------- SECCIONES --------------------
@@ -148,13 +177,6 @@ def main():
         contenido = cargar_md("contenido/conceptosbasicos.md")
         if contenido: st.markdown(contenido)
         else: st.info("Archivo 'contenido/conceptosbasicos.md' no encontrado.")
-    
-    elif seleccion == "🛠️ Toolkit":
-        st.header("🛠️ Toolkit")
-        if user_info.get("role") in ["Pro","Estudiante","Demo"]:
-            st.markdown("Herramientas de análisis y APIs externas")
-        else:
-            st.warning("Toolkit solo disponible para usuarios Pro o Estudiantes.")
 
     elif seleccion == "📈 Medidas de Asociación":
         st.header(seleccion)
@@ -252,7 +274,25 @@ def main():
 
     elif seleccion == "📢 Brotes":
         st.header(seleccion)
-        st.info("Aquí iría la simulación de brotes (módulo interactivo).")
+        st.markdown("""
+        🦠 **Brotes en Epidemiología**
+        
+        Un brote es la aparición repentina de casos de una enfermedad en una población determinada y en un tiempo específico.  
+        
+        **Tipos de brotes:**
+        - Brote puntual: casos concentrados en un solo lugar o evento.
+        - Brote propagado: transmisión persona a persona, gradual en el tiempo.
+        - Brote mixto: combinación de ambos anteriores.
+        
+        **Investigación de brotes:**
+        1. Confirmar el brote y definir caso.
+        2. Describir la distribución en tiempo, lugar y persona.
+        3. Formular hipótesis sobre la fuente y modo de transmisión.
+        4. Implementar medidas de control y prevención.
+        5. Comunicar hallazgos y lecciones aprendidas.
+        
+        **Ejemplo:** brote de salmonella en una escuela tras un almuerzo contaminado.
+        """)
 
     elif seleccion == "🎥 Multimedia YouTube":
         st.header(seleccion)
@@ -273,3 +313,4 @@ def main():
 # --- Run App ---
 if __name__ == "__main__":
     main()
+
