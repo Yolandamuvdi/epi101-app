@@ -217,46 +217,14 @@ def mostrar_confeti():
     rain(emoji="🎉", font_size=54, falling_speed=5, animation_length=3)
 
 # ---------------------------
-# Utilities export y brotes
-# ---------------------------
-def fig_to_bytes(fig, fmt="png"):
-    buf = io.BytesIO()
-    fig.savefig(buf, format=fmt, bbox_inches="tight")
-    buf.seek(0)
-    return buf.getvalue()
-
-def crear_pdf_2x2(a,b,c,d, rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_val, test_name):
-    if not REPORTLAB_AVAILABLE:
-        return None
-    pdf_buf = io.BytesIO()
-    c = canvas.Canvas(pdf_buf, pagesize=letter)
-    c.setFont("Helvetica-Bold", 14)
-    c.drawString(50, 760, "Reporte 2x2 - Epidemiología 101")
-    c.setFont("Helvetica", 10)
-    c.drawString(50, 740, f"Tabla: a={a}, b={b}, c={c}, d={d}")
-    c.drawString(50, 720, f"RR: {rr:.3f} (IC95% {rr_l:.3f}-{rr_u:.3f})")
-    c.drawString(50, 704, f"OR: {or_:.3f} (IC95% {or_l:.3f}-{or_u:.3f})")
-    c.drawString(50, 688, f"RD: {rd:.3f} (IC95% {rd_l:.3f}-{rd_u:.3f})")
-    c.drawString(50, 672, f"p-value ({test_name}): {p_val:.4f}")
-    try:
-        fig = make_forest_fig(rr, rr_l, rr_u, or_, or_l, or_u)
-        img = ImageReader(io.BytesIO(fig_to_bytes(fig, fmt="png")))
-        c.drawImage(img, 50, 450, width=500, height=200)
-    except:
-        pass
-    c.showPage()
-    c.save()
-    pdf_buf.seek(0)
-    return pdf_buf
-
-# ---------------------------
-# Header + Badge
+# Header + Badge (corregido)
 # ---------------------------
 st.title("🧠 Epidemiología 101")
 st.markdown("Aprende epidemiología de manera interactiva y visual.")
 
+# Fix badge
 if badge is not None:
-    badge(label="Versión PRO", color="green", icon="🧪")
+    st.markdown('<div class="badge-green">🧪 Versión PRO</div>', unsafe_allow_html=True)
 
 st.markdown("---")
 
@@ -321,6 +289,6 @@ elif menu == "Simulación Adaptativa":
 # ---------------------------
 elif menu == "Acerca":
     st.subheader("Acerca de Epidemiología 101")
-    st.markdown("Aplicación educativa PRO desarrollada por Pao, enfermera epidemióloga.")
+    st.markdown("Aplicación educativa PRO desarrollada por Yolanda Muvdi, enfermera epidemióloga.")
 
 st.markdown("<br><br>", unsafe_allow_html=True)
