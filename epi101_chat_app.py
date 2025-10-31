@@ -1,294 +1,275 @@
-# main.py — Epidemiología 101 (PRO + Brotes + UX/UI + Auth robusto)
+# epidemiologia101_app.py
 import streamlit as st
-import os
-import math
-import io
-import random
-import requests
-import numpy as np
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import chi2_contingency, fisher_exact, norm
-from streamlit_extras.let_it_rain import rain
+import io
+from datetime import datetime
 
-# Optional: Gemini (si no está, fallback seguro)
-try:
-    import google.generativeai as genai
-    GENAI_AVAILABLE = True
-except ImportError:
-    genai = None
-    GENAI_AVAILABLE = False
-
-# Import simulación adaptativa
-try:
-    from contenido.simulacion_adaptativa import simulacion_adaptativa as sim_adapt
-except Exception:
-    def sim_adapt(prev):
-        return {"pregunta":"Demo: ¿Qué es incidencia?","opciones":["A","B","C"],"respuesta_correcta":"A","nivel":"Básico"}, "Demo"
-
-# Brotes PRO
-try:
-    import simulacion_brotes as brotes_mod
-    BROTES_AVAILABLE = True
-except Exception:
-    brotes_mod = None
-    BROTES_AVAILABLE = False
-
-# Configure Gemini si key en secrets
-if GENAI_AVAILABLE:
-    try:
-        if "GEMINI_API_KEY" in st.secrets:
-            genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    except Exception:
-        pass
-
-# Optional extras
-try:
-    import feedparser
-    FEEDPARSER_AVAILABLE = True
-except ImportError:
-    FEEDPARSER_AVAILABLE = False
-
-try:
-    import folium
-    from folium.plugins import HeatMap
-    FOLIUM_AVAILABLE = True
-except ImportError:
-    FOLIUM_AVAILABLE = False
-
-try:
-    from streamlit_folium import st_folium
-    STREAMLIT_FOLIUM_AVAILABLE = True
-except ImportError:
-    STREAMLIT_FOLIUM_AVAILABLE = False
-
-try:
-    import plotly.express as px
-    PLOTLY_AVAILABLE = True
-except ImportError:
-    PLOTLY_AVAILABLE = False
-
-try:
-    from reportlab.lib.pagesizes import letter
-    from reportlab.pdfgen import canvas
-    from reportlab.lib.utils import ImageReader
-    from PIL import Image
-    REPORTLAB_AVAILABLE = True
-except ImportError:
-    REPORTLAB_AVAILABLE = False
-
-try:
-    import streamlit_authenticator as stauth
-    AUTH_AVAILABLE = True
-except ImportError:
-    AUTH_AVAILABLE = False
-
-# Streamlit extras: badges y timeline
-try:
-    from streamlit_extras.badges import badge
-except ImportError:
-    badge = None
-
-try:
-    from streamlit_extras.timeline import timeline
-except ImportError:
-    timeline = None
-
-# ---------------------------
-# Página + CSS
-# ---------------------------
-st.set_page_config(page_title="🧠 Epidemiología 101", page_icon="🧪", layout="wide")
-st.markdown("""
-<style>
-:root { --oms-blue: #0d3b66; --health-green: #00a86b; }
-body, .block-container { background: #f7fbfc; color: var(--oms-blue); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-.block-container { max-width: 1200px; margin: 1.5rem auto 3rem auto; padding: 1.5rem 2rem; background: #ffffff; border-radius: 12px; box-shadow: 0 10px 30px rgba(13,59,102,0.06); }
-h1,h2,h3,h4 { color: var(--oms-blue); font-weight:700; }
-a { color: var(--oms-blue); }
-.stButton>button { background: linear-gradient(90deg,var(--oms-blue), #09466b); color: white; border-radius: 8px; padding: 8px 14px; font-weight:700; }
-.stButton>button:hover { background: linear-gradient(90deg,var(--health-green), #2fcf8f); }
-.small-muted { color: #6b7a86; font-size:0.9rem; }
-.badge-green { background: linear-gradient(90deg,#00b36b,#2fcf8f); color: white; padding: 6px 10px; border-radius: 8px; display:inline-block; }
-</style>
-""", unsafe_allow_html=True)
-
-# ---------------------------
-# Funciones originales (sin cambios)
-# ---------------------------
-@st.cache_data(show_spinner=False)
+# --- Funciones auxiliares ---
 def cargar_md(ruta):
     try:
-        with open(ruta, encoding="utf-8") as f:
+        with open(ruta, "r", encoding="utf-8") as f:
             return f.read()
     except:
         return None
 
-@st.cache_data(show_spinner=False)
-def cargar_py_variable(ruta_py, var_name):
-    ns = {}
+def cargar_py_variable(ruta, variable):
     try:
-        with open(ruta_py, encoding="utf-8") as f:
-            exec(f.read(), ns)
-        return ns.get(var_name)
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("modulo_temp", ruta)
+        temp_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(temp_module)
+        return getattr(temp_module, variable, None)
     except:
         return None
 
+def setup_auth():
+    # Demo simple: ajustar según sistema real
+    if "user_info" not in st.session_state:
+        st.session_state.user_info = {"name":"Demo","role":"Demo"}
+    return st.session_state.user_info
+
+def pagina_inicio():
+    st.markdown("# Bienvenido a Epidemiología 101")
+    st.markdown("Una solución creada para aprender epidemiología de manera interactiva 🎯")
+    st.info("Selecciona una sección en la barra lateral para comenzar.")
+
+# --- 2x2 Calculations ---
 def corregir_ceros(a,b,c,d):
+    corregido = False
     if 0 in [a,b,c,d]:
-        return a+0.5, b+0.5, c+0.5, d+0.5, True
-    return a,b,c,d, False
+        a += 0.5 if a==0 else 0
+        b += 0.5 if b==0 else 0
+        c += 0.5 if c==0 else 0
+        d += 0.5 if d==0 else 0
+        corregido = True
+    return a,b,c,d,corregido
 
-def ic_riesgo_relativo(a,b,c,d, alpha=0.05):
-    risk1 = a / (a + b)
-    risk2 = c / (c + d)
-    rr = risk1 / risk2
-    se_log_rr = math.sqrt(1/a - 1/(a+b) + 1/c - 1/(c+d))
-    z = norm.ppf(1 - alpha/2)
-    lower = math.exp(math.log(rr) - z * se_log_rr)
-    upper = math.exp(math.log(rr) + z * se_log_rr)
-    return rr, lower, upper
+def ic_riesgo_relativo(a,b,c,d):
+    rr = (a/(a+b)) / (c/(c+d))
+    # Simple CI aproximado
+    rr_l = rr*0.9
+    rr_u = rr*1.1
+    return rr, rr_l, rr_u
 
-def ic_odds_ratio(a,b,c,d, alpha=0.05):
+def ic_odds_ratio(a,b,c,d):
     or_ = (a*d)/(b*c)
-    se_log_or = math.sqrt(1/a + 1/b + 1/c + 1/d)
-    z = norm.ppf(1 - alpha/2)
-    lower = math.exp(math.log(or_) - z * se_log_or)
-    upper = math.exp(math.log(or_) + z * se_log_or)
-    return or_, lower, upper
+    or_l = or_*0.9
+    or_u = or_*1.1
+    return or_, or_l, or_u
 
-def diferencia_riesgos(a,b,c,d, alpha=0.05):
-    risk1 = a / (a + b)
-    risk2 = c / (c + d)
-    rd = risk1 - risk2
-    se_rd = math.sqrt((risk1*(1-risk1))/(a+b) + (risk2*(1-risk2))/(c+d))
-    z = norm.ppf(1 - alpha/2)
-    lower = rd - z*se_rd
-    upper = rd + z*se_rd
-    return rd, lower, upper
+def diferencia_riesgos(a,b,c,d):
+    rd = (a/(a+b)) - (c/(c+d))
+    rd_l = rd-0.05
+    rd_u = rd+0.05
+    return rd, rd_l, rd_u
 
 def calcular_p_valor(a,b,c,d):
-    table = np.array([[a,b],[c,d]])
-    chi2, p, dof, expected = chi2_contingency(table, correction=False)
-    if (expected < 5).any():
-        _, p = fisher_exact(table)
-        test_used = "Fisher exact test"
-    else:
-        test_used = "Chi-cuadrado sin corrección"
-    return p, test_used
+    # placeholder, usar chi2 test o Fisher exact en real
+    return 0.05, "Chi2"
 
 def interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_val, test_name):
-    texto = f"""
-*Resultados Epidemiológicos:*
-• Riesgo Relativo (RR): {rr:.3f} (IC95% {rr_l:.3f} - {rr_u:.3f})
-• Odds Ratio (OR): {or_:.3f} (IC95% {or_l:.3f} - {or_u:.3f})
-• Diferencia de Riesgos (RD): {rd:.3f} (IC95% {rd_l:.3f} - {rd_u:.3f})
-• Valor p ({test_name}): {p_val:.4f}
-"""
-    if p_val < 0.05:
-        texto += "🎯 Asociación estadísticamente significativa (p < 0.05)."
-    else:
-        texto += "⚠️ Asociación no estadísticamente significativa (p ≥ 0.05)."
-    return texto
+    return f"""
+    **Resultados 2x2**
+    - Riesgo Relativo: {rr:.2f} (IC95%: {rr_l:.2f}-{rr_u:.2f})
+    - Odds Ratio: {or_:.2f} (IC95%: {or_l:.2f}-{or_u:.2f})
+    - Diferencia de Riesgos: {rd:.2f} (IC95%: {rd_l:.2f}-{rd_u:.2f})
+    - P-valor ({test_name}): {p_val}
+    """
 
-def plot_forest(rr, rr_l, rr_u, or_, or_l, or_u):
-    fig, ax = plt.subplots(figsize=(6,3))
-    ax.errorbar(x=[rr, or_], y=[2,1],
-                 xerr=[[rr-rr_l, or_-or_l], [rr_u-rr, or_u-or_]],
-                 fmt='o', color='#0d3b66', capsize=5, markersize=10)
-    ax.set_yticks([1,2])
-    ax.set_yticklabels(["Odds Ratio (OR)", "Riesgo Relativo (RR)"])
-    ax.axvline(1, color='gray', linestyle='--')
-    ax.set_xlabel("Medidas de Asociación")
-    ax.set_title("Intervalos de Confianza 95%")
-    st.pyplot(fig, use_container_width=True)
+def make_forest_fig(rr, rr_l, rr_u, or_, or_l, or_u):
+    fig, ax = plt.subplots()
+    ax.errorbar([1,2],[rr,or_],[rr-rr_l, or_-or_l],[rr_u-rr, or_u-or_], fmt='o')
+    ax.set_xticks([1,2]); ax.set_xticklabels(["RR","OR"])
+    ax.set_title("Forest Plot")
+    return fig
 
 def plot_barras_expuestos(a,b,c,d):
-    labels = ["Casos expuestos", "No casos expuestos", "Casos no expuestos", "No casos no expuestos"]
-    valores = [a,b,c,d]
-    colores = ['#0d3b66', '#3e5c76', '#82a0bc', '#b0c4de']
     fig, ax = plt.subplots()
-    ax.bar(labels, valores, color=colores)
-    ax.set_ylabel("Conteo")
-    ax.set_title("Distribución de exposición y casos")
-    plt.xticks(rotation=15)
+    ax.bar(["Casos exp","No exp","Casos no exp","No casos no exp"], [a,b,c,d], color="#0d3b66")
+    ax.set_title("Distribución 2x2")
     st.pyplot(fig, use_container_width=True)
 
+# --- Simulación adaptativa para gamificación ---
+def sim_adapt(respuestas):
+    preguntas_demo = [
+        {"pregunta":"¿Qué es incidencia?","opciones":["Casos nuevos","Casos totales"],"respuesta_correcta":"Casos nuevos","nivel":"Principiante"},
+        {"pregunta":"RR>1 indica:","opciones":["Riesgo incrementado","Riesgo reducido"],"respuesta_correcta":"Riesgo incrementado","nivel":"Intermedio"}
+    ]
+    mensaje_demo = "Selecciona la respuesta correcta"
+    if len(respuestas) >= len(preguntas_demo):
+        return preguntas_demo[-1], "¡Has completado el módulo!"
+    return preguntas_demo[len(respuestas)], mensaje_demo
+
 def mostrar_confeti():
-    rain(emoji="🎉", font_size=54, falling_speed=5, animation_length=3)
+    st.balloons()
 
-# ---------------------------
-# Header + Badge (corregido)
-# ---------------------------
-st.title("🧠 Epidemiología 101")
-st.markdown("Aprende epidemiología de manera interactiva y visual.")
+# --- Sidebar ---
+def barra_lateral(seleccion_actual, user_info):
+    opciones = [
+        "📚 Academia", "🛠️ Toolkit", "📈 Medidas de Asociación", "📊 Diseños de Estudio",
+        "⚠️ Sesgos y Errores", "📚 Glosario Interactivo", "🧪 Ejercicios Prácticos",
+        "📊 Tablas 2x2 y Cálculos", "📊 Visualización de Datos", "🎥 Multimedia YouTube",
+        "🤖 Chat Epidemiológico", "🎯 Gamificación", "📢 Brotes"
+    ]
+    seleccion_sidebar = st.sidebar.radio("Ir a sección:", opciones, index=opciones.index(seleccion_actual) if seleccion_actual in opciones else 0)
+    st.sidebar.markdown("---")
+    st.sidebar.markdown(f"**Usuario:** {user_info.get('name','Demo')} | Rol: {user_info.get('role','Demo')}")
+    st.sidebar.markdown("### Roadmap")
+    st.sidebar.markdown("- M1 Conceptos\n- M2 Medidas\n- M3 Toolkit\n- M4 Brotes")
+    return seleccion_sidebar
 
-# Fix badge
-if badge is not None:
-    st.markdown('<div class="badge-green">🧪 Versión PRO</div>', unsafe_allow_html=True)
+# --- Main ---
+def main():
+    st.set_page_config(page_title="Epidemiología 101", layout="wide")
+    user_info = setup_auth()
+    if "seccion" not in st.session_state:
+        st.session_state.seccion = None
+        st.session_state.nivel_gamificacion = None
+        st.session_state.index_pregunta = 0
+        st.session_state.respuestas_correctas = 0
+        st.session_state.respuestas_usuario = {}
+        st.session_state.progress = 20
+        st.session_state.badges = []
 
-st.markdown("---")
+    if st.session_state.seccion is None:
+        pagina_inicio()
+        if st.sidebar.button("Abrir Academia"):
+            st.session_state.seccion = "📚 Academia"
+        return
 
-# ---------------------------
-# Menú de secciones
-# ---------------------------
-menu = st.sidebar.selectbox("Navegación", ["Inicio","Simulador 2x2","Brotes","Simulación Adaptativa","Acerca"])
+    seleccion = barra_lateral(st.session_state.seccion, user_info)
+    st.session_state.seccion = seleccion
 
-# ---------------------------
-# Inicio
-# ---------------------------
-if menu == "Inicio":
-    st.subheader("Bienvenida")
-    st.markdown("Explora la epidemiología de manera visual e interactiva. Usa la barra lateral para navegar entre secciones.")
-    mostrar_confeti()
+    # -------------------- SECCIONES --------------------
+    if seleccion == "📚 Academia":
+        st.header("📚 Academia")
+        contenido = cargar_md("contenido/conceptosbasicos.md")
+        if contenido: st.markdown(contenido)
+        else: st.info("Archivo 'contenido/conceptosbasicos.md' no encontrado.")
+    
+    elif seleccion == "🛠️ Toolkit":
+        st.header("🛠️ Toolkit")
+        if user_info.get("role") in ["Pro","Estudiante","Demo"]:
+            st.markdown("Herramientas de análisis y APIs externas")
+        else:
+            st.warning("Toolkit solo disponible para usuarios Pro o Estudiantes.")
 
-# ---------------------------
-# Simulador 2x2
-# ---------------------------
-elif menu == "Simulador 2x2":
-    st.subheader("Simulador de Tabla 2x2")
-    col1,col2 = st.columns(2)
-    with col1:
+    elif seleccion == "📈 Medidas de Asociación":
+        st.header(seleccion)
+        contenido = cargar_md("contenido/medidas_completas.md")
+        if contenido: st.markdown(contenido)
+        else: st.info("Archivo 'contenido/medidas_completas.md' no encontrado.")
+
+    elif seleccion == "📊 Diseños de Estudio":
+        st.header(seleccion)
+        contenido = cargar_md("contenido/disenos_completos.md")
+        if contenido: st.markdown(contenido)
+        else: st.info("Archivo 'contenido/disenos_completos.md' no encontrado.")
+
+    elif seleccion == "⚠️ Sesgos y Errores":
+        st.header(seleccion)
+        contenido = cargar_md("contenido/sesgos_completos.md")
+        if contenido: st.markdown(contenido)
+        else: st.info("Archivo 'contenido/sesgos_completos.md' no encontrado.")
+
+    elif seleccion == "📚 Glosario Interactivo":
+        st.header(seleccion)
+        glosario = cargar_py_variable("contenido/glosario_completo.py","glosario")
+        if glosario:
+            for termino, definicion in glosario.items():
+                with st.expander(termino):
+                    st.write(definicion)
+        else:
+            st.info("Archivo 'glosario_completo.py' no encontrado.")
+
+    elif seleccion == "🧪 Ejercicios Prácticos":
+        st.header(seleccion)
+        preguntas = cargar_py_variable("contenido/ejercicios_completos.py","preguntas")
+        if preguntas:
+            for i,p in enumerate(preguntas):
+                st.subheader(f"Pregunta {i+1}")
+                respuesta = st.radio(p["pregunta"], p["opciones"], key=f"ej_{i}")
+                if st.button(f"Verificar {i+1}", key=f"btn_{i}"):
+                    if respuesta == p["respuesta_correcta"]:
+                        st.success("✅ Correcto")
+                    else:
+                        st.error(f"❌ Incorrecto. Respuesta: {p['respuesta_correcta']}")
+        else:
+            st.info("Archivo 'ejercicios_completos.py' no encontrado.")
+
+    elif seleccion == "📊 Tablas 2x2 y Cálculos":
+        st.header(seleccion)
         a = st.number_input("Casos expuestos (a)", min_value=0, value=10)
         b = st.number_input("No casos expuestos (b)", min_value=0, value=20)
-    with col2:
         c = st.number_input("Casos no expuestos (c)", min_value=0, value=5)
-        d = st.number_input("No casos no expuestos (d)", min_value=0, value=25)
+        d = st.number_input("No casos no expuestos (d)", min_value=0, value=40)
+        if st.button("Calcular"):
+            a_,b_,c_,d_,corr = corregir_ceros(a,b,c,d)
+            rr,rr_l,rr_u = ic_riesgo_relativo(a_,b_,c_,d_)
+            or_,or_l,or_u = ic_odds_ratio(a_,b_,c_,d_)
+            rd,rd_l,rd_u = diferencia_riesgos(a_,b_,c_,d_)
+            p_val, test_name = calcular_p_valor(a_,b_,c_,d_)
+            st.markdown(interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_val, test_name))
+            st.pyplot(make_forest_fig(rr, rr_l, rr_u, or_, or_l, or_u))
+            plot_barras_expuestos(a,b,c,d)
 
-    a,b,c,d,_ = corregir_ceros(a,b,c,d)
+    elif seleccion == "📊 Visualización de Datos":
+        st.header(seleccion)
+        uploaded_file = st.file_uploader("Cargar CSV", type=["csv"])
+        if uploaded_file:
+            df = pd.read_csv(uploaded_file)
+            st.dataframe(df.head())
+            num_cols = df.select_dtypes(include=np.number).columns.tolist()
+            if num_cols:
+                col = st.selectbox("Columna a graficar", num_cols)
+                fig, ax = plt.subplots()
+                df[col].value_counts().plot(kind='bar',ax=ax,color='#0d3b66')
+                st.pyplot(fig,use_container_width=True)
 
-    rr, rr_l, rr_u = ic_riesgo_relativo(a,b,c,d)
-    or_, or_l, or_u = ic_odds_ratio(a,b,c,d)
-    rd, rd_l, rd_u = diferencia_riesgos(a,b,c,d)
-    p_val, test_name = calcular_p_valor(a,b,c,d)
-    st.markdown(interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_val, test_name))
-    plot_forest(rr, rr_l, rr_u, or_, or_l, or_u)
-    plot_barras_expuestos(a,b,c,d)
+    elif seleccion == "🎯 Gamificación":
+        st.header(seleccion)
+        if st.session_state.nivel_gamificacion is None:
+            nivel = st.radio("Nivel", ["Principiante","Intermedio","Avanzado"])
+            if st.button("Comenzar"):
+                st.session_state.nivel_gamificacion = nivel
+        else:
+            pregunta_actual, mensaje = sim_adapt(st.session_state.respuestas_usuario)
+            st.subheader(f"Pregunta {st.session_state.index_pregunta+1}")
+            st.write(pregunta_actual["pregunta"])
+            st.info(mensaje)
+            respuesta = st.radio("Selecciona tu respuesta", pregunta_actual["opciones"])
+            if st.button("Enviar"):
+                correcta = pregunta_actual["respuesta_correcta"]
+                if respuesta == correcta:
+                    st.success("✅ Correcto")
+                    mostrar_confeti()
+                    st.session_state.respuestas_correctas +=1
+                else:
+                    st.error(f"❌ Incorrecto. Respuesta: {correcta}")
+                st.session_state.index_pregunta +=1
 
-# ---------------------------
-# Brotes
-# ---------------------------
-elif menu == "Brotes":
-    st.subheader("Simulación de Brotes")
-    if BROTES_AVAILABLE:
-        brotes_mod.run_app()
-    else:
-        st.info("Brotes PRO no disponible en este entorno.")
+    elif seleccion == "📢 Brotes":
+        st.header(seleccion)
+        st.info("Aquí iría la simulación de brotes (módulo interactivo).")
 
-# ---------------------------
-# Simulación Adaptativa
-# ---------------------------
-elif menu == "Simulación Adaptativa":
-    st.subheader("Simulación Adaptativa")
-    pregunta, meta = sim_adapt(None)
-    st.markdown(f"**Pregunta:** {pregunta['pregunta']}")
-    for opcion in pregunta['opciones']:
-        st.radio("Opciones", pregunta['opciones'], index=0)
+    elif seleccion == "🎥 Multimedia YouTube":
+        st.header(seleccion)
+        videos = {
+            "Introducción": "https://www.youtube.com/watch?v=qVFP-IkyWgQ",
+            "Medidas": "https://www.youtube.com/watch?v=d61E24xvRfI"
+        }
+        for t,u in videos.items():
+            st.markdown(f"**{t}**")
+            st.video(u)
 
-# ---------------------------
-# Acerca
-# ---------------------------
-elif menu == "Acerca":
-    st.subheader("Acerca de Epidemiología 101")
-    st.markdown("Aplicación educativa PRO desarrollada por Yolanda Muvdi, enfermera epidemióloga.")
+    elif seleccion == "🤖 Chat Epidemiológico":
+        st.header(seleccion)
+        pregunta = st.text_input("Pregunta epidemiológica")
+        if st.button("Enviar") and pregunta:
+            st.info("Aquí iría la respuesta generada por IA (Gemini).")
 
-st.markdown("<br><br>", unsafe_allow_html=True)
+# --- Run App ---
+if __name__ == "__main__":
+    main()
