@@ -5,11 +5,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import io
 from datetime import datetime
+import os
+import random
+import requests
+import math
+from scipy.stats import chi2_contingency, fisher_exact, norm
+
+# Streamlit extras opcional
+try:
+    from streamlit_extras.let_it_rain import rain
+except:
+    pass
 
 # --- CONFIGURACIÓN STREAMLIT ---
 st.set_page_config(page_title="Epidemiología 101", layout="wide")
 
-# --- Intento de importar Gemini ---
+# --- Intento de importar Gemini (Google Generative AI) ---
 try:
     import google.generativeai as genai
     GENAI_AVAILABLE = True
@@ -133,7 +144,7 @@ def plot_barras_expuestos(a,b,c,d):
     ax.set_title("Distribución 2x2")
     st.pyplot(fig, use_container_width=True)
 
-# --- Simulación adaptativa para gamificación ---
+# --- Simulación adaptativa ---
 def sim_adapt(respuestas):
     preguntas_demo = [
         {"pregunta":"¿Qué es incidencia?","opciones":["Casos nuevos","Casos totales"],"respuesta_correcta":"Casos nuevos","nivel":"Principiante"},
@@ -323,13 +334,11 @@ def main():
                 else:
                     try:
                         genai.configure(api_key=api_key)
-                        respuesta = genai.generate_text(
-                            model="text-bison-001",
-                            prompt=pregunta,
-                            temperature=0.2,
-                            max_output_tokens=512
+                        respuesta = genai.chat.create(
+                            model="models/text-bison-001",
+                            messages=[{"author":"user","content":pregunta}]
                         )
-                        st.write(respuesta.text if hasattr(respuesta, "text") else str(respuesta))
+                        st.write(respuesta.last.message.content)
                     except Exception as e:
                         st.error(f"Error consultando Gemini: {e}")
 
