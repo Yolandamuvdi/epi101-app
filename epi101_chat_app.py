@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import io
 from datetime import datetime
-import requests  # Import necesario para la API de Gemini
+import requests
 
 # --- Funciones auxiliares ---
 def cargar_md(ruta):
@@ -42,7 +42,6 @@ def pagina_inicio():
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Dashboard con cards tipo módulos
     col1, col2, col3 = st.columns(3)
     col1.markdown("""
         <div style='background-color:#f4a261;padding:20px;border-radius:10px;text-align:center;color:white;box-shadow: 1px 1px 10px rgba(0,0,0,0.2);'>
@@ -125,7 +124,7 @@ def plot_barras_expuestos(a,b,c,d):
     ax.set_title("Distribución 2x2")
     st.pyplot(fig, use_container_width=True)
 
-# --- Simulación adaptativa para gamificación ---
+# --- Simulación adaptativa ---
 def sim_adapt(respuestas):
     preguntas_demo = [
         {"pregunta":"¿Qué es incidencia?","opciones":["Casos nuevos","Casos totales"],"respuesta_correcta":"Casos nuevos","nivel":"Principiante"},
@@ -147,26 +146,8 @@ def barra_lateral(seleccion_actual):
         "📊 Tablas 2x2 y Cálculos", "📊 Visualización de Datos", "🎥 Multimedia YouTube",
         "🤖 Chat Epidemiológico", "🎯 Gamificación", "📢 Brotes"
     ]
-    seleccion_sidebar = st.sidebar.radio(
-        "Ir a sección:", opciones,
-        index=opciones.index(seleccion_actual) if seleccion_actual in opciones else 0
-    )
+    seleccion_sidebar = st.sidebar.radio("Ir a sección:", opciones, index=opciones.index(seleccion_actual) if seleccion_actual in opciones else 0)
     return seleccion_sidebar
-
-# --- Función Chat con Gemini ---
-def chat_gemini(pregunta):
-    api_key = st.secrets["GEMINI_API_KEY"]
-    url = "https://api.gemini.com/v1/ask"  # Ajusta según la URL real
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    payload = {"prompt": pregunta, "max_tokens": 200}
-    try:
-        response = requests.post(url, json=payload, headers=headers, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        respuesta = data.get("respuesta", "No se recibió respuesta de Gemini.")
-    except Exception as e:
-        respuesta = f"❌ Error al contactar Gemini: {e}"
-    return respuesta
 
 # --- Main ---
 def main():
@@ -326,9 +307,22 @@ def main():
         pregunta = st.text_input("Escribe tu pregunta epidemiológica aquí:")
 
         if st.button("Enviar") and pregunta:
-            with st.spinner("Generando respuesta con Gemini..."):
-                respuesta = chat_gemini(pregunta)
+            api_key = st.secrets["GEMINI_API_KEY"]
+            url = "https://generativelanguage.googleapis.com/v1beta2/models/text-bison-001:generate"
+            headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+            payload = {
+                "prompt": {"text": pregunta},
+                "temperature": 0.7,
+                "maxOutputTokens": 200
+            }
+            try:
+                response = requests.post(url, headers=headers, json=payload, timeout=10)
+                response.raise_for_status()
+                data = response.json()
+                respuesta = data["candidates"][0]["output"]
                 st.success(respuesta)
+            except Exception as e:
+                st.error(f"❌ Error al contactar Gemini: {e}")
 
 # --- Run App ---
 if __name__ == "__main__":
