@@ -315,7 +315,7 @@ def main():
                 else:
                     try:
                         genai.configure(api_key=api_key)
-                        model = genai.GenerativeModel("gemini-1.5-flash")
+                        model = genai.GenerativeModel("gemini-pro")
                         respuesta = model.generate_content(pregunta)
                         st.write(respuesta.text if hasattr(respuesta, "text") else str(respuesta))
                     except Exception as e:
