@@ -1,12 +1,10 @@
-# epidemiologia101_app.py — Epidemiología 101 (completo)
+# epidemiologia101_app.py
 import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import io
 from datetime import datetime
-import os
-import random
 
 # --- CONFIGURACIÓN STREAMLIT ---
 st.set_page_config(page_title="Epidemiología 101", layout="wide")
@@ -16,7 +14,6 @@ try:
     import google.generativeai as genai
     GENAI_AVAILABLE = True
 except ImportError:
-    genai = None
     GENAI_AVAILABLE = False
 
 # --- Funciones auxiliares ---
@@ -38,7 +35,6 @@ def cargar_py_variable(ruta, variable):
         return None
 
 def setup_auth():
-    # Demo simple: ajustar según sistema real
     if "user_info" not in st.session_state:
         st.session_state.user_info = {"name":"Demo","role":"Demo"}
     return st.session_state.user_info
@@ -55,7 +51,6 @@ def pagina_inicio():
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Dashboard con cards tipo módulos
     col1, col2, col3 = st.columns(3)
     col1.markdown("""
         <div style='background-color:#f4a261;padding:20px;border-radius:10px;text-align:center;color:white;box-shadow: 1px 1px 10px rgba(0,0,0,0.2);'>
@@ -138,7 +133,7 @@ def plot_barras_expuestos(a,b,c,d):
     ax.set_title("Distribución 2x2")
     st.pyplot(fig, use_container_width=True)
 
-# --- Simulación adaptativa ---
+# --- Simulación adaptativa para gamificación ---
 def sim_adapt(respuestas):
     preguntas_demo = [
         {"pregunta":"¿Qué es incidencia?","opciones":["Casos nuevos","Casos totales"],"respuesta_correcta":"Casos nuevos","nivel":"Principiante"},
@@ -187,25 +182,25 @@ def main():
         st.header("📚 Academia")
         contenido = cargar_md("contenido/conceptosbasicos.md")
         if contenido: st.markdown(contenido)
-        else: st.info("Archivo 'conceptosbasicos.md' no encontrado.")
+        else: st.info("Archivo 'contenido/conceptosbasicos.md' no encontrado.")
 
     elif seleccion == "📈 Medidas de Asociación":
         st.header(seleccion)
         contenido = cargar_md("contenido/medidas_completas.md")
         if contenido: st.markdown(contenido)
-        else: st.info("Archivo 'medidas_completas.md' no encontrado.")
+        else: st.info("Archivo 'contenido/medidas_completas.md' no encontrado.")
 
     elif seleccion == "📊 Diseños de Estudio":
         st.header(seleccion)
         contenido = cargar_md("contenido/disenos_completos.md")
         if contenido: st.markdown(contenido)
-        else: st.info("Archivo 'disenos_completos.md' no encontrado.")
+        else: st.info("Archivo 'contenido/disenos_completos.md' no encontrado.")
 
     elif seleccion == "⚠️ Sesgos y Errores":
         st.header(seleccion)
         contenido = cargar_md("contenido/sesgos_completos.md")
         if contenido: st.markdown(contenido)
-        else: st.info("Archivo 'sesgos_completos.md' no encontrado.")
+        else: st.info("Archivo 'contenido/sesgos_completos.md' no encontrado.")
 
     elif seleccion == "📚 Glosario Interactivo":
         st.header(seleccion)
@@ -328,13 +323,16 @@ def main():
                 else:
                     try:
                         genai.configure(api_key=api_key)
-                        # Nuevo método actualizado
-                        respuesta = genai.text.generate(model="text-bison-001", prompt=pregunta)
-                        st.write(respuesta.result if hasattr(respuesta, "result") else str(respuesta))
+                        respuesta = genai.generate_text(
+                            model="text-bison-001",
+                            prompt=pregunta,
+                            temperature=0.2,
+                            max_output_tokens=512
+                        )
+                        st.write(respuesta.text if hasattr(respuesta, "text") else str(respuesta))
                     except Exception as e:
                         st.error(f"Error consultando Gemini: {e}")
 
 # --- Run App ---
 if __name__ == "__main__":
     main()
-
