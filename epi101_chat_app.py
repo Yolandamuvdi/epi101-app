@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import io
 from datetime import datetime
+import requests  # Import necesario para la API de Gemini
 
 # --- Funciones auxiliares ---
 def cargar_md(ruta):
@@ -25,7 +26,6 @@ def cargar_py_variable(ruta, variable):
         return None
 
 def setup_auth():
-    # Demo simple: ajustar según sistema real
     if "user_info" not in st.session_state:
         st.session_state.user_info = {"name":"Demo","role":"Demo"}
     return st.session_state.user_info
@@ -147,8 +147,26 @@ def barra_lateral(seleccion_actual):
         "📊 Tablas 2x2 y Cálculos", "📊 Visualización de Datos", "🎥 Multimedia YouTube",
         "🤖 Chat Epidemiológico", "🎯 Gamificación", "📢 Brotes"
     ]
-    seleccion_sidebar = st.sidebar.radio("Ir a sección:", opciones, index=opciones.index(seleccion_actual) if seleccion_actual in opciones else 0)
+    seleccion_sidebar = st.sidebar.radio(
+        "Ir a sección:", opciones,
+        index=opciones.index(seleccion_actual) if seleccion_actual in opciones else 0
+    )
     return seleccion_sidebar
+
+# --- Función Chat con Gemini ---
+def chat_gemini(pregunta):
+    api_key = st.secrets["GEMINI_API_KEY"]
+    url = "https://api.gemini.com/v1/ask"  # Ajusta según la URL real
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    payload = {"prompt": pregunta, "max_tokens": 200}
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        respuesta = data.get("respuesta", "No se recibió respuesta de Gemini.")
+    except Exception as e:
+        respuesta = f"❌ Error al contactar Gemini: {e}"
+    return respuesta
 
 # --- Main ---
 def main():
@@ -304,26 +322,13 @@ def main():
             st.video(u)
 
     elif seleccion == "🤖 Chat Epidemiológico":
-    st.header(seleccion)
-    pregunta = st.text_input("Pregunta epidemiológica")
+        st.header(seleccion)
+        pregunta = st.text_input("Escribe tu pregunta epidemiológica aquí:")
 
-    if st.button("Enviar") and pregunta:
-        # --- Llamado a Gemini API ---
-        import requests
-        api_key = st.secrets["GEMINI_API_KEY"]  # tu API key guardada en Secrets
-        url = "https://api.gemini.com/v1/ask"  # ejemplo, reemplaza con la URL real de Gemini
-        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-        payload = {"prompt": pregunta, "max_tokens": 200}
-
-        try:
-            response = requests.post(url, json=payload, headers=headers, timeout=10)
-            response.raise_for_status()
-            data = response.json()
-            # Suponiendo que la respuesta del modelo viene en data["respuesta"] o similar
-            respuesta = data.get("respuesta", "No se recibió respuesta de Gemini.")
-        except Exception as e:
-            respuesta = f"❌ Error al contactar Gemini: {e}"
-            st.info(respuesta)
+        if st.button("Enviar") and pregunta:
+            with st.spinner("Generando respuesta con Gemini..."):
+                respuesta = chat_gemini(pregunta)
+                st.success(respuesta)
 
 # --- Run App ---
 if __name__ == "__main__":
