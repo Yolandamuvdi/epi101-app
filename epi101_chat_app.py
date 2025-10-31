@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import io
 from datetime import datetime
+st.set_page_config(page_title="Epidemiología 101", layout="wide")
 
 # Gemini
 try:
