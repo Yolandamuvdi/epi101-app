@@ -323,8 +323,7 @@ def main():
             respuesta = data.get("respuesta", "No se recibió respuesta de Gemini.")
         except Exception as e:
             respuesta = f"❌ Error al contactar Gemini: {e}"
-
-        st.info(respuesta)
+            st.info(respuesta)
 
 # --- Run App ---
 if __name__ == "__main__":
