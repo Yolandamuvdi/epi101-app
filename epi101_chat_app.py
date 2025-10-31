@@ -1,34 +1,23 @@
-# epidemiologia101_app.py — Archivo completo
-
-# --- Imports principales ---
+# epidemiologia101_app.py — Epidemiología 101 (completo)
 import streamlit as st
-import os
-import math
-import io
-import random
-import requests
-import numpy as np
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import chi2_contingency, fisher_exact, norm
+import io
 from datetime import datetime
+import os
+import random
 
-# Extras visuales
-try:
-    from streamlit_extras.let_it_rain import rain
-except ImportError:
-    rain = None
+# --- CONFIGURACIÓN STREAMLIT ---
+st.set_page_config(page_title="Epidemiología 101", layout="wide")
 
-# Optional: Gemini (modo chat)
+# --- Intento de importar Gemini ---
 try:
     import google.generativeai as genai
     GENAI_AVAILABLE = True
 except ImportError:
     genai = None
     GENAI_AVAILABLE = False
-
-# --- CONFIGURACIÓN STREAMLIT ---
-st.set_page_config(page_title="Epidemiología 101", layout="wide")
 
 # --- Funciones auxiliares ---
 def cargar_md(ruta):
@@ -49,11 +38,12 @@ def cargar_py_variable(ruta, variable):
         return None
 
 def setup_auth():
+    # Demo simple: ajustar según sistema real
     if "user_info" not in st.session_state:
         st.session_state.user_info = {"name":"Demo","role":"Demo"}
     return st.session_state.user_info
 
-# --- Landing page ---
+# --- Landing page tipo dashboard ---
 def pagina_inicio():
     st.markdown("""
     <div style='background: linear-gradient(135deg, #0d3b66, #1e5f99); padding:50px; border-radius:15px; color:white; text-align:center; box-shadow: 2px 2px 15px rgba(0,0,0,0.3);'>
@@ -65,6 +55,7 @@ def pagina_inicio():
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    # Dashboard con cards tipo módulos
     col1, col2, col3 = st.columns(3)
     col1.markdown("""
         <div style='background-color:#f4a261;padding:20px;border-radius:10px;text-align:center;color:white;box-shadow: 1px 1px 10px rgba(0,0,0,0.2);'>
@@ -93,7 +84,7 @@ def pagina_inicio():
     if col3.button("Ir a 2x2"):
         st.session_state.seccion = "📊 Tablas 2x2 y Cálculos"
 
-# --- Funciones 2x2 ---
+# --- 2x2 Calculations ---
 def corregir_ceros(a,b,c,d):
     corregido = False
     if 0 in [a,b,c,d]:
@@ -137,8 +128,7 @@ def interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_va
 def make_forest_fig(rr, rr_l, rr_u, or_, or_l, or_u):
     fig, ax = plt.subplots()
     ax.errorbar([1,2],[rr,or_],[rr-rr_l, or_-or_l],[rr_u-rr, or_u-or_], fmt='o', color="#0d3b66")
-    ax.set_xticks([1,2])
-    ax.set_xticklabels(["RR","OR"])
+    ax.set_xticks([1,2]); ax.set_xticklabels(["RR","OR"])
     ax.set_title("Forest Plot")
     return fig
 
@@ -337,9 +327,10 @@ def main():
                     st.error("No se encontró GEMINI_API_KEY en secrets.")
                 else:
                     try:
-                        model = genai.GenerativeModel("text-bison-001")
-                        respuesta = model.generate_content(pregunta)
-                        st.write(respuesta.text if hasattr(respuesta, "text") else str(respuesta))
+                        genai.configure(api_key=api_key)
+                        # Nuevo método actualizado
+                        respuesta = genai.text.generate(model="text-bison-001", prompt=pregunta)
+                        st.write(respuesta.result if hasattr(respuesta, "result") else str(respuesta))
                     except Exception as e:
                         st.error(f"Error consultando Gemini: {e}")
 
