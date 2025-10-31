@@ -23,11 +23,9 @@ except Exception:
 try:
     from contenido.simulacion_adaptativa import simulacion_adaptativa as sim_adapt
 except Exception:
-    # fallback minimal (shouldn't happen if archivo existe)
     def sim_adapt(prev):
         return {"pregunta":"Demo: ¿Qué es incidencia?","opciones":["A","B","C"],"respuesta_correcta":"A","nivel":"Básico"}, "Demo"
 
-# --- CAMBIO 1: Actualizar la importación del módulo de brotes ---
 # Importar módulo PRO de brotes (ahora en la raíz, renombrado a simulacion_brotes.py)
 try:
     import simulacion_brotes as brotes_mod
@@ -36,7 +34,7 @@ except Exception:
     brotes_mod = None
     BROTES_AVAILABLE = False
 
-# Intentar configurar Gemini si está y si la key está en secrets (no obligatorio)
+# Configurar Gemini si está y key en secrets
 if GENAI_AVAILABLE:
     try:
         if "GEMINI_API_KEY" in st.secrets:
@@ -47,34 +45,31 @@ if GENAI_AVAILABLE:
 # ---------------------------
 # Optional extras with fallbacks
 # ---------------------------
-# feedparser (WHO DONs)
 try:
     import feedparser
     FEEDPARSER_AVAILABLE = True
 except Exception:
     FEEDPARSER_AVAILABLE = False
 
-# folium + streamlit_folium
 try:
     import folium
     from folium.plugins import HeatMap
     FOLIUM_AVAILABLE = True
 except Exception:
     FOLIUM_AVAILABLE = False
+
 try:
     from streamlit_folium import st_folium
     STREAMLIT_FOLIUM_AVAILABLE = True
 except Exception:
     STREAMLIT_FOLIUM_AVAILABLE = False
 
-# plotly
 try:
     import plotly.express as px
     PLOTLY_AVAILABLE = True
 except Exception:
     PLOTLY_AVAILABLE = False
 
-# reportlab + Pillow for PDF export
 try:
     from reportlab.lib.pagesizes import letter
     from reportlab.pdfgen import canvas
@@ -84,14 +79,12 @@ try:
 except Exception:
     REPORTLAB_AVAILABLE = False
 
-# streamlit-authenticator (login/roles)
 try:
     import streamlit_authenticator as stauth
     AUTH_AVAILABLE = True
 except Exception:
     AUTH_AVAILABLE = False
 
-# streamlit_extras badges/timeline (optional)
 try:
     from streamlit_extras.badges import badge
 except Exception:
@@ -102,41 +95,50 @@ except Exception:
     timeline = None
 
 # ---------------------------
-# Page config + CSS (azul OMS + acentos verdes)
+# Page config + CSS (profesional UX/UI)
 # ---------------------------
 st.set_page_config(page_title="🧠 Epidemiología 101", page_icon="🧪", layout="wide")
 
 st.markdown("""
 <style>
 :root {
-  --oms-blue: #0d3b66;
-  --health-green: #00a86b;
+  --blue-primary: #0d3b66;
+  --green-accent: #00a86b;
+  --light-bg: #f7fbfc;
+  --card-bg: #ffffff;
 }
 body, .block-container {
-    background: #f7fbfc;
-    color: var(--oms-blue);
+    background: var(--light-bg);
+    color: var(--blue-primary);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 .block-container {
     max-width: 1200px;
     margin: 1.5rem auto 3rem auto;
     padding: 1.5rem 2rem;
-    background: #ffffff;
+    background: var(--card-bg);
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(13,59,102,0.06);
 }
-h1,h2,h3,h4 { color: var(--oms-blue); font-weight:700; }
-a { color: var(--oms-blue); }
+h1,h2,h3,h4 { color: var(--blue-primary); font-weight:700; }
+a { color: var(--blue-primary); text-decoration:none; }
 .stButton>button {
-    background: linear-gradient(90deg,var(--oms-blue), #09466b);
+    background: linear-gradient(90deg,var(--blue-primary), #09466b);
     color: white;
     border-radius: 8px;
     padding: 8px 14px;
     font-weight:700;
 }
-.stButton>button:hover { background: linear-gradient(90deg,var(--health-green), #2fcf8f); }
+.stButton>button:hover { background: linear-gradient(90deg,var(--green-accent), #2fcf8f); }
 .small-muted { color: #6b7a86; font-size:0.9rem; }
-.badge-green { background: linear-gradient(90deg,#00b36b,#2fcf8f); color: white; padding: 6px 10px; border-radius: 8px; display:inline-block; }
+.card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+}
+.card h3 { color: var(--blue-primary); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -161,7 +163,7 @@ def cargar_py_variable(ruta_py, var_name):
     except:
         return None
 
-# your epidemiological functions (unchanged)
+# Epidemiological functions
 def corregir_ceros(a,b,c,d):
     if 0 in [a,b,c,d]:
         return a+0.5, b+0.5, c+0.5, d+0.5, True
@@ -242,12 +244,11 @@ def plot_barras_expuestos(a,b,c,d):
     plt.xticks(rotation=15)
     st.pyplot(fig, use_container_width=True)
 
-# Gamification confetti (original)
 def mostrar_confeti():
     rain(emoji="🎉", font_size=54, falling_speed=5, animation_length=3)
 
 # ---------------------------
-# Utilities para export y brotes (no tocan tus funciones originales)
+# Utilities para export y brotes
 # ---------------------------
 def fig_to_bytes(fig, fmt="png"):
     buf = io.BytesIO()
@@ -268,7 +269,6 @@ def crear_pdf_2x2(a,b,c,d, rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_va
     c.drawString(50, 704, f"OR: {or_:.3f} (IC95% {or_l:.3f}-{or_u:.3f})")
     c.drawString(50, 688, f"RD: {rd:.3f} (IC95% {rd_l:.3f}-{rd_u:.3f})")
     c.drawString(50, 672, f"p-value ({test_name}): {p_val:.4f}")
-    # Add forest plot image
     try:
         fig = make_forest_fig(rr, rr_l, rr_u, or_, or_l, or_u)
         img = ImageReader(io.BytesIO(fig_to_bytes(fig, fmt="png")))
@@ -286,358 +286,75 @@ def make_forest_fig(rr, rr_l, rr_u, or_, or_l, or_u):
                  xerr=[[rr-rr_l, or_-or_l], [rr_u-rr, or_u-or_]],
                  fmt='o', color='#0d3b66', capsize=5, markersize=10)
     ax.set_yticks([1,2])
-    ax.set_yticklabels(["Odds Ratio (OR)", "Riesgo Relativo (RR)"])
+    ax.set_yticklabels(["OR","RR"])
     ax.axvline(1, color='gray', linestyle='--')
-    ax.set_xlabel("Medidas de Asociación")
-    ax.set_title("Intervalos de Confianza 95%")
-    plt.tight_layout()
     return fig
 
 # ---------------------------
-# Auth setup (streamlit-authenticator or demo fallback)
+# HOME UI — limpio y profesional
 # ---------------------------
-def setup_auth():
-    user = {"name": "Demo", "username": "demo", "auth_status": False, "role": "Demo"}
-    if AUTH_AVAILABLE:
-        try:
-            # demo credentials; in prod put in secrets
-            credentials = {
-                "usernames": {
-                    "pro": {"name":"Paola", "password":"pro123"},
-                    "estudiante": {"name":"Estudiante", "password":"est123"}
-                }
-            }
-            authenticator = stauth.Authenticate(credentials, "epi101_cookie", "epi101_sig", cookie_expiry_days=1)
-            name, auth_status, username = authenticator.login("Inicia sesión", "sidebar")
-            if auth_status:
-                authenticator.logout("Cerrar sesión", "sidebar")
-                user["name"] = name
-                user["username"] = username
-                user["auth_status"] = auth_status
-                if username == "pro":
-                    user["role"] = "Pro"
-                else:
-                    user["role"] = "Estudiante"
-            else:
-                user["auth_status"] = auth_status
-        except Exception:
-            pass
-    return user
-
-# ---------------------------
-# PAGE NAV + Main
-# ---------------------------
-def pagina_inicio():
+with st.container():
     st.title("🧠 Epidemiología 101")
-    st.markdown("Bienvenido/a a Epidemiología 101 — selecciona una sección desde la barra lateral.")
-    st.markdown("**Recuerda instalar dependencias** (si quieres exportar PDF / ver mapas / alertas WHO):")
-    st.code("pip install reportlab pillow streamlit-authenticator folium streamlit_folium feedparser openpyxl")
+    st.markdown("""
+Bienvenido a **Epidemiología 101**, tu plataforma interactiva para aprender epidemiología clínica y análisis de datos de manera visual, práctica y gamificada.  
+Explora **conceptos básicos**, realiza **ejercicios interactivos**, analiza **tablas 2x2**, y visualiza datos reales con gráficos y mapas.
+""")
 
-def barra_lateral(seleccion_actual, user_info):
-    st.sidebar.title("🧪 Epidemiología 101")
-    st.sidebar.markdown(f"👩‍⚕️ Creado por **Yolanda Muvdi** \n**Usuario:** {user_info.get('name','-')} \n**Rol:** {user_info.get('role','Demo')}")
-    st.sidebar.markdown("---")
-    opciones = [
-        "📚 Academia", "🛠️ Toolkit", "📈 Medidas de Asociación", "📊 Diseños de Estudio",
-        "⚠️ Sesgos y Errores", "📚 Glosario Interactivo", "🧪 Ejercicios Prácticos",
-        "📊 Tablas 2x2 y Cálculos", "📊 Visualización de Datos", "🎥 Multimedia YouTube",
-        "🤖 Chat Epidemiológico", "🎯 Gamificación", "📢 Brotes (PRO)"
-    ]
-    # if non-pro hide brotes and toolkit?
-    if user_info.get("role") not in ["Pro","Estudiante","Demo"]:
-        pass
-    seleccion_sidebar = st.sidebar.radio("Ir a sección:", opciones, index=opciones.index(seleccion_actual) if seleccion_actual in opciones else 0)
-    if seleccion_sidebar != seleccion_actual:
-        st.session_state.seccion = seleccion_sidebar
-    # timeline mini
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("**Roadmap**")
-    if timeline:
-        try:
-            items = [
-                {"label":"M1","title":"Conceptos","description":"Bases"},
-                {"label":"M2","title":"Medidas","description":"RR/OR/RD"},
-                {"label":"M3","title":"Toolkit","description":"Export y APIs"},
-                {"label":"M4","title":"Brotes","description":"Simulaciones PRO"}
-            ]
-            timeline(items)
-        except Exception:
-            st.sidebar.markdown("- M1 Conceptos\n- M2 Medidas\n- M3 Toolkit\n- M4 Brotes")
-    else:
-        st.sidebar.markdown("- M1 Conceptos\n- M2 Medidas\n- M3 Toolkit\n- M4 Brotes")
-    return st.session_state.seccion
+    col1, col2, col3 = st.columns([2,3,2])
+    with col1:
+        st.markdown("""
+        <div class="card">
+        <h3>📚 Conceptos Básicos</h3>
+        Aprende teoría clave, definiciones y fórmulas epidemiológicas.
+        </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        st.markdown("""
+        <div class="card">
+        <h3>📊 Ejercicios & Práctica</h3>
+        Genera tablas 2x2, calcula RR, OR, RD, IC95% y valor p.
+        </div>
+        """, unsafe_allow_html=True)
+    with col3:
+        st.markdown("""
+        <div class="card">
+        <h3>🌎 Visualización de Datos</h3>
+        Mapas, gráficos interactivos y alertas de brotes de enfermedades.
+        </div>
+        """, unsafe_allow_html=True)
 
-def main():
-    # auth
-    user_info = setup_auth()
+# ---------------------------
+# Sidebar (profesional)
+# ---------------------------
+with st.sidebar:
+    st.header("📌 Navegación")
+    st.markdown("""
+- [Inicio](#)
+- [Conceptos Básicos](#)
+- [Ejercicios](#)
+- [2x2 & Medidas de Asociación](#)
+- [Gráficos & Mapas](#)
+- [Alertas & Brotes](#)
+- [Chat IA](#)
+""")
 
-    # init session state
-    if "seccion" not in st.session_state:
-        st.session_state.seccion = None
-        st.session_state.nivel_gamificacion = None
-        st.session_state.index_pregunta = 0
-        st.session_state.respuestas_correctas = 0
-        st.session_state.respuestas_usuario = {}
-        st.session_state.applied_interventions = []
-        st.session_state.progress = 20
-        st.session_state.badges = []
+    st.markdown("---")
+    st.markdown("🎯 **Tips rápidos**:")
+    st.markdown("""
+- Calcula RR, OR, RD al instante.  
+- Visualiza IC95% con gráficos de bosque.  
+- Gamifica tu aprendizaje con simulaciones y retos.  
+- Accede a brotes y alertas WHO (si tienes conexión).  
+""")
 
-    # show home if no section
-    if st.session_state.seccion is None:
-        pagina_inicio()
-        # quick start buttons
-        if st.sidebar.button("Abrir Academia"):
-            st.session_state.seccion = "📚 Academia"
-        return
+    if badge:
+        badge(label="Versión PRO", color="green", icon="🧪")
 
-    barra_lateral(st.session_state.seccion, user_info)
-    seleccion = st.session_state.seccion
+# ---------------------------
+# Optional: Lluvia de confeti al iniciar (gamificación)
+# ---------------------------
+mostrar_confeti()
 
-    # ---------- SECCIONES (manteniendo tu estructura) ----------
-    if seleccion == "📚 Academia":
-        st.header("📚 Academia")
-        contenido = cargar_md("contenido/conceptosbasicos.md")
-        if contenido:
-            st.markdown(contenido)
-        else:
-            st.info("Archivo 'contenido/conceptosbasicos.md' no encontrado.")
-        # videos quick
-        st.markdown("### Videos recomendados")
-        videos = {
-            "Introducción a Epidemiología": "https://www.youtube.com/watch?v=qVFP-IkyWgQ",
-            "Medidas de Asociación": "https://www.youtube.com/watch?v=d61E24xvRfI"
-        }
-        cols = st.columns(2)
-        i = 0
-        for t,u in videos.items():
-            with cols[i%2]:
-                st.markdown(f"**{t}**")
-                st.video(u)
-            i += 1
-
-    elif seleccion == "🛠️ Toolkit":
-        st.header("🛠️ Toolkit")
-        # restrict to Pro or Estudiante (Pro has full)
-        if user_info.get("role") == "Pro" or user_info.get("role") == "Estudiante" or user_info.get("role") == "Demo":
-            st.markdown("Herramientas: exportación, APIs reales (OWID, INS cuando posible), cálculos.")
-            # Example: load OWID (may take a bit)
-            try:
-                owid_url = "https://covid.ourworldindata.org/data/owid-covid-data.csv"
-                if st.button("Cargar muestra OWID (puede tardar)"):
-                    df_owid = pd.read_csv(owid_url, parse_dates=["date"])
-                    st.success("OWID cargado")
-                    st.dataframe(df_owid.head())
-            except Exception:
-                st.info("No fue posible descargar OWID en este entorno.")
-        else:
-            st.warning("Toolkit disponible solo para usuarios Pro — activa el modo Pro.")
-
-    elif seleccion == "📈 Medidas de Asociación":
-        st.header(seleccion)
-        contenido = cargar_md("contenido/medidas_completas.md")
-        if contenido: st.markdown(contenido)
-        else: st.info("Archivo 'contenido/medidas_completas.md' no encontrado.")
-
-    elif seleccion == "📊 Diseños de Estudio":
-        st.header(seleccion)
-        contenido = cargar_md("contenido/disenos_completos.md")
-        if contenido: st.markdown(contenido)
-        else: st.info("Archivo 'contenido/disenos_completos.md' no encontrado.")
-
-    elif seleccion == "⚠️ Sesgos y Errores":
-        st.header(seleccion)
-        contenido = cargar_md("contenido/sesgos_completos.md")
-        if contenido: st.markdown(contenido)
-        else: st.info("Archivo 'contenido/sesgos_completos.md' no encontrado.")
-
-    elif seleccion == "📚 Glosario Interactivo":
-        st.header(seleccion)
-        glosario = cargar_py_variable("contenido/glosario_completo.py", "glosario")
-        if glosario:
-            for termino, definicion in glosario.items():
-                with st.expander(termino):
-                    st.write(definicion)
-        else:
-            st.info("Archivo 'contenido/glosario_completo.py' no encontrado o variable 'glosario' no definida.")
-
-    elif seleccion == "🧪 Ejercicios Prácticos":
-        st.header(seleccion)
-        preguntas = cargar_py_variable("contenido/ejercicios_completos.py", "preguntas")
-        if preguntas:
-            for i, p in enumerate(preguntas):
-                st.subheader(f"Pregunta {i+1}")
-                respuesta = st.radio(p["pregunta"], p["opciones"], key=f"ej_{i}")
-                if st.button(f"Verificar respuesta {i+1}", key=f"btn_{i}"):
-                    if respuesta == p["respuesta_correcta"]:
-                        st.success("✅ Correcto")
-                    else:
-                        st.error(f"❌ Incorrecto. Respuesta correcta: {p['respuesta_correcta']}")
-        else:
-            st.info("Archivo 'contenido/ejercicios_completos.py' no encontrado o variable 'preguntas' no definida.")
-
-    elif seleccion == "📊 Tablas 2x2 y Cálculos":
-        st.header(seleccion)
-        # defaults
-        if "a" not in st.session_state: st.session_state.a = 10
-        if "b" not in st.session_state: st.session_state.b = 20
-        if "c" not in st.session_state: st.session_state.c = 5
-        if "d" not in st.session_state: st.session_state.d = 40
-
-        col1, col2 = st.columns(2)
-        with col1:
-            st.session_state.a = st.number_input("Casos expuestos (a)", min_value=0, value=st.session_state.a, step=1)
-            st.session_state.b = st.number_input("No casos expuestos (b)", min_value=0, value=st.session_state.b, step=1)
-        with col2:
-            st.session_state.c = st.number_input("Casos no expuestos (c)", min_value=0, value=st.session_state.c, step=1)
-            st.session_state.d = st.number_input("No casos no expuestos (d)", min_value=0, value=st.session_state.d, step=1)
-
-        if st.button("Calcular"):
-            a, b, c, d = st.session_state.a, st.session_state.b, st.session_state.c, st.session_state.d
-            total = a+b+c+d
-            if total == 0:
-                st.error("Por favor ingresa valores mayores que cero.")
-            else:
-                a_, b_, c_, d_, corregido = corregir_ceros(a,b,c,d)
-                rr, rr_l, rr_u = ic_riesgo_relativo(a_,b_,c_,d_)
-                or_, or_l, or_u = ic_odds_ratio(a_,b_,c_,d_)
-                rd, rd_l, rd_u = diferencia_riesgos(a_,b,c,d)
-                p_val, test_name = calcular_p_valor(int(a_), int(b_), int(c_), int(d_))
-                st.markdown(interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u,
-                                                     rd, rd_l, rd_u, p_val, test_name))
-                if corregido:
-                    st.warning("Se aplicó corrección de 0.5 en celdas con valor 0 para cálculos.")
-                # show plots
-                fig_f = make_forest_fig(rr, rr_l, rr_u, or_, or_l, or_u)
-                st.pyplot(fig_f, use_container_width=True)
-                plot_barras_expuestos(a,b,c,d)
-
-                # export options
-                df_res = pd.DataFrame([{"a":a,"b":b,"c":c,"d":d,"RR":rr,"RR_l":rr_l,"RR_u":rr_u,"OR":or_,"RD":rd,"p":p_val}])
-                buf_xl = io.BytesIO(); df_res.to_excel(buf_xl,index=False); buf_xl.seek(0)
-                st.download_button("⬇️ Descargar resultados (Excel)", data=buf_xl, file_name="resultados_2x2.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
-                # PDF
-                if REPORTLAB_AVAILABLE:
-                    pdf_bytes = crear_pdf_2x2(a,b,c,d, rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_val, test_name)
-                    if pdf_bytes:
-                        st.download_button("⬇️ Descargar reporte (PDF)", data=pdf_bytes, file_name="reporte_2x2.pdf", mime="application/pdf")
-                else:
-                    st.info("Para exportar PDF instala: reportlab pillow")
-
-    elif seleccion == "📊 Visualización de Datos":
-        st.header(seleccion)
-        uploaded_file = st.file_uploader("Carga un archivo CSV para gráficos exploratorios", type=["csv"])
-        if uploaded_file:
-            try:
-                df = pd.read_csv(uploaded_file)
-                st.dataframe(df.head())
-                num_cols = df.select_dtypes(include=np.number).columns.tolist()
-                if num_cols:
-                    col = st.selectbox("Selecciona columna numérica para graficar", num_cols)
-                    fig, ax = plt.subplots()
-                    df[col].value_counts().plot(kind='bar', ax=ax, color='#0d3b66')
-                    ax.set_title(f"Distribución de {col}")
-                    st.pyplot(fig, use_container_width=True)
-                    png = fig_to_bytes(fig, fmt="png")
-                    st.download_button("⬇️ Descargar gráfico (PNG)", data=png, file_name="grafico.png", mime="image/png")
-                    excel_buf = io.BytesIO(); df.to_excel(excel_buf, index=False); excel_buf.seek(0)
-                    st.download_button("⬇️ Descargar datos (Excel)", data=excel_buf, file_name="datos.xlsx")
-                else:
-                    st.info("No se detectaron columnas numéricas para graficar.")
-            except Exception as e:
-                st.error(f"Error leyendo CSV: {e}")
-        else:
-            st.info("Carga un archivo CSV para ver gráficos dinámicos.")
-
-    elif seleccion == "🎥 Multimedia YouTube":
-        st.header(seleccion)
-        videos = {
-            "Introducción a Epidemiología": "https://www.youtube.com/watch?v=qVFP-IkyWgQ",
-            "Medidas de Asociación": "https://www.youtube.com/watch?v=d61E24xvRfI",
-            "Diseños de Estudio": "https://www.youtube.com/watch?v=y6odn6E8yRs",
-            "Sesgos en Epidemiología": "https://www.youtube.com/watch?v=1kyFIyG37qc"
-        }
-        for titulo, url in videos.items():
-            st.markdown(f"**{titulo}**")
-            st.video(url)
-        st.markdown("Puedes pausar el video y aplicar las preguntas del módulo de brotes o de la simulación adaptativa para practicar decisiones reales.")
-
-    elif seleccion == "🤖 Chat Epidemiológico":
-        st.header(seleccion)
-        pregunta = st.text_input("Escribe tu pregunta epidemiológica:")
-        if st.button("Enviar") and pregunta:
-            if not GENAI_AVAILABLE:
-                st.warning("Gemini (google.generativeai) no está disponible en este entorno. Instala la librería y agrega GEMINI_API_KEY en secrets.")
-            else:
-                api_key = st.secrets.get("GEMINI_API_KEY")
-                if not api_key:
-                    st.error("No se encontró GEMINI_API_KEY en secrets.")
-                else:
-                    try:
-                        model = genai.GenerativeModel("gemini-1.5-flash")
-                        respuesta = model.generate_content(pregunta)
-                        st.write(respuesta.text if hasattr(respuesta, "text") else str(respuesta))
-                    except Exception as e:
-                        st.error(f"Error consultando Gemini: {e}")
-
-    elif seleccion == "🎯 Gamificación":
-        st.header(seleccion)
-        if st.session_state.nivel_gamificacion is None:
-            st.subheader("Antes de comenzar, ¿en qué nivel sientes que estás en Epidemiología?")
-            nivel = st.radio("Selecciona tu nivel:", ["Principiante","Intermedio","Avanzado"], index=0, key="nivel_inicial")
-            if st.button("Comenzar"):
-                st.session_state.nivel_gamificacion = nivel
-                st.session_state.index_pregunta = 0
-                st.session_state.respuestas_correctas = 0
-                st.session_state.respuestas_usuario = {}
-        else:
-            if "pregunta_actual" not in st.session_state:
-                st.session_state.pregunta_actual, st.session_state.mensaje = sim_adapt({})
-            pregunta_actual = st.session_state.pregunta_actual
-            mensaje = st.session_state.mensaje
-            st.subheader(f"Pregunta {st.session_state.index_pregunta + 1}")
-            st.write(pregunta_actual["pregunta"])
-            st.info(mensaje)
-            respuesta = st.radio("Selecciona tu respuesta:", pregunta_actual["opciones"], key=f"resp_temp_{st.session_state.index_pregunta}")
-            if st.button("Enviar respuesta", key=f"btn_{st.session_state.index_pregunta}"):
-                correcta = pregunta_actual["respuesta_correcta"]
-                st.session_state.respuestas_usuario[st.session_state.index_pregunta] = {
-                    "pregunta": pregunta_actual["pregunta"],
-                    "nivel": pregunta_actual["nivel"],
-                    "correcto": respuesta == correcta,
-                    "seleccion": respuesta
-                }
-                if respuesta == correcta:
-                    st.success("✅ Correcto")
-                    mostrar_confeti()
-                    st.session_state.respuestas_correctas += 1
-                    st.session_state.progress = min(100, st.session_state.get("progress",20) + 8)
-                else:
-                    st.error(f"❌ Incorrecto. Respuesta correcta: {correcta}")
-                st.session_state.index_pregunta += 1
-                st.session_state.pregunta_actual, st.session_state.mensaje = sim_adapt(st.session_state.respuestas_usuario)
-            # show progress + badges
-            st.markdown("### Progreso")
-            st.progress(st.session_state.get("progress",20))
-            if st.session_state.get("respuestas_correctas",0) >= 5 and "Nivel Pro" not in st.session_state.badges:
-                st.session_state.badges.append("Nivel Pro")
-            st.markdown("### Badges")
-            for b in st.session_state.badges:
-                st.markdown(f"- {b}")
-            st.markdown("### Ranking (local)")
-            ranking_df = pd.DataFrame.from_dict({"Usuario":[user_info.get("name","Demo")], "Puntos":[st.session_state.get("respuestas_correctas",0)]})
-            st.table(ranking_df)
-
-    # --- CAMBIO 2: Eliminar la restricción de rol "Pro" ---
-    elif seleccion == "📢 Brotes (PRO)":
-        st.header("📢 Simulación de Brotes")
-        if BROTES_AVAILABLE:
-            try:
-                brotes_mod.app()
-            except Exception as e:
-                st.error(f"Error arrancando módulo brotes: {e}")
-        else:
-            st.error("Módulo 'simulacion_brotes.py' no encontrado. Añade el archivo y reintenta.")
     # end sections
 
 # run
