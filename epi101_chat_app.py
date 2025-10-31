@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import io
 from datetime import datetime
-import requests
+import requests  # para el chat Gemini
 
 # --- Funciones auxiliares ---
 def cargar_md(ruta):
@@ -26,6 +26,7 @@ def cargar_py_variable(ruta, variable):
         return None
 
 def setup_auth():
+    # Demo simple: ajustar según sistema real
     if "user_info" not in st.session_state:
         st.session_state.user_info = {"name":"Demo","role":"Demo"}
     return st.session_state.user_info
@@ -42,6 +43,7 @@ def pagina_inicio():
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    # Dashboard con cards tipo módulos
     col1, col2, col3 = st.columns(3)
     col1.markdown("""
         <div style='background-color:#f4a261;padding:20px;border-radius:10px;text-align:center;color:white;box-shadow: 1px 1px 10px rgba(0,0,0,0.2);'>
@@ -124,7 +126,7 @@ def plot_barras_expuestos(a,b,c,d):
     ax.set_title("Distribución 2x2")
     st.pyplot(fig, use_container_width=True)
 
-# --- Simulación adaptativa ---
+# --- Simulación adaptativa para gamificación ---
 def sim_adapt(respuestas):
     preguntas_demo = [
         {"pregunta":"¿Qué es incidencia?","opciones":["Casos nuevos","Casos totales"],"respuesta_correcta":"Casos nuevos","nivel":"Principiante"},
@@ -307,23 +309,26 @@ def main():
         pregunta = st.text_input("Escribe tu pregunta epidemiológica aquí:")
 
         if st.button("Enviar") and pregunta:
-            api_key = st.secrets["GEMINI_API_KEY"]
-            url = "https://generativelanguage.googleapis.com/v1beta2/models/text-bison-001:generate"
-            headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+            api_key = st.secrets["GEMINI_API_KEY"]  # tu API key en Secrets
+            url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro-latest:generateContent"
+            headers = {"x-goog-api-key": api_key, "Content-Type":"application/json"}
             payload = {
-                "prompt": {"text": pregunta},
-                "temperature": 0.7,
-                "maxOutputTokens": 200
+                "contents":[{"parts":[{"text":pregunta}]}],
+                "generationConfig":{"temperature":0.7,"maxOutputTokens":200}
             }
+
             try:
-                response = requests.post(url, headers=headers, json=payload, timeout=10)
+                response = requests.post(url, json=payload, headers=headers, timeout=10)
                 response.raise_for_status()
                 data = response.json()
-                respuesta = data["candidates"][0]["output"]
-                st.success(respuesta)
+                # Gemini responde en "candidates" -> "content"
+                respuesta = data.get("candidates",[{"content":"No se recibió respuesta de Gemini."}])[0]["content"]
             except Exception as e:
-                st.error(f"❌ Error al contactar Gemini: {e}")
+                respuesta = f"❌ Error al contactar Gemini: {e}"
+
+            st.info(respuesta)
 
 # --- Run App ---
 if __name__ == "__main__":
     main()
+
