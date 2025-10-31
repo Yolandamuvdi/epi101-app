@@ -33,10 +33,10 @@ def setup_auth():
 # --- Landing page tipo dashboard ---
 def pagina_inicio():
     st.markdown("""
-    <div style='background-color:#0d3b66;padding:50px;border-radius:15px;color:white;text-align:center;'>
-        <h1 style='font-size:50px;'>🎓 Bienvenido a Epidemiología 101</h1>
-        <p style='font-size:22px;'>Aprende epidemiología de manera interactiva, con ejercicios, gráficos y gamificación 🧪</p>
-        <p style='font-size:18px;'>Explora los módulos y domina conceptos clave, medidas de asociación, tablas 2x2 y mucho más.</p>
+    <div style='background: linear-gradient(135deg, #0d3b66, #1e5f99); padding:50px; border-radius:15px; color:white; text-align:center; box-shadow: 2px 2px 15px rgba(0,0,0,0.3);'>
+        <h1 style='font-size:55px; font-weight:bold; text-shadow: 2px 2px 5px rgba(0,0,0,0.6); color:white;'>🎓 Bienvenido a Epidemiología 101</h1>
+        <p style='font-size:22px; color:white;'>Aprende epidemiología de manera interactiva, con ejercicios, gráficos y gamificación 🧪</p>
+        <p style='font-size:18px; color:white;'>Explora los módulos y domina conceptos clave, medidas de asociación, tablas 2x2 y mucho más.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -45,7 +45,7 @@ def pagina_inicio():
     # Dashboard con cards tipo módulos
     col1, col2, col3 = st.columns(3)
     col1.markdown("""
-        <div style='background-color:#f4a261;padding:20px;border-radius:10px;text-align:center;color:white;'>
+        <div style='background-color:#f4a261;padding:20px;border-radius:10px;text-align:center;color:white;box-shadow: 1px 1px 10px rgba(0,0,0,0.2);'>
             <h3>📚 Academia</h3>
             <p>Conceptos básicos de epidemiología</p>
         </div>
@@ -54,7 +54,7 @@ def pagina_inicio():
         st.session_state.seccion = "📚 Academia"
 
     col2.markdown("""
-        <div style='background-color:#2a9d8f;padding:20px;border-radius:10px;text-align:center;color:white;'>
+        <div style='background-color:#2a9d8f;padding:20px;border-radius:10px;text-align:center;color:white;box-shadow: 1px 1px 10px rgba(0,0,0,0.2);'>
             <h3>📈 Medidas de Asociación</h3>
             <p>RR, OR, RD y más</p>
         </div>
@@ -63,7 +63,7 @@ def pagina_inicio():
         st.session_state.seccion = "📈 Medidas de Asociación"
 
     col3.markdown("""
-        <div style='background-color:#e76f51;padding:20px;border-radius:10px;text-align:center;color:white;'>
+        <div style='background-color:#e76f51;padding:20px;border-radius:10px;text-align:center;color:white;box-shadow: 1px 1px 10px rgba(0,0,0,0.2);'>
             <h3>📊 Tablas 2x2</h3>
             <p>Calcula y visualiza tablas 2x2</p>
         </div>
@@ -101,7 +101,6 @@ def diferencia_riesgos(a,b,c,d):
     return rd, rd_l, rd_u
 
 def calcular_p_valor(a,b,c,d):
-    # placeholder, usar chi2 test o Fisher exact en real
     return 0.05, "Chi2"
 
 def interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_val, test_name):
@@ -313,4 +312,3 @@ def main():
 # --- Run App ---
 if __name__ == "__main__":
     main()
-
