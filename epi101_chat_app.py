@@ -1,4 +1,4 @@
-# main.py — Epidemiología 101 (integración PRO + Brotes + UX/UI + Auth)
+# main.py — Epidemiología 101 (PRO + Brotes + UX/UI + Auth robusto)
 import streamlit as st
 import os
 import math
@@ -11,22 +11,22 @@ import matplotlib.pyplot as plt
 from scipy.stats import chi2_contingency, fisher_exact, norm
 from streamlit_extras.let_it_rain import rain
 
-# Optional: Gemini (si no está, quedamos en modo sin chat)
+# Optional: Gemini (si no está, fallback seguro)
 try:
-    import google.generativeai as genai  # ✅ Importar Gemini
+    import google.generativeai as genai
     GENAI_AVAILABLE = True
-except Exception:
+except ImportError:
     genai = None
     GENAI_AVAILABLE = False
 
-# Importar función de simulación adaptativa (mantén tu archivo)
+# Import simulación adaptativa
 try:
     from contenido.simulacion_adaptativa import simulacion_adaptativa as sim_adapt
 except Exception:
     def sim_adapt(prev):
         return {"pregunta":"Demo: ¿Qué es incidencia?","opciones":["A","B","C"],"respuesta_correcta":"A","nivel":"Básico"}, "Demo"
 
-# Importar módulo PRO de brotes (ahora en la raíz, renombrado a simulacion_brotes.py)
+# Brotes PRO
 try:
     import simulacion_brotes as brotes_mod
     BROTES_AVAILABLE = True
@@ -34,7 +34,7 @@ except Exception:
     brotes_mod = None
     BROTES_AVAILABLE = False
 
-# Configurar Gemini si está y key en secrets
+# Configure Gemini si key en secrets
 if GENAI_AVAILABLE:
     try:
         if "GEMINI_API_KEY" in st.secrets:
@@ -42,32 +42,30 @@ if GENAI_AVAILABLE:
     except Exception:
         pass
 
-# ---------------------------
-# Optional extras with fallbacks
-# ---------------------------
+# Optional extras
 try:
     import feedparser
     FEEDPARSER_AVAILABLE = True
-except Exception:
+except ImportError:
     FEEDPARSER_AVAILABLE = False
 
 try:
     import folium
     from folium.plugins import HeatMap
     FOLIUM_AVAILABLE = True
-except Exception:
+except ImportError:
     FOLIUM_AVAILABLE = False
 
 try:
     from streamlit_folium import st_folium
     STREAMLIT_FOLIUM_AVAILABLE = True
-except Exception:
+except ImportError:
     STREAMLIT_FOLIUM_AVAILABLE = False
 
 try:
     import plotly.express as px
     PLOTLY_AVAILABLE = True
-except Exception:
+except ImportError:
     PLOTLY_AVAILABLE = False
 
 try:
@@ -76,74 +74,46 @@ try:
     from reportlab.lib.utils import ImageReader
     from PIL import Image
     REPORTLAB_AVAILABLE = True
-except Exception:
+except ImportError:
     REPORTLAB_AVAILABLE = False
 
 try:
     import streamlit_authenticator as stauth
     AUTH_AVAILABLE = True
-except Exception:
+except ImportError:
     AUTH_AVAILABLE = False
 
+# Streamlit extras: badges y timeline
 try:
     from streamlit_extras.badges import badge
-except Exception:
+except ImportError:
     badge = None
+
 try:
     from streamlit_extras.timeline import timeline
-except Exception:
+except ImportError:
     timeline = None
 
 # ---------------------------
-# Page config + CSS (profesional UX/UI)
+# Página + CSS
 # ---------------------------
 st.set_page_config(page_title="🧠 Epidemiología 101", page_icon="🧪", layout="wide")
-
 st.markdown("""
 <style>
-:root {
-  --blue-primary: #0d3b66;
-  --green-accent: #00a86b;
-  --light-bg: #f7fbfc;
-  --card-bg: #ffffff;
-}
-body, .block-container {
-    background: var(--light-bg);
-    color: var(--blue-primary);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-.block-container {
-    max-width: 1200px;
-    margin: 1.5rem auto 3rem auto;
-    padding: 1.5rem 2rem;
-    background: var(--card-bg);
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(13,59,102,0.06);
-}
-h1,h2,h3,h4 { color: var(--blue-primary); font-weight:700; }
-a { color: var(--blue-primary); text-decoration:none; }
-.stButton>button {
-    background: linear-gradient(90deg,var(--blue-primary), #09466b);
-    color: white;
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-weight:700;
-}
-.stButton>button:hover { background: linear-gradient(90deg,var(--green-accent), #2fcf8f); }
+:root { --oms-blue: #0d3b66; --health-green: #00a86b; }
+body, .block-container { background: #f7fbfc; color: var(--oms-blue); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+.block-container { max-width: 1200px; margin: 1.5rem auto 3rem auto; padding: 1.5rem 2rem; background: #ffffff; border-radius: 12px; box-shadow: 0 10px 30px rgba(13,59,102,0.06); }
+h1,h2,h3,h4 { color: var(--oms-blue); font-weight:700; }
+a { color: var(--oms-blue); }
+.stButton>button { background: linear-gradient(90deg,var(--oms-blue), #09466b); color: white; border-radius: 8px; padding: 8px 14px; font-weight:700; }
+.stButton>button:hover { background: linear-gradient(90deg,var(--health-green), #2fcf8f); }
 .small-muted { color: #6b7a86; font-size:0.9rem; }
-.card {
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-    margin-bottom: 20px;
-}
-.card h3 { color: var(--blue-primary); }
+.badge-green { background: linear-gradient(90deg,#00b36b,#2fcf8f); color: white; padding: 6px 10px; border-radius: 8px; display:inline-block; }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Keep original functions (no changes)
+# Funciones originales (sin cambios)
 # ---------------------------
 @st.cache_data(show_spinner=False)
 def cargar_md(ruta):
@@ -163,7 +133,6 @@ def cargar_py_variable(ruta_py, var_name):
     except:
         return None
 
-# Epidemiological functions
 def corregir_ceros(a,b,c,d):
     if 0 in [a,b,c,d]:
         return a+0.5, b+0.5, c+0.5, d+0.5, True
@@ -248,7 +217,7 @@ def mostrar_confeti():
     rain(emoji="🎉", font_size=54, falling_speed=5, animation_length=3)
 
 # ---------------------------
-# Utilities para export y brotes
+# Utilities export y brotes
 # ---------------------------
 def fig_to_bytes(fig, fmt="png"):
     buf = io.BytesIO()
@@ -272,91 +241,86 @@ def crear_pdf_2x2(a,b,c,d, rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_va
     try:
         fig = make_forest_fig(rr, rr_l, rr_u, or_, or_l, or_u)
         img = ImageReader(io.BytesIO(fig_to_bytes(fig, fmt="png")))
-        c.drawImage(img, 50, 380, width=500, height=250)
-    except Exception:
+        c.drawImage(img, 50, 450, width=500, height=200)
+    except:
         pass
     c.showPage()
     c.save()
     pdf_buf.seek(0)
-    return pdf_buf.getvalue()
-
-def make_forest_fig(rr, rr_l, rr_u, or_, or_l, or_u):
-    fig, ax = plt.subplots(figsize=(6,3))
-    ax.errorbar(x=[rr, or_], y=[2,1],
-                 xerr=[[rr-rr_l, or_-or_l], [rr_u-rr, or_u-or_]],
-                 fmt='o', color='#0d3b66', capsize=5, markersize=10)
-    ax.set_yticks([1,2])
-    ax.set_yticklabels(["OR","RR"])
-    ax.axvline(1, color='gray', linestyle='--')
-    return fig
+    return pdf_buf
 
 # ---------------------------
-# HOME UI — limpio y profesional
+# Header + Badge
 # ---------------------------
-with st.container():
-    st.title("🧠 Epidemiología 101")
-    st.markdown("""
-Bienvenido a **Epidemiología 101**, tu plataforma interactiva para aprender epidemiología clínica y análisis de datos de manera visual, práctica y gamificada.  
-Explora **conceptos básicos**, realiza **ejercicios interactivos**, analiza **tablas 2x2**, y visualiza datos reales con gráficos y mapas.
-""")
+st.title("🧠 Epidemiología 101")
+st.markdown("Aprende epidemiología de manera interactiva y visual.")
 
-    col1, col2, col3 = st.columns([2,3,2])
+if badge is not None:
+    badge(label="Versión PRO", color="green", icon="🧪")
+
+st.markdown("---")
+
+# ---------------------------
+# Menú de secciones
+# ---------------------------
+menu = st.sidebar.selectbox("Navegación", ["Inicio","Simulador 2x2","Brotes","Simulación Adaptativa","Acerca"])
+
+# ---------------------------
+# Inicio
+# ---------------------------
+if menu == "Inicio":
+    st.subheader("Bienvenida")
+    st.markdown("Explora la epidemiología de manera visual e interactiva. Usa la barra lateral para navegar entre secciones.")
+    mostrar_confeti()
+
+# ---------------------------
+# Simulador 2x2
+# ---------------------------
+elif menu == "Simulador 2x2":
+    st.subheader("Simulador de Tabla 2x2")
+    col1,col2 = st.columns(2)
     with col1:
-        st.markdown("""
-        <div class="card">
-        <h3>📚 Conceptos Básicos</h3>
-        Aprende teoría clave, definiciones y fórmulas epidemiológicas.
-        </div>
-        """, unsafe_allow_html=True)
+        a = st.number_input("Casos expuestos (a)", min_value=0, value=10)
+        b = st.number_input("No casos expuestos (b)", min_value=0, value=20)
     with col2:
-        st.markdown("""
-        <div class="card">
-        <h3>📊 Ejercicios & Práctica</h3>
-        Genera tablas 2x2, calcula RR, OR, RD, IC95% y valor p.
-        </div>
-        """, unsafe_allow_html=True)
-    with col3:
-        st.markdown("""
-        <div class="card">
-        <h3>🌎 Visualización de Datos</h3>
-        Mapas, gráficos interactivos y alertas de brotes de enfermedades.
-        </div>
-        """, unsafe_allow_html=True)
+        c = st.number_input("Casos no expuestos (c)", min_value=0, value=5)
+        d = st.number_input("No casos no expuestos (d)", min_value=0, value=25)
+
+    a,b,c,d,_ = corregir_ceros(a,b,c,d)
+
+    rr, rr_l, rr_u = ic_riesgo_relativo(a,b,c,d)
+    or_, or_l, or_u = ic_odds_ratio(a,b,c,d)
+    rd, rd_l, rd_u = diferencia_riesgos(a,b,c,d)
+    p_val, test_name = calcular_p_valor(a,b,c,d)
+    st.markdown(interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_val, test_name))
+    plot_forest(rr, rr_l, rr_u, or_, or_l, or_u)
+    plot_barras_expuestos(a,b,c,d)
 
 # ---------------------------
-# Sidebar (profesional)
+# Brotes
 # ---------------------------
-with st.sidebar:
-    st.header("📌 Navegación")
-    st.markdown("""
-- [Inicio](#)
-- [Conceptos Básicos](#)
-- [Ejercicios](#)
-- [2x2 & Medidas de Asociación](#)
-- [Gráficos & Mapas](#)
-- [Alertas & Brotes](#)
-- [Chat IA](#)
-""")
-
-    st.markdown("---")
-    st.markdown("🎯 **Tips rápidos**:")
-    st.markdown("""
-- Calcula RR, OR, RD al instante.  
-- Visualiza IC95% con gráficos de bosque.  
-- Gamifica tu aprendizaje con simulaciones y retos.  
-- Accede a brotes y alertas WHO (si tienes conexión).  
-""")
-
-    if badge:
-        badge(label="Versión PRO", color="green", icon="🧪")
+elif menu == "Brotes":
+    st.subheader("Simulación de Brotes")
+    if BROTES_AVAILABLE:
+        brotes_mod.run_app()
+    else:
+        st.info("Brotes PRO no disponible en este entorno.")
 
 # ---------------------------
-# Optional: Lluvia de confeti al iniciar (gamificación)
+# Simulación Adaptativa
 # ---------------------------
-mostrar_confeti()
+elif menu == "Simulación Adaptativa":
+    st.subheader("Simulación Adaptativa")
+    pregunta, meta = sim_adapt(None)
+    st.markdown(f"**Pregunta:** {pregunta['pregunta']}")
+    for opcion in pregunta['opciones']:
+        st.radio("Opciones", pregunta['opciones'], index=0)
 
-    # end sections
+# ---------------------------
+# Acerca
+# ---------------------------
+elif menu == "Acerca":
+    st.subheader("Acerca de Epidemiología 101")
+    st.markdown("Aplicación educativa PRO desarrollada por Pao, enfermera epidemióloga.")
 
-# run
-if __name__ == "__main__":
-    main()
+st.markdown("<br><br>", unsafe_allow_html=True)
