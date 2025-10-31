@@ -304,10 +304,27 @@ def main():
             st.video(u)
 
     elif seleccion == "🤖 Chat Epidemiológico":
-        st.header(seleccion)
-        pregunta = st.text_input("Pregunta epidemiológica")
-        if st.button("Enviar") and pregunta:
-            st.info("Aquí iría la respuesta generada por IA (Gemini).")
+    st.header(seleccion)
+    pregunta = st.text_input("Pregunta epidemiológica")
+
+    if st.button("Enviar") and pregunta:
+        # --- Llamado a Gemini API ---
+        import requests
+        api_key = st.secrets["GEMINI_API_KEY"]  # tu API key guardada en Secrets
+        url = "https://api.gemini.com/v1/ask"  # ejemplo, reemplaza con la URL real de Gemini
+        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        payload = {"prompt": pregunta, "max_tokens": 200}
+
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            # Suponiendo que la respuesta del modelo viene en data["respuesta"] o similar
+            respuesta = data.get("respuesta", "No se recibió respuesta de Gemini.")
+        except Exception as e:
+            respuesta = f"❌ Error al contactar Gemini: {e}"
+
+        st.info(respuesta)
 
 # --- Run App ---
 if __name__ == "__main__":
