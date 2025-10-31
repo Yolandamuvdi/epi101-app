@@ -1,12 +1,4 @@
 # ============================
-# UX/UI y extras
-# ============================
-pyyaml==6.0
-streamlit-authenticator==0.4.2
-python-dotenv==1.1.0
-streamlit-extras==0.7.8
-
-# ============================
 # Core Streamlit + Data Science
 # ============================
 streamlit==1.37.0
@@ -16,6 +8,15 @@ scipy==1.11.0
 matplotlib==3.7.2
 seaborn==0.12.2
 statsmodels==0.14.0
+scikit-learn==1.3.0
+
+# ============================
+# UX/UI y extras (gamificación, badges, timeline)
+# ============================
+pyyaml==6.0
+streamlit-authenticator==0.4.2
+python-dotenv==1.1.0
+streamlit-extras==0.7.8
 
 # ============================
 # IA / Chat Educativo (Gemini)
@@ -23,7 +24,7 @@ statsmodels==0.14.0
 google-generativeai==0.8.5
 
 # ============================
-# Visualización Interactiva
+# Visualización interactiva
 # ============================
 plotly==5.23.0
 folium==0.16.0
@@ -42,8 +43,3 @@ openpyxl==3.1.2
 # ============================
 pillow==10.1.0
 reportlab==4.0.4
-
-# ============================
-# Optional / ML
-# ============================
-scikit-learn==1.3.0
