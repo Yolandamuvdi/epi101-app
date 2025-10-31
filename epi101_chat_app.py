@@ -1,20 +1,34 @@
-# epidemiologia101_app.py
+# epidemiologia101_app.py — Archivo completo
+
+# --- Imports principales ---
 import streamlit as st
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
+import os
+import math
 import io
+import random
+import requests
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy.stats import chi2_contingency, fisher_exact, norm
 from datetime import datetime
 
-# --- CONFIGURACIÓN STREAMLIT ---
-st.set_page_config(page_title="Epidemiología 101", layout="wide")
+# Extras visuales
+try:
+    from streamlit_extras.let_it_rain import rain
+except ImportError:
+    rain = None
 
-# --- Intento de importar Gemini ---
+# Optional: Gemini (modo chat)
 try:
     import google.generativeai as genai
     GENAI_AVAILABLE = True
 except ImportError:
+    genai = None
     GENAI_AVAILABLE = False
+
+# --- CONFIGURACIÓN STREAMLIT ---
+st.set_page_config(page_title="Epidemiología 101", layout="wide")
 
 # --- Funciones auxiliares ---
 def cargar_md(ruta):
@@ -35,12 +49,11 @@ def cargar_py_variable(ruta, variable):
         return None
 
 def setup_auth():
-    # Demo simple: ajustar según sistema real
     if "user_info" not in st.session_state:
         st.session_state.user_info = {"name":"Demo","role":"Demo"}
     return st.session_state.user_info
 
-# --- Landing page tipo dashboard ---
+# --- Landing page ---
 def pagina_inicio():
     st.markdown("""
     <div style='background: linear-gradient(135deg, #0d3b66, #1e5f99); padding:50px; border-radius:15px; color:white; text-align:center; box-shadow: 2px 2px 15px rgba(0,0,0,0.3);'>
@@ -52,7 +65,6 @@ def pagina_inicio():
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Dashboard con cards tipo módulos
     col1, col2, col3 = st.columns(3)
     col1.markdown("""
         <div style='background-color:#f4a261;padding:20px;border-radius:10px;text-align:center;color:white;box-shadow: 1px 1px 10px rgba(0,0,0,0.2);'>
@@ -81,7 +93,7 @@ def pagina_inicio():
     if col3.button("Ir a 2x2"):
         st.session_state.seccion = "📊 Tablas 2x2 y Cálculos"
 
-# --- 2x2 Calculations ---
+# --- Funciones 2x2 ---
 def corregir_ceros(a,b,c,d):
     corregido = False
     if 0 in [a,b,c,d]:
@@ -125,7 +137,8 @@ def interpretar_resultados(rr, rr_l, rr_u, or_, or_l, or_u, rd, rd_l, rd_u, p_va
 def make_forest_fig(rr, rr_l, rr_u, or_, or_l, or_u):
     fig, ax = plt.subplots()
     ax.errorbar([1,2],[rr,or_],[rr-rr_l, or_-or_l],[rr_u-rr, or_u-or_], fmt='o', color="#0d3b66")
-    ax.set_xticks([1,2]); ax.set_xticklabels(["RR","OR"])
+    ax.set_xticks([1,2])
+    ax.set_xticklabels(["RR","OR"])
     ax.set_title("Forest Plot")
     return fig
 
@@ -135,7 +148,7 @@ def plot_barras_expuestos(a,b,c,d):
     ax.set_title("Distribución 2x2")
     st.pyplot(fig, use_container_width=True)
 
-# --- Simulación adaptativa para gamificación ---
+# --- Simulación adaptativa ---
 def sim_adapt(respuestas):
     preguntas_demo = [
         {"pregunta":"¿Qué es incidencia?","opciones":["Casos nuevos","Casos totales"],"respuesta_correcta":"Casos nuevos","nivel":"Principiante"},
@@ -184,25 +197,25 @@ def main():
         st.header("📚 Academia")
         contenido = cargar_md("contenido/conceptosbasicos.md")
         if contenido: st.markdown(contenido)
-        else: st.info("Archivo 'contenido/conceptosbasicos.md' no encontrado.")
+        else: st.info("Archivo 'conceptosbasicos.md' no encontrado.")
 
     elif seleccion == "📈 Medidas de Asociación":
         st.header(seleccion)
         contenido = cargar_md("contenido/medidas_completas.md")
         if contenido: st.markdown(contenido)
-        else: st.info("Archivo 'contenido/medidas_completas.md' no encontrado.")
+        else: st.info("Archivo 'medidas_completas.md' no encontrado.")
 
     elif seleccion == "📊 Diseños de Estudio":
         st.header(seleccion)
         contenido = cargar_md("contenido/disenos_completos.md")
         if contenido: st.markdown(contenido)
-        else: st.info("Archivo 'contenido/disenos_completos.md' no encontrado.")
+        else: st.info("Archivo 'disenos_completos.md' no encontrado.")
 
     elif seleccion == "⚠️ Sesgos y Errores":
         st.header(seleccion)
         contenido = cargar_md("contenido/sesgos_completos.md")
         if contenido: st.markdown(contenido)
-        else: st.info("Archivo 'contenido/sesgos_completos.md' no encontrado.")
+        else: st.info("Archivo 'sesgos_completos.md' no encontrado.")
 
     elif seleccion == "📚 Glosario Interactivo":
         st.header(seleccion)
@@ -333,3 +346,4 @@ def main():
 # --- Run App ---
 if __name__ == "__main__":
     main()
+
